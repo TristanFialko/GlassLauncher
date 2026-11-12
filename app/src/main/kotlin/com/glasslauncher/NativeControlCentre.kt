@@ -69,6 +69,7 @@ class NativeControlCentre(private val home: NativeHomeView) {
     private val lm = Matrix()
     private val r = RectF()
     private var aSel: ValueAnimator? = null
+    private val setSel = NativeHomeView.Setter { selAmt = it }
     private var tintColor = 0
     private var tintFilter: PorterDuffColorFilter? = null
 
@@ -169,7 +170,7 @@ class NativeControlCentre(private val home: NativeHomeView) {
     private fun selectNav(to: Int) {
         sel = to
         home.host.playNav()
-        aSel = home.anim(aSel, 0f, 1f, 180, NativeHomeView.EASE) { selAmt = it }
+        aSel = home.anim(aSel, 0f, 1f, 180, NativeHomeView.EASE, setSel)
     }
 
     // ---------------- drawing ----------------

@@ -1,5 +1,7 @@
 package com.glasslauncher
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.TimeInterpolator
 import android.animation.ValueAnimator
 import android.content.Context
@@ -23,6 +25,7 @@ import android.os.Trace
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.PathInterpolator
 import java.util.Calendar
 
@@ -42,6 +45,11 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
         fun openSearch()
         fun launchRecent()
         fun exitPrototype()
+        /**
+         * The full-size wallpaper for [dark] is not loaded (only the theme on screen keeps one). True if it will arrive
+         * through [wallpaperLoaded]; the theme crossfade waits for it.
+         */
+        fun wallpaperNeeded(dark: Boolean): Boolean = false
     }
 
     fun interface Setter { fun set(v: Float) }
@@ -83,6 +91,8 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
         const val RTHUMB_H = 73f
 
         @JvmField val EASE = PathInterpolator(.2f, .8f, .2f, 1f)   // --ease
+        /** ValueAnimator's default, set explicitly because anim() reuses animators. */
+        @JvmField val ACCEL_DECEL = AccelerateDecelerateInterpolator()
         @JvmField val REGULAR: Typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         @JvmField val BOLD: Typeface = Typeface.create("sans-serif", Typeface.BOLD)
 
@@ -102,6 +112,7 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
     @JvmField var vpos = 0
     @JvmField var hdrIdx = 0
     @JvmField val col = IntArray(cfg.rows.size)
+    /** Full-size wallpapers with the home shade baked in (NativeArt.shaded). Only the theme on screen keeps one. */
     @JvmField var wallLight: Bitmap? = null
     @JvmField var wallDark: Bitmap? = null
     @JvmField var blurLight: Bitmap? = null
@@ -146,6 +157,27 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
     private var aCc: ValueAnimator? = null
     private var aToast: ValueAnimator? = null
     private var aScrollTarget = 0f
+    /** The theme flipped but its wallpaper is still being decoded: the crossfade starts in [wallpaperLoaded]. */
+    private var crossfadePending = false
+    private var darkTarget = 0f
+    // allocated once: anim() binds a setter when it creates an animator, so key presses allocate no lambdas
+    private val setDarkMix = Setter { darkMix = it }
+    private val setScroll = Setter { scroll = it }
+    private val setFocus = Setter { focusAmt = it }
+    private val setShine = Setter { shine = it }
+    private val setBtn = Setter { btnAmt = it }
+    private val setCc = Setter { ccMix = it }
+    private val setToast = Setter { toastMix = it; toastLayer?.invalidate() }
+    private val darkSettled = object : AnimatorListenerAdapter() {
+        private var canceled = false
+        override fun onAnimationStart(animation: Animator) { canceled = false }
+        override fun onAnimationCancel(animation: Animator) { canceled = true }
+        override fun onAnimationEnd(animation: Animator) {
+            // the float lerp can stop a hair short of 1, which would keep drawing both wallpapers (dark at alpha 254)
+            if (!canceled) darkMix = darkTarget
+            trimWallpapers()
+        }
+    }
 
     private val pBmp = Paint(Paint.FILTER_BITMAP_FLAG)
     private val pFill = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -179,7 +211,7 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
         isFocusableInTouchMode = true
         pStroke.style = Paint.Style.STROKE
         pText.typeface = REGULAR
-        pShade.shader = LinearGradient(0f, 0f, 0f, H, intArrayOf(0x1F000000, 0x00000000, 0x80000000.toInt()), floatArrayOf(0f, .35f, 1f), Shader.TileMode.CLAMP)
+        pShade.shader = LinearGradient(0f, 0f, 0f, H, NativeArt.SHADE_COLORS, NativeArt.SHADE_STOPS, Shader.TileMode.CLAMP)
         dark = isNight(Calendar.getInstance())
         darkMix = if (dark) 1f else 0f
         tick()
@@ -199,7 +231,35 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
     fun setDark(d: Boolean) {
         if (d == dark) return
         dark = d
-        aDark = anim(aDark, darkMix, if (d) 1f else 0f, 700, null) { darkMix = it }
+        // the theme off screen has no full-size wallpaper (PSS): the host decodes it and the crossfade starts when it arrives
+        if ((if (d) wallDark else wallLight) == null && host.wallpaperNeeded(d)) { crossfadePending = true; return }
+        startCrossfade()
+    }
+
+    /**
+     * A full-size wallpaper from the host, shade baked in (null if it failed to decode): the first one at startup, the
+     * other theme's after [Host.wallpaperNeeded].
+     */
+    fun wallpaperLoaded(isDark: Boolean, bm: Bitmap?) {
+        if (isDark) wallDark = bm else wallLight = bm
+        if (crossfadePending && isDark == dark) startCrossfade() else trimWallpapers()
+        invalidate()
+    }
+
+    private fun startCrossfade() {
+        crossfadePending = true   // anim() cancels a running crossfade; its end callback must not trim a wallpaper still needed
+        darkTarget = if (dark) 1f else 0f
+        val first = aDark == null
+        val a = anim(aDark, darkMix, darkTarget, 700, null, setDarkMix)
+        if (first) a.addListener(darkSettled)
+        aDark = a
+        crossfadePending = false
+    }
+
+    /** With no crossfade running or waiting, drops the wallpaper that is not on screen (8 MB at 1920x1080). */
+    private fun trimWallpapers() {
+        if (crossfadePending || aDark?.isRunning == true) return
+        if (darkMix >= 1f) wallLight = null else if (darkMix <= 0f) wallDark = null
     }
 
     // ---------------- input ----------------
@@ -400,29 +460,30 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
     fun moved() {
         host.playNav()
         if (zone == 0) {
-            aFocus = anim(aFocus, 0f, 1f, 220, EASE) { focusAmt = it }
-            aShine = anim(aShine, 0f, 1f, 700, null) { shine = it }
+            aFocus = anim(aFocus, 0f, 1f, 220, EASE, setFocus)
+            aShine = anim(aShine, 0f, 1f, 700, null, setShine)
         }
-        aBtn = anim(aBtn, 0f, 1f, 200, EASE) { btnAmt = it }
+        aBtn = anim(aBtn, 0f, 1f, 200, EASE, setBtn)
         val target = if (zone == 0 && vpos > 0) 1f else 0f
         val running = aScroll?.isRunning == true
         if (target != scroll && (!running || aScrollTarget != target)) {
             aScrollTarget = target
-            aScroll = anim(aScroll, scroll, target, 450, EASE) { scroll = it }
+            aScroll = anim(aScroll, scroll, target, 450, EASE, setScroll)
         }
         invalidate()
     }
 
-    fun openControlCentre(focusVolume: Boolean = false) { cc.open(if (focusVolume) CcLogic.T_VOL else 0); aCc = anim(aCc, ccMix, 1f, 420, EASE) { ccMix = it } }
-    fun closeControlCentre() { cc.isOpen = false; aCc = anim(aCc, ccMix, 0f, 420, EASE) { ccMix = it }; host.playNav() }
+    fun openControlCentre(focusVolume: Boolean = false) { cc.open(if (focusVolume) CcLogic.T_VOL else 0); aCc = anim(aCc, ccMix, 1f, 420, EASE, setCc) }
+    fun closeControlCentre() { cc.isOpen = false; aCc = anim(aCc, ccMix, 0f, 420, EASE, setCc); host.playNav() }
 
     // Search overlay (NativeSearchView sits above this view): body.searchopen dims the home like body.ccopen.
     private var searchMix = 0f
     private var aSearch: ValueAnimator? = null
+    private val setSearch = Setter { searchMix = it }
     /** Draws the toast above Search; null means this view draws it itself. */
     var toastLayer: View? = null
 
-    fun setSearchOpen(open: Boolean) { aSearch = anim(aSearch, searchMix, if (open) 1f else 0f, 300, EASE) { searchMix = it } }
+    fun setSearchOpen(open: Boolean) { aSearch = anim(aSearch, searchMix, if (open) 1f else 0f, 300, EASE, setSearch) }
     private fun dimMix() = if (ccMix > searchMix) ccMix else searchMix
 
     /** Called by the toast layer's onDraw. */
@@ -433,18 +494,23 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
 
     fun showToast(text: String) {
         toast = text; toastUntil = System.currentTimeMillis() + 3200
-        aToast = anim(aToast, toastMix, 1f, 300, null) { toastMix = it; toastLayer?.invalidate() }
+        aToast = anim(aToast, toastMix, 1f, 300, null, setToast)
         postDelayed({
-            if (System.currentTimeMillis() >= toastUntil) aToast = anim(aToast, toastMix, 0f, 300, null) { toastMix = it; toastLayer?.invalidate() }
+            if (System.currentTimeMillis() >= toastUntil) aToast = anim(aToast, toastMix, 0f, 300, null, setToast)
         }, 3200)
     }
 
+    /**
+     * Runs [old] again from [from] to [to], creating it on first use, so a key press no longer allocates an animator (with
+     * its value holder and listener) per slot. [s] is bound when the animator is created: a slot must always pass the same
+     * setter.
+     */
     fun anim(old: ValueAnimator?, from: Float, to: Float, ms: Long, ip: TimeInterpolator?, s: Setter): ValueAnimator {
-        old?.cancel()
-        val a = ValueAnimator.ofFloat(from, to)
+        val a = old ?: ValueAnimator().also { n -> n.addUpdateListener { s.set(it.animatedValue as Float); invalidate() } }
+        a.cancel()
+        a.setFloatValues(from, to)
         a.duration = ms
-        if (ip != null) a.interpolator = ip
-        a.addUpdateListener { s.set(it.animatedValue as Float); invalidate() }
+        a.interpolator = ip ?: ACCEL_DECEL
         a.start()
         return a
     }
@@ -460,7 +526,7 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
             drawHead(c)
             drawRecent(c)
             drawButtons(c)
-            if (searchMix > 0f) { c.saveLayerAlpha(0f, 0f, W, H, (255 * (1f - .5f * searchMix)).toInt()); drawRowsMasked(c); c.restore() } else drawRowsMasked(c)   // searchopen #stage .5
+            drawRowsMasked(c, if (searchMix > 0f) (255 * (1f - .5f * searchMix)).toInt() else 255)   // searchopen #stage .5
             if (ccMix > 0f) cc.draw(c, ccMix)
             if (toastLayer == null) drawToast(c)
             c.restore()
@@ -475,7 +541,10 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
         if (wd != null && darkMix > 0f) {
             pBmp.alpha = (255 * darkMix).toInt(); r.set(0f, 0f, W, H); c.drawBitmap(wd, null, r, pBmp); pBmp.alpha = 255
         }
-        c.drawRect(0f, 0f, W, H, pShade)
+        // The wallpapers carry the shade (NativeArt.shaded), saving a full-screen gradient pass per frame. Source-over is
+        // affine in the destination, so shading before the crossfade gives the same pixels. Only the bare base colour
+        // (no wallpaper yet, or a failed decode) still needs it here.
+        if (if (darkMix < 1f) wl == null else wd == null) c.drawRect(0f, 0f, W, H, pShade)
     }
 
     private fun drawHead(c: Canvas) {
@@ -530,30 +599,37 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
 
     /**
      * #stage mask (home.js:88-90): alpha 0 to viewTop-24, ramp to 1 at viewTop, 1 to viewBottom-24, ramp to 0 at viewBottom+56.
-     * The layer is limited to the rows' bounds and only used while they reach a fade band.
+     * [alpha] is the Search dimming (searchopen #stage .5). One layer, limited to what the rows paint, does both, and it
+     * exists only while the rows reach a fade band or are dimmed.
      */
-    private fun drawRowsMasked(c: Canvas) {
-        val top = ROW0_TOP - ROWS_SHIFT * scroll - ROWS_HALO
-        val bottom = ROW0_TOP - ROWS_SHIFT * scroll + cfg.rows.size * (DOCK_H + ROW_GAP) - ROW_GAP + ROWS_HALO
+    private fun drawRowsMasked(c: Canvas, alpha: Int) {
+        val dockTop = ROW0_TOP - ROWS_SHIFT * scroll
+        val dockBottom = dockTop + cfg.rows.size * (DOCK_H + ROW_GAP) - ROW_GAP
         // decide on the docks themselves: only their shadows/halos reach the bands at rest, and a layer there would cost a
-        // ~1920x600 offscreen pass every frame on the box. So the layer exists only while rows scroll through a band.
-        val dockTop = top + ROWS_HALO
-        val dockBottom = bottom - ROWS_HALO
-        if (dockTop >= FADE_TOP_END && dockBottom <= FADE_BOT_START) { drawRows(c); return }
+        // ~1920x600 offscreen pass every frame on the box. So the mask is used only while rows scroll through a band.
+        val masked = dockTop < FADE_TOP_END || dockBottom > FADE_BOT_START
+        if (!masked && alpha >= 255) { drawRows(c); return }
+        // painted extent: focus halos reach ROWS_HALO; the dock shadow (blur pad, drawn 36 px low) reaches further down
+        val ds = dockShadow
+        val below = if (ds != null) maxOf(ROWS_HALO, (ds.height - DOCK_H) / 2f + 36f) else ROWS_HALO
+        val top = dockTop - ROWS_HALO
+        val bottom = dockBottom + below
         val t = if (top < 0f) 0f else top
         val b = if (bottom > H) H else bottom
         if (b <= t) return
-        var g = maskGrad
-        if (g == null) {
-            g = LinearGradient(0f, 0f, 0f, H, intArrayOf(0, 0, Color.BLACK, Color.BLACK, 0),
-                floatArrayOf(0f, FADE_TOP_START / H, FADE_TOP_END / H, FADE_BOT_START / H, FADE_BOT_END / H), Shader.TileMode.CLAMP)
-            maskGrad = g
-            pMask.shader = g
-            pMask.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
-        }
-        val sc = c.saveLayer(0f, t, W, b, null)
+        val sc = c.saveLayerAlpha(0f, t, W, b, alpha)
         drawRows(c)
-        c.drawRect(0f, t, W, b, pMask)
+        if (masked) {
+            var g = maskGrad
+            if (g == null) {
+                g = LinearGradient(0f, 0f, 0f, H, intArrayOf(0, 0, Color.BLACK, Color.BLACK, 0),
+                    floatArrayOf(0f, FADE_TOP_START / H, FADE_TOP_END / H, FADE_BOT_START / H, FADE_BOT_END / H), Shader.TileMode.CLAMP)
+                maskGrad = g
+                pMask.shader = g
+                pMask.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+            }
+            c.drawRect(0f, t, W, b, pMask)
+        }
         c.restoreToCount(sc)
     }
 
