@@ -535,7 +535,11 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
     private fun drawRowsMasked(c: Canvas) {
         val top = ROW0_TOP - ROWS_SHIFT * scroll - ROWS_HALO
         val bottom = ROW0_TOP - ROWS_SHIFT * scroll + cfg.rows.size * (DOCK_H + ROW_GAP) - ROW_GAP + ROWS_HALO
-        if (top >= FADE_TOP_END && bottom <= FADE_BOT_START) { drawRows(c); return }
+        // decide on the docks themselves: only their shadows/halos reach the bands at rest, and a layer there would cost a
+        // ~1920x600 offscreen pass every frame on the box. So the layer exists only while rows scroll through a band.
+        val dockTop = top + ROWS_HALO
+        val dockBottom = bottom - ROWS_HALO
+        if (dockTop >= FADE_TOP_END && dockBottom <= FADE_BOT_START) { drawRows(c); return }
         val t = if (top < 0f) 0f else top
         val b = if (bottom > H) H else bottom
         if (b <= t) return
