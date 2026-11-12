@@ -79,6 +79,8 @@ public class NativeUiPrototypeTest {
 
     @Test public void a_nativeVersusWebView() throws Exception {
         ua = InstrumentationRegistry.getInstrumentation().getUiAutomation();
+        // the Control Centre asks for location on first open (S8, same as the WebView UI); a system dialog would take the keys
+        sh("pm grant com.glasslauncher android.permission.ACCESS_FINE_LOCATION");
         sh("rm -rf /data/local/tmp/glass-nativeui"); sh("mkdir -p /data/local/tmp/glass-nativeui");
         int[] path = {22, 22, 20, 21, 19, 19};   // right, right, down (row 2), left, up, up (header)
         StringBuilder report = new StringBuilder();
@@ -155,6 +157,8 @@ public class NativeUiPrototypeTest {
      */
     @Test public void b_nativeSurfacesAndRouting() throws Exception {
         ua = InstrumentationRegistry.getInstrumentation().getUiAutomation();
+        // the Control Centre asks for location on first open (S8, same as the WebView UI); a system dialog would take the keys
+        sh("pm grant com.glasslauncher android.permission.ACCESS_FINE_LOCATION");
         sh("mkdir -p /data/local/tmp/glass-nativeui");
         sh("logcat -c");
         sh("am start -W -n com.glasslauncher/.NativeHomeActivity");
