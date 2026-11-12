@@ -15,7 +15,7 @@ foreach ($x in @($a, $b)) {
     exit 1
   }
 }
-foreach ($k in @("model", "android", "wm_size", "wm_density", "refresh_hz", "webview", "expected_theme", "dexopt_status", "background_package")) {
+foreach ($k in @("harness_version", "model", "android", "wm_size", "wm_density", "refresh_hz", "webview", "expected_theme", "dexopt_status", "background_component")) {
   if ("$($a.device.$k)" -ne "$($b.device.$k)") { Write-Warning "Different $k : '$($a.device.$k)' vs '$($b.device.$k)' - results are not directly comparable" }
 }
 foreach ($x in @(@($a, $First), @($b, $Second))) { foreach ($w in $x[0].warnings) { Write-Warning ("[" + $x[0].device.label + "] " + $w) } }
@@ -41,10 +41,13 @@ Row "cold start ms" $a.cold_start_ms $b.cold_start_ms 5 $true
 Row "warm start ms" $a.warm_start_ms $b.warm_start_ms 5 $true
 Row "app PSS KB" $a.memory.app_pss_kb $b.memory.app_pss_kb
 Row "renderer PSS KB" $a.memory.renderer_pss_kb $b.memory.renderer_pss_kb
+Row "total PSS KB" $a.memory.total_pss_kb $b.memory.total_pss_kb
 Row "CPU % fg idle (app)" $a.cpu_foreground_idle.app_process_pct $b.cpu_foreground_idle.app_process_pct
 Row "CPU % fg idle (renderer)" $a.cpu_foreground_idle.renderer_pct $b.cpu_foreground_idle.renderer_pct
 Row "CPU % background (app)" $a.cpu_background.app_process_pct $b.cpu_background.app_process_pct
 Row "CPU % background (renderer)" $a.cpu_background.renderer_pct $b.cpu_background.renderer_pct
+Row "CPU % fg idle (app+renderer)" $a.cpu_foreground_idle.total_pct $b.cpu_foreground_idle.total_pct
+Row "CPU % background (app+renderer)" $a.cpu_background.total_pct $b.cpu_background.total_pct
 Row "frame ms (last frames)" $a.frames.nav_framestats_last_frames.duration_ms $b.frames.nav_framestats_last_frames.duration_ms 20
 Val "D-pad frames / idle frames" ("{0} / {1}" -f $a.frames.nav.frames, $a.frames.idle_control.frames) ("{0} / {1}" -f $b.frames.nav.frames, $b.frames.idle_control.frames)
 Val "D-pad janky %" $a.frames.nav.janky_pct $b.frames.nav.janky_pct

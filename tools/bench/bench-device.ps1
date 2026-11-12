@@ -1,5 +1,5 @@
 <#
-  Glass Launcher on-device benchmark (Android TV over adb), harness v2. Measures any APK the same way so the baseline
+  Glass Launcher on-device benchmark (Android TV over adb), harness v3. Measures any APK the same way so the baseline
   and a Glass 2.0 build can be compared on the SAME device under the SAME conditions.
 
   Usage (Windows):  tools\bench\bench-device.bat -Label baseline -Apk C:\path\glasslauncher-baseline.apk -CompileSpeed
@@ -7,11 +7,12 @@
          (pwsh):    pwsh tools/bench/bench-device.ps1 -Label glass2 -Apk app/build/outputs/apk/debug/app-debug.apk
   Compare:          powershell -ExecutionPolicy Bypass -File tools\bench\compare.ps1 <a>\summary.json <b>\summary.json
 
-  What v2 measures and how (see docs/benchmarks/METHODOLOGY.md):
+  What it measures and how (see docs/benchmarks/METHODOLOGY.md):
     cold start   am start -S -W, kept only when LaunchState=COLD; logcat "Displayed" recorded as a cross-check.
-    warm start   a full-screen app is opened first (-BackgroundPackage, default: first installed of YouTube / Netflix /
-                 Play Store), Glass must be verified STOPPED and its process alive, then am start -W; LaunchState kept.
-                 Samples that fail these checks are rejected and listed, never averaged in.
+    warm start   a full-screen launcher activity (-BackgroundComponent pkg/cls, or resolved from -BackgroundPackage /
+                 first installed of YouTube, Netflix, Play Store) is started with am start -W -n; the harness then polls
+                 dumpsys activity/window until that package is in front AND Glass is STOPPED (-BackgroundWaitSeconds,
+                 default 15) before timing am start -W of Glass. Anything else is rejected with a diagnostic, never averaged in.
     memory       dumpsys meminfo <pid>, 3 samples, app process AND WebView renderer process(es).
     CPU          /proc/<pid>/stat utime+stime for the app AND renderer process(es), 3 windows each.
     frames       gfxinfo over a scripted D-pad sequence AND over an idle window of the same length (control), plus
@@ -29,6 +30,8 @@ param(
   [int]$NavRounds = 15,
   [int]$KeyIntervalMs = 500,
   [string]$BackgroundPackage = "",
+  [string]$BackgroundComponent = "",
+  [int]$BackgroundWaitSeconds = 15,
   [switch]$CompileSpeed,
   [switch]$Trace,
   [string]$Serial = ""
@@ -52,13 +55,13 @@ function Invoke-AdbShell([string]$cmd) { return Invoke-AdbCmd @("shell", $cmd) }
 function Save([string]$name, [string]$text) { Add-Content -Path (Join-Path $out $name) -Value $text }
 function Warn([string]$m) { [void]$warnings.Add($m); Write-Warning $m }
 function GlassPid() { return (Invoke-AdbShell "pidof $Pkg").Trim() }
+# Callers must wrap in @(): PowerShell unrolls a returned one-element array (see Get-SumOrNull in bench-lib.ps1).
 function RendererPids() { return @(Get-RendererPids (Invoke-AdbShell "ps -A -o PID,ARGS")) }
-function GlassState() { return Get-ActivityState (Invoke-AdbShell "dumpsys activity activities") $Act }
 
 function CpuWindow([int]$seconds, [string[]]$pids) {
   $t0 = @{}; foreach ($p in $pids) { $t0[$p] = Get-ProcTicks (Invoke-AdbShell "cat /proc/$p/stat") }
   Start-Sleep -Seconds $seconds
-  $res = [ordered]@{}
+  $res = @{}
   foreach ($p in $pids) {
     $t1 = Get-ProcTicks (Invoke-AdbShell "cat /proc/$p/stat")
     if ($t0[$p] -ne $null -and $t1 -ne $null) { $res[$p] = [math]::Round(100.0 * ($t1 - $t0[$p]) / 100 / $seconds, 3) } else { $res[$p] = $null }  # USER_HZ=100
@@ -68,21 +71,22 @@ function CpuWindow([int]$seconds, [string[]]$pids) {
 function CpuMeasure([string]$name) {
   $app = GlassPid
   if (-not $app) { Warn "$name CPU: Glass process not running"; return $null }
-  $rend = RendererPids
+  $rend = @(RendererPids)
   $pids = @($app) + @($rend | ForEach-Object { $_.pid })
   $win = [math]::Max(5, [int]($IdleSeconds / 3))
-  $appS = @(); $rendS = @()
+  $appS = @(); $rendS = @(); $totS = @()
   for ($w = 0; $w -lt 3; $w++) {
     $r = CpuWindow $win $pids
-    Save "cpu-$name.txt" ("window " + $w + ": " + ($r | ConvertTo-Json -Compress))
+    Save "cpu-$name.txt" ("window " + $w + ": " + (($pids | ForEach-Object { "$_=" + $r[$_] }) -join " "))
     if ($r[$app] -ne $null) { $appS += $r[$app] }
-    $sum = 0.0; $okR = $true
-    foreach ($x in $rend) { if ($r[$x.pid] -eq $null) { $okR = $false } else { $sum += $r[$x.pid] } }
-    if ($okR -and $rend.Count) { $rendS += $sum }
+    $rs = Get-SumOrNull @($rend | ForEach-Object { $r[$_.pid] })
+    if ($rs -ne $null) { $rendS += $rs }
+    if ($r[$app] -ne $null -and ($rend.Length -eq 0 -or $rs -ne $null)) { $totS += ($r[$app] + [double]$rs) }
   }
+  if ($rend.Length -gt 0 -and $rendS.Length -eq 0) { Warn "$name CPU: renderer process(es) found but their /proc stat could not be read" }
   return [ordered]@{ window_seconds = $win; app_process_pct = (Get-Stats $appS)
-                     renderer_processes = @($rend | ForEach-Object { $_.name }); renderer_pct = (Get-Stats $rendS)
-                     total_pct_median = $(if ($rendS.Count) { [math]::Round((Get-Stats $appS).median + (Get-Stats $rendS).median, 3) } else { (Get-Stats $appS).median }) }
+                     renderer_processes = @($rend | ForEach-Object { $_.name + " (pid " + $_.pid + ")" }); renderer_pct = (Get-Stats $rendS)
+                     total_pct = (Get-Stats $totS) }
 }
 function RunNav([int]$rounds) {
   # invariant culture: a comma-decimal Windows locale would otherwise send "sleep 0,5" to the device
@@ -93,17 +97,52 @@ function RunNav([int]$rounds) {
   $sw.Stop()
   return $sw.Elapsed.TotalSeconds
 }
+<#
+  Background app = an explicit, resolved launcher activity (pkg/cls), started with `am start -W -n`. v2 used `monkey`,
+  which on the VIP7802 returned without displacing Glass. Returns @{ package; component; diagnostic }.
+#>
 function PickBackground() {
-  if ($BackgroundPackage) { return $BackgroundPackage }
-  foreach ($p in @("com.google.android.youtube.tv", "com.netflix.ninja", "com.android.vending")) {
-    if ((Invoke-AdbShell "pm path $p") -match "package:") { return $p }
+  $cands = @()
+  if ($BackgroundComponent) { return @{ package = ($BackgroundComponent -split "/")[0]; component = $BackgroundComponent; diagnostic = "given" } }
+  if ($BackgroundPackage) { $cands = @($BackgroundPackage) } else { $cands = @("com.google.android.youtube.tv", "com.netflix.ninja", "com.android.vending") }
+  $diag = @()
+  foreach ($p in $cands) {
+    if (-not ((Invoke-AdbShell "pm path $p") -match "package:")) { $diag += "$p not installed"; continue }
+    foreach ($cat in @("android.intent.category.LEANBACK_LAUNCHER", "android.intent.category.LAUNCHER")) {
+      $o = Invoke-AdbShell "cmd package resolve-activity --brief -a android.intent.action.MAIN -c $cat $p"
+      $c = Get-ResolvedComponent $o
+      if ($c) { return @{ package = $p; component = $c; diagnostic = "resolved via $cat" } }
+    }
+    $diag += "$p has no MAIN/LEANBACK_LAUNCHER or LAUNCHER activity"
   }
-  return $null
+  return @{ package = $null; component = $null; diagnostic = ($diag -join "; ") }
 }
-function OpenBackground([string]$bg) {
-  $o = Invoke-AdbShell "monkey -p $bg -c android.intent.category.LEANBACK_LAUNCHER 1"
-  if ($o -match "No activities found") { $o = Invoke-AdbShell "monkey -p $bg -c android.intent.category.LAUNCHER 1" }
-  return $o
+<#
+  Starts the background activity and waits (up to $BackgroundWaitSeconds) until BOTH the background package is in front
+  (resumed activity / focused app) AND Glass's own activity record is STOPPED. Android stops the covered activity only
+  after the new one goes idle, or after a 10 s idle timeout when it keeps animating (video autoplay), hence the wait.
+  Returns @{ ok; reason; foreground; glass_state; glass_visible; waited_s; am }.
+#>
+function OpenBackground($bg) {
+  $am = Invoke-AdbShell "am start -W -n $($bg.component)"
+  $a = ConvertFrom-AmStart $am
+  $res = [ordered]@{ ok = $false; reason = $null; foreground = $null; glass_state = $null; glass_visible = $null; waited_s = 0; am_status = $a.status; am_warning = $a.warning; am_error = $a.error }
+  if ($a.error -or ($a.status -and $a.status -ne "ok")) { $res.reason = "am start $($bg.component) failed: status=$($a.status) error=$($a.error)"; return $res }
+  $sw = [Diagnostics.Stopwatch]::StartNew()
+  do {
+    Start-Sleep -Seconds 1
+    $acts = Invoke-AdbShell "dumpsys activity activities"
+    $fg = Get-ForegroundInfo $acts (Invoke-AdbShell "dumpsys window windows")
+    $st = Get-ActivityState $acts $Act
+    $res.foreground = $fg.package; $res.glass_state = $st.state; $res.glass_visible = $st.visible
+    $res.waited_s = [math]::Round($sw.Elapsed.TotalSeconds, 1)
+    if ($fg.package -eq $bg.package -and $st.state -eq "STOPPED") { $res.ok = $true; return $res }
+  } while ($sw.Elapsed.TotalSeconds -lt $BackgroundWaitSeconds)
+  if (-not $st.found) { $res.reason = "Glass activity record not found in dumpsys activity activities (foreground: $($fg.package))" }
+  elseif (-not $st.state) { $res.reason = "Glass activity record found but no state= line ($($st.header))" }
+  elseif ($fg.package -ne $bg.package) { $res.reason = "$($bg.package) did not come to the front after $($res.waited_s) s (resumed=$($fg.resumed), focused app=$($fg.focused_app), focused window=$($fg.focused_window)); Glass state=$($st.state)" }
+  else { $res.reason = "$($bg.package) is in front but Glass stayed $($st.state) (visible=$($st.visible)) for $($res.waited_s) s" }
+  return $res
 }
 
 & adb version | Out-Null
@@ -118,7 +157,7 @@ $sfDump = Invoke-AdbShell "dumpsys SurfaceFlinger"; Save "surfaceflinger.txt" $s
 $refresh = Get-RefreshHz $displayDump $sfDump
 $hour = 0; [void][int]::TryParse((Invoke-AdbShell "date +%H").Trim(), [ref]$hour)
 $info = [ordered]@{
-  label = $Label; timestamp = $stamp; harness_version = 2
+  label = $Label; timestamp = $stamp; harness_version = 3
   model = (Invoke-AdbShell "getprop ro.product.model").Trim()
   android = (Invoke-AdbShell "getprop ro.build.version.release").Trim()
   sdk = (Invoke-AdbShell "getprop ro.build.version.sdk").Trim()
@@ -169,16 +208,22 @@ for ($i = 1; $i -le $Runs; $i++) {
 # ---------- warm start ----------
 $bg = PickBackground
 $warm = @(); $warmRows = @()
-if (-not $bg) { Warn "No full-screen background app found; pass -BackgroundPackage <pkg>. Warm start skipped." }
+Save "warm.txt" "background app: package=$($bg.package) component=$($bg.component) ($($bg.diagnostic))"
+if (-not $bg.component) { Warn "No full-screen background activity found ($($bg.diagnostic)); pass -BackgroundComponent pkg/cls. Warm start and background CPU skipped." }
 else {
-  $info.background_package = $bg
+  $info.background_package = $bg.package
+  $info.background_component = $bg.component
   for ($i = 1; $i -le $Runs; $i++) {
     Invoke-AdbShell "am start -W -n $Act" | Out-Null
     Start-Sleep -Seconds 2
     $pidBefore = GlassPid
-    Save "warm.txt" ("--- run $i background launch`n" + (OpenBackground $bg))
-    Start-Sleep -Seconds 5
-    $st = GlassState
+    $cover = OpenBackground $bg
+    Save "warm.txt" ("--- run $i background: ok=$($cover.ok) foreground=$($cover.foreground) glass_state=$($cover.glass_state) glass_visible=$($cover.glass_visible) waited_s=$($cover.waited_s) am_status=$($cover.am_status) am_warning=$($cover.am_warning)" + $(if ($cover.reason) { " reason=" + $cover.reason } else { "" }))
+    if (-not $cover.ok) {
+      # Glass not confirmed stopped: relaunching it would not be a warm start, so no launch is timed for this sample.
+      $warmRows += [ordered]@{ run = $i; background = $cover; valid = $false; rejected_because = @("background not confirmed: " + $cover.reason) }
+      continue
+    }
     Invoke-AdbCmd @("logcat", "-c") | Out-Null
     $o = Invoke-AdbShell "am start -W -n $Act"
     Start-Sleep -Seconds 2
@@ -187,13 +232,13 @@ else {
     $a = ConvertFrom-AmStart $o
     $why = @()
     if ($a.status -ne "ok") { $why += "status=$($a.status)" }
+    if ($a.warning) { $why += "am warning: $($a.warning)" }
     if (-not ($a.total_ms -gt 0)) { $why += "no TotalTime" }
-    if ($st.state -ne "STOPPED") { $why += "Glass was $($st.state) (not STOPPED) behind $bg" }
     if (-not $pidBefore -or $pidBefore -ne $pidAfter) { $why += "process changed ($pidBefore -> $pidAfter)" }
     if ($a.launch_state -eq "COLD") { $why += "LaunchState=COLD" }
-    $valid = ($why.Count -eq 0)
-    $warmRows += [ordered]@{ run = $i; am = $a; displayed_ms = $disp; glass_state_before = $st.state; glass_visible_before = $st.visible; valid = $valid; rejected_because = $why }
-    Save "warm.txt" "--- run $i (valid=$valid state_before=$($st.state) pid $pidBefore->$pidAfter displayed_ms=$disp reasons=$($why -join '; '))`n$o"
+    $valid = ($why.Length -eq 0)
+    $warmRows += [ordered]@{ run = $i; background = $cover; am = $a; displayed_ms = $disp; valid = $valid; rejected_because = $why }
+    Save "warm.txt" "--- run $i relaunch (valid=$valid pid $pidBefore->$pidAfter displayed_ms=$disp reasons=$($why -join '; '))`n$o"
     if ($valid) { $warm += $a.total_ms }
   }
 }
@@ -203,27 +248,31 @@ Invoke-AdbShell "am start -W -n $Act" | Out-Null
 Start-Sleep -Seconds 10
 
 # ---------- memory ----------
-$memApp = @(); $memRend = @(); $memErr = @()
+$memApp = @(); $memRend = @(); $memTot = @(); $memErr = @()
 for ($s = 1; $s -le 3; $s++) {
   $app = GlassPid
   $mo = Invoke-AdbShell "dumpsys meminfo $app"; Save "meminfo.txt" "--- sample $s app pid $app`n$mo"
   $m = ConvertFrom-Meminfo $mo
   if ($m.pss_kb) { $memApp += $m.pss_kb } else { $memErr += "app: $($m.error)" }
-  $sum = 0; $ok = $true; $rend = RendererPids
+  $rend = @(RendererPids); $vals = @()
   foreach ($x in $rend) {
-    $ro = Invoke-AdbShell "dumpsys meminfo $($x.pid)"; Save "meminfo.txt" "--- sample $s renderer $($x.pid) $($x.name)`n$ro"
+    $ro = Invoke-AdbShell "dumpsys meminfo $($x.pid)"; Save "meminfo.txt" "--- sample $s renderer pid $($x.pid) $($x.name)`n$ro"
     $rm = ConvertFrom-Meminfo $ro
-    if ($rm.pss_kb) { $sum += $rm.pss_kb } else { $ok = $false; $memErr += "renderer $($x.pid): $($rm.error)" }
+    $vals += $rm.pss_kb
+    if (-not $rm.pss_kb) { $memErr += "renderer $($x.pid): $($rm.error)" }
   }
-  if ($ok -and $rend.Count) { $memRend += $sum }
+  $rs = Get-SumOrNull $vals
+  if ($rs -ne $null) { $memRend += $rs }
+  if ($m.pss_kb -and ($rend.Length -eq 0 -or $rs -ne $null)) { $memTot += ($m.pss_kb + [double]$rs) }
+  Save "meminfo.txt" "--- sample $s parsed: app=$($m.pss_kb) ($($m.source)) renderer_sum=$rs from $($rend.Length) renderer process(es)"
   Start-Sleep -Seconds 5
 }
 foreach ($e in ($memErr | Select-Object -Unique)) { Warn "meminfo: $e" }
-$rendNow = RendererPids
-if ($rendNow.Count -gt 1) { Warn "More than one WebView renderer process is running ($(($rendNow | ForEach-Object { $_.name }) -join ', ')); renderer CPU/PSS may include another app's WebView" }
-$memory = [ordered]@{ app_pss_kb = (Get-Stats $memApp); renderer_pss_kb = (Get-Stats $memRend)
-                      renderer_processes = @($rendNow | ForEach-Object { $_.name })
-                      webview_mode = $(if ($rendNow.Count) { "multiprocess (renderer in a separate process)" } else { "single-process (no renderer process found)" }) }
+$rendNow = @(RendererPids)
+if ($rendNow.Length -gt 1) { Warn "More than one WebView renderer process is running ($(($rendNow | ForEach-Object { $_.name }) -join ', ')); renderer CPU/PSS may include another app's WebView" }
+$memory = [ordered]@{ app_pss_kb = (Get-Stats $memApp); renderer_pss_kb = (Get-Stats $memRend); total_pss_kb = (Get-Stats $memTot)
+                      renderer_processes = @($rendNow | ForEach-Object { $_.name + " (pid " + $_.pid + ")" })
+                      webview_mode = $(if ($rendNow.Length -gt 0) { "multiprocess (renderer in a separate process)" } else { "single-process (no renderer process found)" }) }
 
 # ---------- foreground idle CPU ----------
 Write-Host "Measuring foreground idle CPU (3 x $([math]::Max(5, [int]($IdleSeconds / 3))) s)..."
@@ -266,14 +315,23 @@ if ($Trace) {
 }
 
 # ---------- background CPU (Glass hidden behind a full-screen app) ----------
-$cpuBg = $null; $bgState = $null
-if ($bg) {
-  OpenBackground $bg | Out-Null
-  Start-Sleep -Seconds 5
-  $bgState = (GlassState).state
-  if ($bgState -ne "STOPPED") { Warn "Background CPU: Glass was $bgState behind $bg, not STOPPED" }
-  Write-Host "Measuring background CPU..."
-  $cpuBg = CpuMeasure "background"
+# Measured only when Glass is confirmed STOPPED behind the background app before AND after the windows; otherwise the
+# measurement is rejected (cpu_background = null) with the reason, instead of recording a foreground number as background.
+$cpuBg = $null; $bgCheck = $null; $bgReject = $null
+if ($bg.component) {
+  $bgCheck = OpenBackground $bg
+  Save "cpu-background.txt" "background before: ok=$($bgCheck.ok) foreground=$($bgCheck.foreground) glass_state=$($bgCheck.glass_state) waited_s=$($bgCheck.waited_s) reason=$($bgCheck.reason)"
+  if (-not $bgCheck.ok) { $bgReject = "before measuring: " + $bgCheck.reason }
+  else {
+    Write-Host "Measuring background CPU..."
+    $cpuBg = CpuMeasure "background"
+    $acts = Invoke-AdbShell "dumpsys activity activities"
+    $after = Get-ActivityState $acts $Act
+    $fgAfter = (Get-ForegroundInfo $acts (Invoke-AdbShell "dumpsys window windows")).package
+    Save "cpu-background.txt" "background after: foreground=$fgAfter glass_state=$($after.state)"
+    if ($after.state -ne "STOPPED" -or $fgAfter -ne $bg.package) { $bgReject = "after measuring: foreground=$fgAfter, Glass state=$($after.state)"; $cpuBg = $null }
+  }
+  if ($bgReject) { Warn "Background CPU rejected ($bgReject)" }
   Invoke-AdbShell "am start -W -n $Act" | Out-Null
 }
 
@@ -281,8 +339,11 @@ if ($bg) {
 $coldStats = Get-Stats $cold; $warmStats = Get-Stats $warm
 if ($coldStats -and $coldStats.all_identical) { Warn "All cold-start samples are identical - treat as invalid" }
 if ($warmStats -and $warmStats.all_identical) { Warn "All warm-start samples are identical - treat as invalid" }
-if ($cold.Count -lt $Runs) { Warn "Cold start: $($Runs - $cold.Count) of $Runs samples rejected (see cold.txt)" }
-if ($bg -and $warm.Count -lt $Runs) { Warn "Warm start: $($Runs - $warm.Count) of $Runs samples rejected (see warm.txt)" }
+if ($cold.Length -lt $Runs) { Warn "Cold start: $($Runs - $cold.Length) of $Runs samples rejected (see cold.txt)" }
+if ($bg.component -and $warm.Length -lt $Runs) {
+  $reasons = @($warmRows | Where-Object { -not $_.valid } | ForEach-Object { $_.rejected_because } | Select-Object -Unique)
+  Warn "Warm start: $($Runs - $warm.Length) of $Runs samples rejected: $($reasons -join ' | ')"
+}
 
 $summary = [ordered]@{
   schema_version = 2
@@ -291,15 +352,16 @@ $summary = [ordered]@{
   warm_start_ms = $warmStats; warm_start_runs = $warmRows
   memory = $memory
   cpu_foreground_idle = $cpuFg
-  cpu_background = $cpuBg; glass_state_during_background = $bgState
+  cpu_background = $cpuBg; cpu_background_check = $bgCheck; cpu_background_rejected = $bgReject
   frames = $frames
   warnings = @($warnings)
   notes = "Start times: am start -W TotalTime (to first frame of the activity window; WebView content appears later). CPU: /proc/<pid>/stat utime+stime, USER_HZ=100."
 }
 $summary | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $out "summary.json")
 Write-Host ""
-Write-Host ("cold start median {0} ms (n={1}), warm start median {2} ms (n={3})" -f $coldStats.median, $cold.Count, $warmStats.median, $warm.Count)
-Write-Host ("app PSS median {0} KB, renderer PSS median {1} KB" -f $memory.app_pss_kb.median, $memory.renderer_pss_kb.median)
+Write-Host ("cold start median {0} ms (n={1}), warm start median {2} ms (n={3})" -f $coldStats.median, $cold.Length, $warmStats.median, $warm.Length)
+Write-Host ("PSS median: app {0} KB, renderer {1} KB, total {2} KB" -f $memory.app_pss_kb.median, $memory.renderer_pss_kb.median, $memory.total_pss_kb.median)
+Write-Host ("CPU % median: foreground app {0} + renderer {1}; background app {2} + renderer {3}" -f $cpuFg.app_process_pct.median, $cpuFg.renderer_pct.median, $cpuBg.app_process_pct.median, $cpuBg.renderer_pct.median)
 Write-Host ("D-pad window: {0} frames ({1} janky), idle control: {2} frames" -f $nav.frames, $nav.janky, $idle.frames)
 if ($warnings.Count) { Write-Host "`nWARNINGS:"; $warnings | ForEach-Object { Write-Host " - $_" } }
 Write-Host "`nSummary: $(Join-Path $out 'summary.json')"

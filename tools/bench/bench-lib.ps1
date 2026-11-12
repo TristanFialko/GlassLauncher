@@ -151,18 +151,67 @@ function Get-RefreshHz([string]$display, [string]$sf) {
   return $null
 }
 
-<# Glass's ActivityRecord state from `dumpsys activity activities`: state (RESUMED/PAUSED/STOPPED...) and visibility. #>
+<#
+  Glass's ActivityRecord state from `dumpsys activity activities`.
+  Only the activity's own "* Hist #N: ActivityRecord{...}" entry is read, up to the next Hist/Task/"Running activities"
+  header. Android 11 also mentions the record in summary lines (e.g. "Activities=[ActivityRecord{...}]",
+  "mResumedActivity: ActivityRecord{...}"); v2 started reading at those and stopped before the state line (state blank).
+  Returns found, state (RESUMED/PAUSED/STOPPING/STOPPED...), visible (from mVisibleRequested/visible/nowVisible) and the
+  matched header line for diagnostics.
+#>
 function Get-ActivityState([string]$o, [string]$component) {
-  $r = [ordered]@{ found = $false; state = $null; visible = $null }
-  $lines = $o -split "\r?\n"
+  $r = [ordered]@{ found = $false; state = $null; visible = $null; header = $null }
   $in = $false
-  foreach ($l in $lines) {
-    if ($l -match "ActivityRecord\{") { if ($in) { break }; $in = ($l -like ("*" + $component + "*")); if ($in) { $r.found = $true }; continue }
-    if (-not $in) { continue }
+  foreach ($l in ($o -split "\r?\n")) {
+    $isHeader = ($l -match "^\s*\*?\s*(Hist #\d+:|Task\{|TaskRecord\{|Running activities)")
+    if ($in -and $isHeader) { break }
+    if (-not $in) {
+      if ($l -match "^\s*\*?\s*Hist #\d+:\s*ActivityRecord\{" -and $l -like ("*" + $component + "*")) { $in = $true; $r.found = $true; $r.header = $l.Trim() }
+      continue
+    }
     if (-not $r.state -and $l -match "\bstate=([A-Z_]+)") { $r.state = $Matches[1] }
     if ($null -eq $r.visible -and $l -match "\b(?:mVisibleRequested|visible|nowVisible)=(true|false)") { $r.visible = ($Matches[1] -eq "true") }
   }
   return $r
+}
+
+<# Package of an "ActivityRecord{... u0 pkg/act tN}" or "Window{... u0 pkg/act}" reference. #>
+function Get-RecordPackage([string]$s) {
+  if ($s -match "\bu\d+\s+([A-Za-z0-9_.]+)/") { return $Matches[1] }
+  return $null
+}
+
+<#
+  What is in front, from `dumpsys activity activities` (top-level "ResumedActivity:", else the first "mResumedActivity:")
+  and `dumpsys window windows` ("mCurrentFocus=", "mFocusedApp="). Returns the package for each source and a combined
+  `package` (resumed activity first, then focused app, then focused window).
+#>
+function Get-ForegroundInfo([string]$activities, [string]$windows) {
+  $r = [ordered]@{ resumed = $null; focused_app = $null; focused_window = $null; package = $null }
+  if ($activities -match "(?m)^\s*ResumedActivity:\s*(.+)$") { $r.resumed = Get-RecordPackage $Matches[1] }
+  elseif ($activities -match "(?m)^\s*mResumedActivity:\s*(.+)$") { $r.resumed = Get-RecordPackage $Matches[1] }
+  if ($windows -match "(?m)^\s*mFocusedApp=(.+)$") { $r.focused_app = Get-RecordPackage $Matches[1] }
+  if ($windows -match "(?m)^\s*mCurrentFocus=(.+)$") { $r.focused_window = Get-RecordPackage $Matches[1] }
+  foreach ($k in @("resumed", "focused_app", "focused_window")) { if ($r[$k]) { $r.package = $r[$k]; break } }
+  return $r
+}
+
+<# Component ("pkg/cls") from `cmd package resolve-activity --brief ...`, or null when nothing resolves. #>
+function Get-ResolvedComponent([string]$o) {
+  $c = $null
+  foreach ($l in ($o -split '\r?\n')) { if ($l.Trim() -match '^[A-Za-z0-9_.]+/[A-Za-z0-9_.$]+$') { $c = $l.Trim() } }
+  return $c
+}
+
+<#
+  Sum of per-process values, or $null if the list is empty or any value is missing. [object[]] makes a single item a
+  one-element array: Windows PowerShell 5.1 gives a lone [pscustomobject] no .Count, which blanked renderer PSS/CPU in v2.
+#>
+function Get-SumOrNull([object[]]$values) {
+  if ($null -eq $values -or $values.Length -eq 0) { return $null }
+  $sum = 0.0
+  foreach ($v in $values) { if ($null -eq $v) { return $null }; $sum += [double]$v }
+  return $sum
 }
 
 <# PIDs of WebView renderer (sandboxed) processes from `ps -A -o PID,ARGS`. #>

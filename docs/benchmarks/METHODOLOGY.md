@@ -1,7 +1,9 @@
-# Device benchmark methodology (harness v2)
+# Device benchmark methodology (harness v3)
 
-`tools/bench/bench-device.ps1` measures an installed build over adb. v2 replaces v1 after the first VIP7802 comparison
-(2026-11-12) exposed problems in v1's method. This page lists each problem, how v2 handles it, and how to run a valid A/B.
+`tools/bench/bench-device.ps1` measures an installed build over adb. v2 replaced v1 after the first VIP7802 comparison
+(2026-11-12) exposed problems in v1's method. v3 fixes the device-specific problems found in the first VIP7802 run of v2.
+This page lists each problem, how the harness handles it now, and how to run a valid A/B. Summaries from v1 are refused by
+`compare.ps1`; summaries from different harness versions trigger a warning.
 
 ## What was wrong with v1, and what v2 does
 
@@ -20,10 +22,24 @@
 | 11 | **Comparisons ignored noise.** v1 compared single medians. | Cold 1209.5 → 1249.5 ms (+40 ms) with unknown spread. | `compare.ps1` reports median, IQR and n. It calls a difference better or worse only if both runs have enough valid samples and the medians differ by more than the larger IQR. Otherwise it reports "within noise". It refuses v1 summaries. |
 | 12 | Windows PowerShell 5.1: adb stderr output combined with `$ErrorActionPreference = "Stop"` can abort the script. | Not hit in the device run. | adb output is collected as text with errors non-terminating. |
 
+## What the first VIP7802 run of v2 exposed, and what v3 does
+
+| # | v2 problem (from the owner's `warm.txt` / `meminfo.txt`) | Cause | v3 behaviour |
+|---|---|---|---|
+| 13 | **Glass's state was always blank.** Every warm sample was rejected as "Glass was  (not STOPPED)". | Android 11 mentions Glass's activity in a task summary line (`Activities=[ActivityRecord{...}]`) before its own `* Hist #0: ActivityRecord{...}` entry. v2 started reading at the summary line and stopped at the Hist entry, before its `state=` line. Reproduced: the v2 parser returns an empty state on an Android 11 fixture. | Only the activity's own `Hist #N` entry is read, up to the next Hist/Task header. If the record or its `state=` line is missing, the sample is rejected and the diagnostic says which. |
+| 14 | **The background app never displaced Glass.** Every Glass relaunch printed `Warning: Activity not started, its current task has been brought to the front`, with the same PID. | `monkey -p com.google.android.youtube.tv ...` returned on the box without bringing YouTube to the front. | The background activity is resolved explicitly with `cmd package resolve-activity --brief -a MAIN -c LEANBACK_LAUNCHER <pkg>` (LAUNCHER as a fallback) and started with `am start -W -n <pkg/cls>`. `-BackgroundComponent pkg/cls` overrides it. |
+| 15 | **Nothing confirmed what was actually in front.** | — | For up to `-BackgroundWaitSeconds` (default 15 s), the harness polls `dumpsys activity activities` (`ResumedActivity` / `mResumedActivity`) and `dumpsys window windows` (`mFocusedApp`, `mCurrentFocus`). It accepts only when the background package is in front **and** Glass's own record is `STOPPED`. Android stops a covered activity only after the new one goes idle, or after a 10 s idle timeout if it keeps animating (video autoplay), hence the polling. Otherwise **no Glass launch is timed** and the sample is rejected with a diagnostic, e.g. `com.google.android.youtube.tv did not come to the front after 15.1 s (resumed=com.glasslauncher, focused app=com.glasslauncher, ...); Glass state=RESUMED`. A relaunch that still prints an `am` warning is also rejected. |
+| 16 | **Renderer PSS was blank in the summary** even though `meminfo.txt` had it (renderer PID 4958, ~63.5 MB). | `RendererPids` returned a one-element array, which PowerShell unwraps into a single object. Windows PowerShell 5.1 gives a lone `[pscustomobject]` no `.Count`, so `$rend.Count` was empty and the renderer sum was dropped. Renderer CPU was blanked the same way. PowerShell 7, used for the earlier tests, does have `.Count`, which is why the tests passed. | Results are wrapped in `@()` and summed by `Get-SumOrNull([object[]])`, so one renderer works the same as several. `meminfo.txt` now records the parsed values for each sample. The summary has app, renderer and total PSS. |
+| 17 | **Background CPU was recorded even when Glass wasn't confirmed hidden.** | Same as 14/15. | Background CPU is measured only after the check above passes, and re-checked afterwards. If either check fails, `cpu_background` is null and `cpu_background_rejected` gives the reason. App, renderer and combined CPU are reported for foreground idle and background. |
+
 The parsing functions live in `tools/bench/bench-lib.ps1`. They are unit-tested against Android 11 and Android 12+
-output fixtures by `tools/bench/test-bench-lib.ps1` (65 checks, run in CI). The full harness was also run end to end
-against a simulated Android 11 device: once with a normal full-screen background app (all samples accepted) and once
-with an overlay that leaves Glass paused (all warm samples rejected with the reason). **It has not yet been run on the VIP7802.**
+output fixtures by `tools/bench/test-bench-lib.ps1` (90 checks, run in CI). The Android 11 activity-dump fixture fails
+against the v2 parser and passes against v3. The full harness was also run end to end against a simulated Android 11
+device in two modes:
+- The background app comes to the front and Glass stops after a delay: all warm samples are accepted, background CPU is measured, and renderer PSS/CPU are present.
+- The background launch leaves Glass in front, as on the box: every warm sample and the background CPU are rejected with the diagnostic.
+
+**v3 has not yet been run on the VIP7802.**
 
 ## Running a valid A/B comparison
 

@@ -137,6 +137,110 @@ Check "refresh display mode 2" (Get-RefreshHz $disp11b "") 50
 Check "refresh none" (Get-RefreshHz "nothing" "nothing") ""
 
 # ---- activity state ----
+# Android 11 (R) shape: the Glass record is referenced in "Activities=[...]" and "mResumedActivity:" summary lines before
+# and after its own "* Hist #0:" entry. Harness v2 read the summary line first and stopped before state= (state blank).
+$acts11 = @"
+ACTIVITY MANAGER ACTIVITIES (dumpsys activity activities)
+Display #0 (activities from top to bottom):
+
+  Stack #12: type=standard mode=fullscreen
+  isSleeping=false
+  mBounds=Rect(0, 0 - 0, 0)
+    * Task{a1 #12 visible=true type=standard mode=fullscreen translucent=false A=10101:com.google.android.youtube.tv U=0 StackId=12 sz=1}
+      mResumeWithRemoteInputs=false
+      affinity=10101:com.google.android.youtube.tv
+      Activities=[ActivityRecord{1111 u0 com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity t12}]
+      * Hist #0: ActivityRecord{1111 u0 com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity t12}
+          packageName=com.google.android.youtube.tv processName=com.google.android.youtube.tv
+          state=RESUMED stopped=false delayedResume=false finishing=false
+          keysPaused=false inHistory=true setToSleep=false idle=false mStartingWindowState=STARTING_WINDOW_REMOVED
+          visible=true sleeping=false idle=false
+    Running activities (most recent first):
+      Task{a1 #12 visible=true type=standard A=10101:com.google.android.youtube.tv U=0 StackId=12 sz=1}
+        Run #0: ActivityRecord{1111 u0 com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity t12}
+    mResumedActivity: ActivityRecord{1111 u0 com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity t12}
+
+  Stack #5: type=home mode=fullscreen
+    * Task{b2 #5 visible=false type=home mode=fullscreen translucent=false A=10050:com.glasslauncher U=0 StackId=5 sz=1}
+      affinity=10050:com.glasslauncher
+      intent={act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.glasslauncher/.MainActivity}
+      Activities=[ActivityRecord{2222 u0 com.glasslauncher/.MainActivity t5}]
+      * Hist #0: ActivityRecord{2222 u0 com.glasslauncher/.MainActivity t5}
+          packageName=com.glasslauncher processName=com.glasslauncher
+          launchedFromUid=1000 launchedFromPackage=android userId=0
+          app=ProcessRecord{3333 4925:com.glasslauncher/u0a50}
+          state=STOPPED stopped=true delayedResume=false finishing=false
+          visible=false sleeping=false idle=true mStartingWindowState=STARTING_WINDOW_NOT_SHOWN
+    Running activities (most recent first):
+      Task{b2 #5 visible=false type=home A=10050:com.glasslauncher U=0 StackId=5 sz=1}
+        Run #0: ActivityRecord{2222 u0 com.glasslauncher/.MainActivity t5}
+    mLastPausedActivity: ActivityRecord{2222 u0 com.glasslauncher/.MainActivity t5}
+
+ ResumedActivity: ActivityRecord{1111 u0 com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity t12}
+"@
+$s11 = Get-ActivityState $acts11 "com.glasslauncher/.MainActivity"
+Check "act11 found" $s11.found "True"; Check "act11 state (v2 regression)" $s11.state "STOPPED"; Check "act11 visible" $s11.visible "False"
+Check "act11 header" $s11.header "* Hist #0: ActivityRecord{2222 u0 com.glasslauncher/.MainActivity t5}"
+Check "act11 youtube" (Get-ActivityState $acts11 "com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity").state "RESUMED"
+$acts11Front = $acts11 -replace "state=STOPPED stopped=true", "state=RESUMED stopped=false"
+Check "act11 resumed" (Get-ActivityState $acts11Front "com.glasslauncher/.MainActivity").state "RESUMED"
+$noState = $acts11 -replace "          state=STOPPED stopped=true delayedResume=false finishing=false\r?\n", ""
+$sNo = Get-ActivityState $noState "com.glasslauncher/.MainActivity"
+Check "act11 no state line" "$($sNo.found)/$($sNo.state)" "True/"
+
+# ---- foreground ----
+$win11 = @"
+WINDOW MANAGER WINDOWS (dumpsys window windows)
+  Window #0 Window{aaa u0 com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity}:
+    mDisplayId=0 rootTaskId=12 mSession=Session{bbb 5000:u0a10101} mClient=android.os.BinderProxy@ccc
+  mGlobalConfiguration={1.0 ?mcc?mnc [en_US] ldltr sw540dp w960dp h540dp 320dpi lrg long land television -touch qwerty/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 1920, 1080) }}
+  mHasPermanentDpad=true
+  mTopFocusedDisplayId=0
+  mCurrentFocus=Window{aaa u0 com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity}
+  mFocusedApp=ActivityRecord{1111 u0 com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity t12}
+"@
+$fg = Get-ForegroundInfo $acts11 $win11
+Check "fg resumed" $fg.resumed "com.google.android.youtube.tv"; Check "fg app" $fg.focused_app "com.google.android.youtube.tv"
+Check "fg window" $fg.focused_window "com.google.android.youtube.tv"; Check "fg package" $fg.package "com.google.android.youtube.tv"
+$fgGlass = Get-ForegroundInfo " ResumedActivity: ActivityRecord{2222 u0 com.glasslauncher/.MainActivity t5}" "  mCurrentFocus=null`n  mFocusedApp=ActivityRecord{2222 u0 com.glasslauncher/.MainActivity t5}"
+Check "fg glass" $fgGlass.package "com.glasslauncher"; Check "fg null focus" $fgGlass.focused_window ""
+Check "fg only mResumed" (Get-ForegroundInfo "    mResumedActivity: ActivityRecord{1 u0 com.netflix.ninja/.MainActivity t9}" "").package "com.netflix.ninja"
+Check "fg nothing" (Get-ForegroundInfo "" "").package ""
+
+# ---- resolve-activity ----
+$res = "priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false`ncom.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity"
+Check "resolve" (Get-ResolvedComponent $res) "com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity"
+Check "resolve short" (Get-ResolvedComponent "com.netflix.ninja/.MainActivity`r`n") "com.netflix.ninja/.MainActivity"
+Check "resolve none" (Get-ResolvedComponent "No activity found") ""
+
+# ---- per-process sums (PS 5.1: a lone pscustomobject has no .Count) ----
+Check "sum single" (Get-SumOrNull @(63536)) 63536
+Check "sum two" (Get-SumOrNull @(63536, 1000)) 64536
+Check "sum missing" (Get-SumOrNull @(63536, $null)) ""
+Check "sum empty" (Get-SumOrNull @()) ""
+$one = @(Get-RendererPids "  PID ARGS`n 4958 com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0")
+Check "renderer single wrapped length" $one.Length 1
+Check "sum from single renderer" (Get-SumOrNull @($one | ForEach-Object { 63536 })) 63536
+
+# ---- renderer meminfo as captured on the VIP7802 (TOTAL PSS summary) ----
+$rendMem = @"
+Applications Memory Usage (in Kilobytes):
+Uptime: 5123456 Realtime: 5123456
+
+** MEMINFO in pid 4958 [com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0] **
+                   Pss  Private  Private  SwapPss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------
+  Native Heap    20112    20100        0        0    24576    21000     3576
+        TOTAL    63536    41000     9000        0    24576    21000     3576
+
+ App Summary
+                       Pss(KB)
+                        ------
+           TOTAL PSS:    63536            TOTAL RSS:   112000      TOTAL SWAP PSS:        0
+"@
+Check "renderer meminfo" (ConvertFrom-Meminfo $rendMem).pss_kb 63536
+
 $acts = @"
 ACTIVITY MANAGER ACTIVITIES (dumpsys activity activities)
 Display #0 (activities from top to bottom):
