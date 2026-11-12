@@ -17,8 +17,11 @@ alternating runs, medians and spread). Emulator numbers never satisfy a gate.
 | 4b Native as HOME by default | not started | after 4a passes |
 | 4c Remove WebView UI | inventory ready (`MIGRATION_STATUS.md`) | after one release of 4b with no regressions |
 
+- Branch (2026-11-13): work continues on `glasslauncher-2.0-consolidated`, created from `glasslauncher-2.0-migration` at
+  `3522999` (PR #2 stays open on the old branch). CI at `3522999` (run 43303322890): all six jobs green, including both emulator jobs.
+
 - WebView UI on the box: D-pad focus animation at p50 61 ms per frame (~16 fps), 96.65 % over budget — from the smoke run, which was not a 2.0 build. One run; indicative only.
-- Native UI: verified on a 1080p TV emulator (renders, focus, rows, Search open/type/close, Control Centre, theme, toast, HOME routing). Software GPU: says nothing about the box.
+- Native UI: exercised on a 1080p TV emulator (renders, focus, rows, Search open/type/close, Control Centre, theme, toast, HOME routing). Software GPU: says nothing about the box.
 
 ## Stage 0 — measure (owner, ~1 h)
 Alternate WebView and native runs of the same Glass 2.0 APK: W, N, W, N (commands in `MIGRATION_STATUS.md`). Compare per UI:

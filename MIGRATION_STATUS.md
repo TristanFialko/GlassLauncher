@@ -1,6 +1,6 @@
 # Glass Launcher 2.0 — Migration status
 
-_Last updated: 2026-11-12 · branch `glasslauncher-2.0-migration` (PR #2, open, not merged) · baseline
+_Last updated: 2026-11-13 · branch `glasslauncher-2.0-consolidated` (from `glasslauncher-2.0-migration` at `3522999`; PR #2 open on the old branch, not merged) · baseline
 `glasslauncher-1.5-phase7-baseline` (`452320a`) · app version `2.0.0-dev` (versionCode 7)_
 
 ## Summary (read this first)
@@ -14,6 +14,25 @@ _Last updated: 2026-11-12 · branch `glasslauncher-2.0-migration` (PR #2, open, 
   (software GPU). Emulator timings are never device evidence.
 - **WebView/HTML/CSS/JS are not removed yet**, on purpose: they are the fallback until the owner's device checklist and
   A/B pass (Stage 4 in `docs/nativeui/MIGRATION_PLAN.md`). The removal inventory is ready (below).
+
+## Consolidation (2026-11-13)
+
+- New working branch `glasslauncher-2.0-consolidated`, created on GitHub from the verified head of `glasslauncher-2.0-migration`.
+  Starting SHA: `3522999a54f0e4aae6d6103d22d617ab0d7d8d65` (identical to `glasslauncher-2.0-migration`, so it contains every commit
+  listed below). `main` stays at the baseline `452320a` (tag `glasslauncher-1.5-phase7-baseline`). The old branch and PR #2 are unchanged.
+- CI at `3522999` (Actions run 43303322890, 2026-11-12 20:44–20:50 UTC): all six jobs succeeded: Rust fmt/clippy/tests/parity;
+  Android build + JVM/JNI tests (includes the `libglass.so` armeabi-v7a/arm64-v8a packaging check); Instrumented test (x86_64 emulator,
+  API 30); Native UI prototype (emulator, TV 1080p, API 30); Baseline APK; Benchmark harness on Windows PowerShell 5.1. The `NativeUiPrototypeTest`
+  timeout seen at `2f056ef` is resolved at this head.
+- CI now also runs on pushes to `glasslauncher-2.0-consolidated` (`.github/workflows/ci.yml`), because this branch has no PR of its own.
+- Docs reconciled against the code (labels: implemented and JVM-tested / exercised on emulator / verified on physical hardware /
+  intentionally different / historical). Stale Stage 1 statements that Search and the Control Centre Search tile were toasts, or that
+  no emulator had run Search, are now marked *Historical* in `PROTOTYPE.md`, `SEARCH.md` and `PARITY_CHECKLIST.md`.
+- Checked by code reading at `3522999`: native Search is wired into Home (`NativeHomeActivity.openSearch`) and into the Control Centre tile;
+  settings shortcuts run on the `pm` executor; UI and key sounds are opened (`openFd`) on the worker; `NativeSearchView` and
+  `NativeControlCentre` draw paths allocate nothing; `NativeHomeView` builds its two gradients once (lazy, cached). Release builds
+  set `nativeUiExported=false` (debug `true`); package `com.glasslauncher`, minSdk 23, targetSdk 30, versionName `2.0.0-dev`, versionCode 7.
+- Still unverified: everything on the VIP7802 (owner steps below).
 
 ## This session (2026-11-12, second half)
 
@@ -46,7 +65,7 @@ The previous agent's local workspace could not be reached, and GitHub had nothin
 
 Harness v5.1 (`tools/bench`): native runs also report the main `com.glasslauncher` process in `memory.main_process` (never summed). It can stay cached after the router hands over to native HOME, or be relaunched by Android when a WebView-mode Glass is the default HOME, and the PSS gate should not ignore it silently.
 
-Not verified yet: CI for `7f0acd9`/`26f8055` was still running when this was written; check the PR. Nothing in this session ran on the VIP7802.
+*Historical:* CI for `7f0acd9`/`26f8055` was still running when this was written. It has since passed at `3522999` (see "Consolidation" above). Nothing in this session ran on the VIP7802.
 
 ### Rendering and threading review (code reading only; change after a device trace)
 
@@ -132,11 +151,11 @@ under Windows PowerShell 5.1.
 ## What the owner needs to do next (when the TV is free, about 1.5 h)
 
 All commands are Windows CMD from the repository root. Download `glasslauncher-debug-apk` from the latest green CI run
-on `glasslauncher-2.0-migration` to `C:\glass\glass2\app-debug.apk`.
+on `glasslauncher-2.0-consolidated` (or PR #2's run at `3522999`, the same app code) to `C:\glass\glass2\app-debug.apk`.
 
 1. Install and confirm identity:
    ```bat
-   git fetch origin && git checkout glasslauncher-2.0-migration && git pull
+   git fetch origin && git checkout glasslauncher-2.0-consolidated && git pull
    adb install -r C:\glass\glass2\app-debug.apk
    adb shell dumpsys package com.glasslauncher | findstr /C:"versionName" /C:"primaryCpuAbi"
    ```

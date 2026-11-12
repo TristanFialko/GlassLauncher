@@ -355,6 +355,21 @@ Only **successful** launches (bridge returned `true`) from Home cards, the Recen
 
 Native status column (Home, Theme, Control Centre, Search, Persistence rows): added with the Stage 1 Home work; "Implemented" means present in the native code (with the named unit test where there is one), never yet confirmed on the device.
 
+**Evidence labels (reconciled 2026-11-13 against `3522999`, CI run 43303322890 green).** Nothing in the status column is verified on
+physical hardware yet.
+
+| Status wording | Evidence class |
+|---|---|
+| "Implemented; tests `…`" / "JVM parity: …" | implemented and JVM-tested (runs in CI) |
+| "Implemented" / "Implemented (home slice)" / "native implemented" | implemented; code review and emulator screenshots only |
+| "emulator (`…`)" | also exercised on the TV emulator by `NativeUiPrototypeTest` (CI job "Native UI prototype"); not device evidence |
+| "device check pending" | not yet verified on the VIP7802 (owner-only, see `MIGRATION_STATUS.md`) |
+| "Not implemented …" / "Not applicable …" | intentionally different; the reason is in the row |
+
+`NativeUiPrototypeTest.a_nativeVersusWebView` drives both UIs over the same D-pad path (screenshots, gfxinfo, meminfo);
+`b_nativeSurfacesAndRouting` covers Search open/type/close, the Control Centre, theme, toast and `UiRouter` HOME routing.
+Sections 0–4 above describe the WebView UI and are historical reference for the port, not native status.
+
 Legend: **P1** (●) = must be covered by the first native prototype slice (Home tiles/artwork, D-pad focus + animation, app launching, one overlay). Suggested overlay for P1: the Control Centre (static layout with exact spec above, spatial focus, all live state comes from existing Java classes; no on-screen keyboard or Rust search needed). Items marked `—` can follow later.
 
 ### Home — layout and artwork
@@ -445,7 +460,7 @@ Legend: **P1** (●) = must be covered by the first native prototype slice (Home
 | C18 | Clicking the scrim closes CC; hover focuses tiles; click activates | — |
 | C19 | Tab cycles tiles with wrap and nav sound | — |
 
-**Native implementation status (wip/cc): native implemented, device check pending for every row below unless noted.** Code: `ControlCentreLogic.kt`, `NativeControlCentre.kt`, `ControlCentreController.kt`. Unit tests: `ControlCentreLogicTest` (texts, volume step, nav table, poll gate) and `HomeClockTest.ccTimeIs12Hour`.
+**Native implementation status (Control Centre; first written on the `wip/cc` work branch): native implemented, device check pending for every row below unless noted.** Code: `ControlCentreLogic.kt`, `NativeControlCentre.kt`, `ControlCentreController.kt`. Unit tests: `ControlCentreLogicTest` (texts, volume step, nav table, poll gate) and `HomeClockTest.ccTimeIs12Hour`.
 
 | Rows | Status | Test ref / note |
 |---|---|---|

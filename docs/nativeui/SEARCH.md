@@ -1,7 +1,8 @@
 # Native Search (surface S5)
 
-Kotlin components in `app/src/main/kotlin/com/glasslauncher/`, a behavioural port of the WebView Search. Nothing here modifies the home
-view, the activity or the manifest; the home activity wires these in through the interface below.
+Kotlin components in `app/src/main/kotlin/com/glasslauncher/`, a behavioural port of the WebView Search. `NativeHomeActivity` wires them in through the interface below; the Home header Search
+button and the Control Centre Search tile both open it. *Historical:* this file was first written before that wiring, when nothing
+here touched the home view, the activity or the manifest.
 
 ## Components
 
@@ -45,7 +46,7 @@ search.setBackdrops(blurLight, blurDark); search.setDark(isDark)    // same pre-
     `false` only before `openControlCentre`.
   * `playNav()`, `playClick()`, `playKey(ALPHA|SPACE|ALT|ENTER)` (the `sounds/keys/*` pools), `toast(text)`.
 * The activity should dim/fade the home view like `body.searchopen` (`#stage` opacity .5, `#head` .3, header buttons hidden, Recently Used .3);
-  that is home-view work and is not done here.
+  that is home-view work, done in `NativeHomeView.setSearchOpen` (its full-screen `saveLayerAlpha` is a rendering-review candidate in `MIGRATION_STATUS.md`).
 
 ### Result activation (search.js `run`, registry.js, shortcuts.js)
 
@@ -89,7 +90,13 @@ data-dependent cases; it is a line-for-line port, and `SearchRankingParityTest` 
   pre-blurred wallpaper (no real backdrop-filter on API 30), so content behind the panel is covered, not blurred.
 * Fonts are Roboto (`sans-serif`, `sans-serif-medium`) instead of SamsungOne/Helvetica; widths differ slightly.
 
-## Needs on-device checking (no emulator was available; only compile and JVM tests ran)
+## Needs on-device checking
+
+Evidence so far (reconciled 2026-11-13 against `3522999`): JVM tests in CI ("Android build + JVM/JNI tests") and the TV emulator
+(`NativeUiPrototypeTest.b_nativeSurfacesAndRouting`: Search opens from Home, hardware typing changes the results, Back closes it).
+Emulator timing and visuals are not device evidence. *Historical:* this heading first said no emulator was available.
+`onDraw` was made allocation-free by `26f8055` (font metrics cached as fields); that is by code reading, not measured.
+
 
 * Visual match against the WebView at 1920x1080/320dpi: panel position, glass tint, text metrics and baselines, icon sizes, focus scale/shadows.
 * Frame pacing on the Arris VIP7802 while typing and while the results list scrolls (draw is allocation-free by construction, not measured).

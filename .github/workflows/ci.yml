@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # main, plus the 2.0 consolidation branch (no PR of its own; PR #2 stays on glasslauncher-2.0-migration)
+    branches: [main, glasslauncher-2.0-consolidated]
   pull_request:
   workflow_dispatch:
 
