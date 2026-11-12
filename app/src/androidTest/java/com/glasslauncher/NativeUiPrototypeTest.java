@@ -115,7 +115,16 @@ public class NativeUiPrototypeTest {
         // ---- WebView UI, same path ----
         sh("logcat -c");
         report.append("--- webview start\n").append(sh("am start -W -n com.glasslauncher/.MainActivity --ez glass.latency true"));
-        SystemClock.sleep(8000);                                  // WebView + page load + first layout
+        // the emulator's software-GPU WebView paints the clock and rows well after `am start` returns (at 8 s only the
+        // wallpaper, header buttons and Recently Used panel were there): wait >= 15 s, then until two shots 2 s apart match
+        SystemClock.sleep(15_000);
+        Bitmap prev = ua.takeScreenshot();
+        for (int i = 0; i < 15; i++) {
+            SystemClock.sleep(2000);
+            Bitmap now = ua.takeScreenshot();
+            if (!differs(prev, now)) break;
+            prev = now;
+        }
         shot("webview-1-home.png");
         sh("dumpsys gfxinfo com.glasslauncher reset");
         for (int k : path) key(k);

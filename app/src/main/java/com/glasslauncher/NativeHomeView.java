@@ -50,7 +50,7 @@ final class NativeHomeView extends View {
     static final float DOCK_W = 1674, DOCK_H = 234, DOCK_R = 48, ROW_GAP = 48, ROW0_TOP = 461;
     static final float LABEL_SIZE = 23, LABEL_BLOCK = 42;          // .rowLabel 1.15rem + .7rem margin
     static final float ROWS_SHIFT = 303, HEAD_LIFT = 85, HEAD_SCALE = 0.6f;
-    static final float BTN_R = 34, BTN_Y = 94, BTN_SEARCH_X = 1726, BTN_CC_X = 1814;
+    static final float BTN_R = 34, BTN_Y = 94, BTN_SEARCH_X = 1746, BTN_CC_X = 1814;
     static final PathInterpolator EASE = new PathInterpolator(.2f, .8f, .2f, 1f);   // --ease
 
     final NativeHomeConfig cfg;
@@ -231,6 +231,7 @@ final class NativeHomeView extends View {
             c.scale(k, k);
             drawBackdrop(c);
             drawHead(c);
+            drawRecent(c);
             drawButtons(c);
             drawRows(c);
             if (ccMix > 0f) cc.draw(c, ccMix);
@@ -328,14 +329,7 @@ final class NativeHomeView extends View {
         }
         r.set(x, y, x + w, y + h);
         if (blur != null) {
-            BitmapShader sh = blur == blurDark ? blurShDark : blurShLight;
-            if (sh == null) {
-                sh = new BitmapShader(blur, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-                lm.setScale(W / blur.getWidth(), H / blur.getHeight());
-                sh.setLocalMatrix(lm);
-                if (blur == blurDark) blurShDark = sh; else blurShLight = sh;
-            }
-            pGlass.setShader(sh); pGlass.setColorFilter(saturate);
+            pGlass.setShader(blurShader(blur)); pGlass.setColorFilter(saturate);
             c.drawRoundRect(r, rad, rad, pGlass);
             pGlass.setShader(null); pGlass.setColorFilter(null);
         }
@@ -385,6 +379,55 @@ final class NativeHomeView extends View {
             r.set(x, y, x + TILE_W, y + TILE_H);
             c.drawRoundRect(r, TILE_R, TILE_R, pShine);
         }
+        c.restore();
+    }
+
+    /** Screen-aligned shader over the pre-blurred wallpaper (one per theme, built once). */
+    private BitmapShader blurShader(Bitmap blur) {
+        BitmapShader sh = blur == blurDark ? blurShDark : blurShLight;
+        if (sh == null) {
+            sh = new BitmapShader(blur, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+            lm.setScale(W / blur.getWidth(), H / blur.getHeight());
+            sh.setLocalMatrix(lm);
+            if (blur == blurDark) blurShDark = sh; else blurShLight = sh;
+        }
+        return sh;
+    }
+
+    /**
+     * Blurred backdrop for a panel drawn under canvas.translate(tx, ty) (the Control Centre). Content behind the panel is
+     * covered rather than blurred - backdrop-filter has no API 30 equivalent - so only the wallpaper shows through.
+     */
+    void drawBlurBackdrop(Canvas c, RectF rr, float rad, float tx, float ty, float alpha) {
+        Bitmap blur = darkMix >= .5f ? blurDark : blurLight;
+        if (blur == null) return;
+        BitmapShader sh = blurShader(blur);
+        lm.setScale(W / blur.getWidth(), H / blur.getHeight()); lm.postTranslate(-tx, -ty); sh.setLocalMatrix(lm);
+        pGlass.setShader(sh); pGlass.setColorFilter(saturate); pGlass.setAlpha((int) (255 * alpha));
+        c.drawRoundRect(rr, rad, rad, pGlass);
+        pGlass.setShader(null); pGlass.setColorFilter(null); pGlass.setAlpha(255);
+        lm.setScale(W / blur.getWidth(), H / blur.getHeight()); sh.setLocalMatrix(lm);
+    }
+
+    /** #recent empty state (recent.css): the prototype does not record launches yet, so it always shows the hint. */
+    private void drawRecent(Canvas c) {
+        float a = (1f - scroll) * (1f - .7f * ccMix);           // .scrolled: fades out; ccopen: .3
+        if (a <= 0.01f) return;
+        float x = 72, y = 60, w = 328, h = 101, rad = 36;
+        c.save();
+        c.translate(0, -28 * scroll);
+        r.set(x, y, x + w, y + h);
+        pFill.setShader(null); pFill.setColor(Color.argb((int) (128 * a), 30, 34, 46));
+        c.drawRoundRect(r, rad, rad, pFill);
+        lm.setTranslate(x, y); dockSheen.setLocalMatrix(lm); pSheen.setShader(dockSheen); pSheen.setAlpha((int) (255 * a));
+        c.drawRoundRect(r, rad, rad, pSheen); pSheen.setAlpha(255);
+        pStroke.setStrokeWidth(1); pStroke.setColor(Color.argb((int) (51 * a), 255, 255, 255));
+        c.drawRoundRect(r, rad, rad, pStroke);
+        pText.setTextAlign(Paint.Align.LEFT); pText.setShader(null);
+        pText.setTypeface(BOLD); pText.setTextSize(15); pText.setLetterSpacing(.08f); pText.setColor(Color.WHITE); pText.setAlpha((int) (178 * a));
+        c.drawText("RECENTLY USED", x + 22, y + 33, pText);
+        pText.setTypeface(REGULAR); pText.setTextSize(19); pText.setLetterSpacing(0); pText.setAlpha((int) (200 * a));
+        c.drawText("Apps you open will appear here", x + 22, y + 72, pText);
         c.restore();
     }
 

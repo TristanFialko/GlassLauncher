@@ -52,8 +52,8 @@ The audit found no other pure computation with meaningful workload: everything e
 | 3 Core logic | Search ranking + search snapshot preparation in Rust with exact parity; JS fallback retained |
 | 4 Bridge | 1 coarse call per Search session + 1 per query; icons bypass the bridge |
 | 5 Performance | Emulator/host gains below; device unmeasured |
-| 6 Rendering | Not started; needs device frame-pacing data |
-| 7 Device validation | Harness v4 verified off-device; **owner smoke run next** |
+| 6 Rendering | Native home prototype built (`docs/nativeui/`), emulator-verified; **decision waits for the owner W/N A/B on the VIP7802** |
+| 7 Device validation | v4 smoke run on the box validated warm/renderer/background checks but measured a build without the native library; harness v5 fixes identity and the issues found |
 | 8 Release hardening | Not started; APK unsigned |
 
 ## Performance (emulator/host unless stated — not hardware claims)
@@ -69,52 +69,74 @@ The audit found no other pure computation with meaningful workload: everything e
 | Debug APK | 2,617,976 B | 3,250,079 B | +0.63 MB native libs (`armeabi-v7a` + `arm64-v8a`), CI run `43243655890` |
 
 ## Preservation
-No HTML/CSS/images/sounds/layout, manifest, permissions, package ID, SDK settings or debloat scripts changed. Search
-results, order, icons and actions are unchanged (parity above). Device feature checklist still pending.
+No HTML/CSS/images/sounds/layout, permissions, package ID, SDK settings or debloat scripts changed. The manifest only
+gains the explicit-start `NativeHomeActivity` (own process, no HOME/launcher filter). Search results, order, icons and
+actions are unchanged (parity above). Device feature checklist still pending.
 
 ## Rollback
 Source: `git checkout glasslauncher-1.5-phase7-baseline`; APK: CI artifact `glasslauncher-baseline-1.5-debug-apk`.
 Partial: `PERF.core:'js'` in `apps.js` (all search in JS), `-Pglass.rust=false` (no native library), `PERF.icons:'bridge'`.
-Snapshot migration only: revert `018e627` (the ABI returns to 1 with it).
+Snapshot migration only: revert `018e627` (the ABI returns to 1 with it). Native prototype: it is never started unless
+launched explicitly; removing it is reverting `c011c97` and its follow-ups.
 
-## What the owner needs to do next (hardware)
+## Owner smoke run (harness v4, `bench-smoke-glass2-20261112-191851`): what it showed
 
-The harness is ready for a **short smoke run** (≈10 min) to confirm v4 reads this box correctly before any long A/B.
-Windows CMD, from the repository root, box connected over adb:
+- **Harness:** v4 worked on the box. 3/3 warm samples were valid (YouTube in front, Glass `STOPPED` after ~1.3 s). The renderer (PID 13074) was attributed through `dumpsys activity services`, and background CPU was accepted.
+- **Build:** the run did **not** measure Glass 2.0. The package dump has `primaryCpuAbi=null`, meaning an APK with no native library, and every Rust-enabled 2.0 build ships `libglass.so`. That leaves the 1.5 baseline or a `-Pglass.rust=false` build. `versionName` is `1.5` in both builds, which hid this. None of the numbers can be attributed to 2.0.
+- **Observations** (one run, not claims):
+  - cold start 1,245 ms (2/3 valid); warm start 140 ms;
+  - PSS: app 54,362 KB, renderer 71,761 KB;
+  - D-pad frames: p50 61 ms (~16 fps), 96.65 % over budget;
+  - idle control: 0 frames over 35.25 s, which is correct for a static screen.
+- **Harness v5** (`a9306c9`) fixes what the run exposed:
+  - build identity: package, signing digest, APK SHA-256 and libglass presence, with a warning if the installed APK doesn't match `-Apk`;
+  - a discarded warm-up launch, plus a rejection reason on every cold row;
+  - no fake 4,950 ms percentiles for empty histograms; idle-window coverage recorded;
+  - renderer attribution limited to exactly `com.glasslauncher` (the real dump also listed `com.glasslauncher.utilityhub`).
+
+  The box's real captures are now test fixtures: 132 parser and 46 simulated-device checks, in PowerShell 7 and Windows PowerShell 5.1.
+
+## Native UI (Phase 6): status
+- `docs/nativeui/PARITY_CHECKLIST.md`: a screen-by-screen inventory and a testable parity checklist, from a source audit.
+- `docs/nativeui/PROTOTYPE.md`: the home-screen slice as a custom `View`. It covers artwork cards, D-pad focus with the CSS timings, row collapse, launching with the same resolution rules, a Control Centre overlay and theme. It is a separate activity in its own process; the WebView stays HOME.
+- `docs/nativeui/MIGRATION_PLAN.md`: stages with device-evidence gates. Nothing migrates until the owner's A/B passes Stage 0.
+- Verified so far, only on a CI emulator with the Android TV 1080p profile: it renders, focus moves, the Entertainment row scrolls, the Control Centre opens and closes, and every D-pad key produced a measured frame. Screenshots and logs are in the `native-ui-prototype` artifact. Emulator timings are not device numbers.
+
+## What the owner needs to do next (hardware, about 1 h)
+
+1. Download the `glasslauncher-debug-apk` artifact from the latest green CI run on `glasslauncher-2.0-migration`, to `C:\glass\glass2\app-debug.apk`.
+2. From the repository root, in Windows CMD:
 
 ```bat
 git fetch origin
 git checkout glasslauncher-2.0-migration
 git pull
-adb devices
-tools\bench\bench-device.bat -Label smoke-glass2 -Runs 3 -IdleSeconds 15 -NavRounds 3 -BackgroundPackage com.google.android.youtube.tv
+adb install -r C:\glass\glass2\app-debug.apk
 ```
 
-Please send back the whole `bench-smoke-glass2-<timestamp>` folder (or at least `summary.json`, `warm.txt`,
-`renderers.txt`, `meminfo.txt`). It is valid if `warm_start_ms.n` is 3, `memory.renderer_pss_kb` is filled with
-`renderer_attribution` = `dumpsys activity services`, and `cpu_background_rejected` is empty. If not, the files say
-exactly why, and the harness gets fixed off-device again — no long run is needed until the smoke run is clean.
-
-The full A/B (≈1 h) follows only after that, alternating builds; download both APKs from the same CI run (artifacts
-`glasslauncher-baseline-1.5-debug-apk` and `glasslauncher-debug-apk`). Each CI run signs with a different debug key, so
-uninstall before every switch (this clears Glass's saved settings, identically for both builds):
+   If the install reports `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, run `adb uninstall com.glasslauncher` first (this clears Glass's saved settings), then install again.
+3. Look at the prototype with the remote (visual judgement, about 2 minutes); Back returns to Glass:
 
 ```bat
-adb uninstall com.glasslauncher
-tools\bench\bench-device.bat -Label baseline-1 -Apk C:\glass\baseline\app-debug.apk -CompileSpeed
-adb uninstall com.glasslauncher
-tools\bench\bench-device.bat -Label glass2-1 -Apk C:\glass\glass2\app-debug.apk -CompileSpeed
-adb uninstall com.glasslauncher
-tools\bench\bench-device.bat -Label baseline-2 -Apk C:\glass\baseline\app-debug.apk -CompileSpeed
-adb uninstall com.glasslauncher
-tools\bench\bench-device.bat -Label glass2-2 -Apk C:\glass\glass2\app-debug.apk -CompileSpeed
-powershell -ExecutionPolicy Bypass -File tools\bench\compare.ps1 bench-baseline-1-<ts>\summary.json bench-glass2-1-<ts>\summary.json
+adb shell am start -n com.glasslauncher/.NativeHomeActivity
 ```
 
-Keep the same time band (theme switches at 19:00/07:00), don't touch the remote during a run, and set Glass as the
-default home app after each install if Android asks.
+4. Run the WebView and native UIs alternately, in one sitting, without touching the remote during runs:
+
+```bat
+tools\bench\bench-device.bat -Label web-1 -Apk C:\glass\glass2\app-debug.apk -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
+tools\bench\bench-device.bat -Label native-1 -Activity .NativeHomeActivity -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
+tools\bench\bench-device.bat -Label web-2 -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
+tools\bench\bench-device.bat -Label native-2 -Activity .NativeHomeActivity -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
+```
+
+   Each run prints `Build under test: …` first. It must say `has a native library (armeabi-v7a)` for all four runs; if it doesn't, stop and send that folder.
+5. Send back the four `bench-*` folders.
+
+The 1.5-vs-2.0 WebView A/B is a separate comparison: it needs the baseline APK artifact and an uninstall before each switch. It has lower priority than the UI decision.
 
 ## Next engineering actions
-1. Smoke run → fix anything it shows → full A/B.
-2. With device frame data and `-Trace`, decide the rendering question (Phase 6).
-3. Measure D-pad navigation latency and set targets from the validated device baseline.
+1. Analyse the WebView/native A/B against the Stage 0 gate in `docs/nativeui/MIGRATION_PLAN.md`.
+2. If the gate passes, start Stage 1 (complete the native Home). If it fails, profile the WebView focus animation with `-Trace`, starting with the docks' backdrop blur, before considering a port.
+3. Remote-control parity checklist on the box (P1 items in `PARITY_CHECKLIST.md`) for the prototype.
+

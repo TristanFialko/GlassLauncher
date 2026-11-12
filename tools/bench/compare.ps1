@@ -1,5 +1,5 @@
 <#
-  Compares two summary.json files written by bench-device.ps1 v2 (e.g. baseline vs Glass 2.0 on the same box).
+  Compares two summary.json files written by bench-device.ps1 (v2+; v5 adds UI, build identity and key->frame latency) (e.g. baseline vs Glass 2.0 on the same box).
   Usage: powershell -ExecutionPolicy Bypass -File tools\bench\compare.ps1 bench-baseline-...\summary.json bench-glass2-...\summary.json
 
   A difference is only called "better"/"worse" when both runs have enough valid samples (start times: 5, CPU/PSS: 3
@@ -54,4 +54,8 @@ Val "D-pad janky %" $a.frames.nav.janky_pct $b.frames.nav.janky_pct
 Val "D-pad frames > 2 vsync %" $a.frames.nav_histogram.over_2_vsync_pct $b.frames.nav_histogram.over_2_vsync_pct
 Val "gfxinfo p50 ms (bucket)" ("{0} ({1}-{0})" -f $a.frames.nav_histogram.p50.ms, $a.frames.nav_histogram.p50.bucket_from_ms) ("{0} ({1}-{0})" -f $b.frames.nav_histogram.p50.ms, $b.frames.nav_histogram.p50.bucket_from_ms)
 Val "gfxinfo p95 ms (bucket)" ("{0} ({1}-{0})" -f $a.frames.nav_histogram.p95.ms, $a.frames.nav_histogram.p95.bucket_from_ms) ("{0} ({1}-{0})" -f $b.frames.nav_histogram.p95.ms, $b.frames.nav_histogram.p95.bucket_from_ms)
+Row "D-pad key->frame ms (probe)" $a.frames.key_to_frame_ms $b.frames.key_to_frame_ms 20
+Val "UI" $a.device.ui $b.device.ui
+Val "build" $a.device.build.kind $b.device.build.kind
+Val "APK sha256 (device)" $a.device.build.device_apk_sha256 $b.device.build.device_apk_sha256
 Val "APK bytes" $a.device.apk_bytes $b.device.apk_bytes

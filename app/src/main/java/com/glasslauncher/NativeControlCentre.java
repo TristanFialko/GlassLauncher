@@ -101,6 +101,7 @@ final class NativeControlCentre {
         c.save();
         c.translate(x, y);
         r.set(0, 0, PW, h);
+        home.drawBlurBackdrop(c, r, PR, x, y, mix);   // controlcentre.css backdrop-filter: blur(1.5rem) saturate(1.5)
         fill.setShader(null); fill.setColor(Color.argb((int) (168 * mix), 25, 29, 40));
         c.drawRoundRect(r, PR, PR, fill);
         fill.setShader(panelSheen); fill.setAlpha((int) (255 * mix));
