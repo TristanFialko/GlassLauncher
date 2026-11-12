@@ -82,9 +82,10 @@ public class NativeUiPrototypeTest {
 
         // ---- native prototype ----
         sh("logcat -c");
-        report.append("--- native start\n").append(sh("am start -W -n com.glasslauncher/.NativeHomeActivity --ez glass.latency true"));
+        String nStart = sh("am start -W -n com.glasslauncher/.NativeHomeActivity --ez glass.latency true");
+        report.append("--- native start\n").append(nStart);
         String ready = waitFor("GlassNative:I", "assets ready", 30_000);
-        assertTrue("native prototype never finished loading assets:\n" + ready, ready.contains("assets ready"));
+        assertTrue("native prototype never finished loading assets:\n" + ready + "\nam start:\n" + nStart + "\nresumed: " + resumed() + "\n" + sh("logcat -d -t 60 *:W"), ready.contains("assets ready"));
         Bitmap nHome = shot("native-1-home.png");
         sh("dumpsys gfxinfo com.glasslauncher:native reset");
         key(22);
