@@ -443,6 +443,26 @@ Legend: **P1** (●) = must be covered by the first native prototype slice (Home
 | C18 | Clicking the scrim closes CC; hover focuses tiles; click activates | — |
 | C19 | Tab cycles tiles with wrap and nav sound | — |
 
+**Native implementation status (wip/cc): native implemented, device check pending for every row below unless noted.** Code: `ControlCentreLogic.kt`, `NativeControlCentre.kt`, `ControlCentreController.kt`. Unit tests: `ControlCentreLogicTest` (texts, volume step, nav table, poll gate) and `HomeClockTest.ccTimeIs12Hour`.
+
+| Rows | Status | Test ref / note |
+|---|---|---|
+| C1, C2 | native implemented (420 ms slide, scrim gradient, header buttons fade, clock/recent at .3 were already in `NativeHomeView`); device check pending | n/a (visual) |
+| C3 | native implemented; device check pending | `HomeClockTest.ccTimeIs12Hour` (the earlier 24-hour format disagreed with `controlcentre.js`) |
+| C4, C5 | native implemented; device check pending | `gridGeometry`; initial focus Appearance |
+| C6 | native implemented; device check pending | `navigationTable`, `navigationBottomRow` (same scoring as `G.spatial`, quirks included, e.g. Right from Wi-Fi reaches Search) |
+| C7 | native implemented; device check pending | focus fill .29→.16, border .34, scale 1.018, 180 ms |
+| C8 | native implemented; device check pending | theme toggle via `NativeHomeView.setDark` |
+| C9, C12 | native implemented; device check pending | `volumeTexts`, `volumeStepAndClamp`, `percentRoundsHalfUp`; fixed volume dims and toasts |
+| C10 | native implemented; device check pending | `wifi*`, `bluetooth*`, `deviceLine`, `pollRunsOnlyWhileOpenAndResumed` |
+| C11 | native implemented; device check pending | worker-thread `SettingsLauncher.open`, toast on failure |
+| C13 | partly: tile closes the panel and calls `ControlCentreController.openSearch` (toast until native Search is wired) | pending native Search |
+| C14 | native implemented (Back closes, 420 ms); header focus return is `NativeHomeView`'s; device check pending | |
+| C15, C16 | native implemented (400 ms after resume, 250 ms after a volume key); device check pending | `pollTimings` |
+| C17 | native implemented (once, flag in `glass_native_cc` prefs, result refreshes Wi-Fi); device check pending | |
+| C18 | not applicable: the native UI has no pointer | |
+| C19 | native implemented (Tab / Shift+Tab with wrap); device check pending | `tabWraps` |
+
 ### Search
 | # | Check | P1 |
 |---|---|---|

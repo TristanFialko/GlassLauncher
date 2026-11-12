@@ -13,5 +13,5 @@ class HomeClockTest {
     @Test fun noonIsTwelve() = assertEquals("12:00", HomeClock.clock(cal(2026, Calendar.NOVEMBER, 12, 12, 0)))
     @Test fun afternoonHasNoAmPm() = assertEquals("1:07", HomeClock.clock(cal(2026, Calendar.NOVEMBER, 12, 13, 7)))
     @Test fun dateHasNoComma() = assertEquals("Thursday 12 November", HomeClock.date(cal(2026, Calendar.NOVEMBER, 12, 9, 0)))
-    @Test fun ccTimeIs24Hour() = assertEquals("13:07", HomeClock.ccTime(cal(2026, Calendar.NOVEMBER, 12, 13, 7)))
+    @Test fun ccTimeIs12Hour() = assertEquals("1:07", HomeClock.ccTime(cal(2026, Calendar.NOVEMBER, 12, 13, 7)))
 }

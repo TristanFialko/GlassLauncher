@@ -60,6 +60,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
             cfg = c
             val v = NativeHomeView(this, c, this)
             view = v
+            cc = ControlCentreController(this, v, sys!!, settings!!, worker, ui) { playNav() }
             @Suppress("DEPRECATION")
             v.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             setContentView(v)
@@ -161,76 +162,29 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         if (!settings!!.open(kind)) view?.showToast("This box has no such settings screen")
     }
 
-    override fun controlCentreAction(id: String, delta: Int) {
-        val view = view ?: return
-        val sys = sys ?: return
-        when (id) {
-            "wifi" -> openSettings("wifi")
-            "bluetooth" -> openSettings("bluetooth")
-            "settings" -> openSettings("main")
-            "device" -> openSettings("device")
-            "theme" -> view.setDark(!view.dark)
-            "volume" -> {
-                worker.execute {
-                    try {
-                        val v = JSONObject(sys.volumeInfo())
-                        val r = if (delta == 0) sys.toggleMute() else sys.setVolume(maxOf(0, minOf(v.getInt("max"), v.getInt("cur") + delta)))
-                        applyVolume(view, JSONObject(r))
-                    } catch (t: Throwable) { Log.w(TAG, "volume", t) }
-                }
-                if (delta != 0) playNav()
-            }
-            else -> {   // "refresh": read all Control Centre state off the UI thread
-                worker.execute {
-                    val cc = view.cc
-                    try {
-                        val w = JSONObject(sys.wifiInfo())
-                        val eth = w.optBoolean("ethernet")
-                        val con = w.optBoolean("wifiConnected")
-                        cc.wifiOn = eth || con || w.optBoolean("wifiEnabled")
-                        cc.wifiTitle = if (eth) "Ethernet" else "Wi-Fi"
-                        cc.wifiSub = if (eth) "Connected"
-                        else if (con) (if (w.optString("ssid", "").isEmpty()) "Connected" else w.optString("ssid"))
-                        else if (w.optBoolean("wifiEnabled")) "Not connected" else "Off"
-                    } catch (t: Throwable) { cc.wifiSub = "Unavailable" }
-                    try {
-                        val bt = JSONObject(sys.bluetoothInfo())
-                        cc.btOn = bt.optBoolean("enabled")
-                        val conn = bt.optJSONArray("connected")
-                        cc.btSub = if (!bt.optBoolean("supported")) "Not supported" else if (!cc.btOn) "Off"
-                        else if (conn != null && conn.length() > 0) conn.optString(0) else "On"
-                    } catch (t: Throwable) { cc.btSub = "Unavailable" }
-                    try { applyVolume(view, JSONObject(sys.volumeInfo())) } catch (ignored: Throwable) {}
-                    try {
-                        val d = JSONObject(sys.deviceInfo())
-                        cc.deviceSub = d.optString("model", "") + (if (d.has("android")) " · Android " + d.optString("android") else "")
-                    } catch (t: Throwable) { cc.deviceSub = "" }
-                    ui.post { view.invalidate() }
-                }
-            }
-        }
-    }
+    override fun controlCentreAction(id: String, delta: Int) { cc?.handle(id, delta) }
 
-    private fun applyVolume(view: NativeHomeView, v: JSONObject) {
-        val cc = view.cc
-        cc.vol = v.optInt("cur", -1); cc.volMax = v.optInt("max", 15); cc.muted = v.optBoolean("muted")
-        cc.volSub = if (cc.muted) "Muted" else (cc.vol.toString() + " of " + cc.volMax)
-        ui.post { view.invalidate() }
+    // ---- Control Centre hooks (ControlCentreController) ----
+    private var cc: ControlCentreController? = null
+    override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, results: IntArray) {
+        super.onRequestPermissionsResult(code, perms, results); cc?.onPermissionResult()
     }
 
     override fun exitPrototype() { if (!asHome) finish() }
 
     override fun dispatchKeyEvent(e: KeyEvent): Boolean {
+        if (e.action == KeyEvent.ACTION_DOWN && (e.keyCode == KeyEvent.KEYCODE_VOLUME_UP || e.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || e.keyCode == KeyEvent.KEYCODE_VOLUME_MUTE)) cc?.onVolumeKey()
         val r = super.dispatchKeyEvent(e)
         probe?.onKeyDispatched(e)
         return r
     }
 
-    override fun onResume() { super.onResume(); ui.post(ticker); checkStillHome() }
-    override fun onPause() { ui.removeCallbacks(ticker); super.onPause() }
+    override fun onResume() { super.onResume(); ui.post(ticker); checkStillHome(); cc?.onResume() }
+    override fun onPause() { ui.removeCallbacks(ticker); cc?.onPause(); super.onPause() }
 
     override fun onDestroy() {
         probe?.detach()
+        cc?.onDestroy()
         worker.shutdownNow()
         sounds?.release()
         super.onDestroy()

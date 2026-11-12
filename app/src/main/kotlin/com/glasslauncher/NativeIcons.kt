@@ -71,6 +71,18 @@ object NativeIcons {
         c.drawLine(cx - s * .35f, cy + s * .7f, cx + s * .35f, cy + s * .7f, P)
     }
 
+    /** icons.js ethernet: 24-unit box, 1 unit = s / 12. */
+    fun ethernet(c: Canvas, cx: Float, cy: Float, s: Float, color: Int, alpha: Float) {
+        val u = s / 12f
+        stroke(color, alpha, 2f * u * .75f)
+        c.drawRoundRect(cx + (5 - 12) * u, cy + (3 - 12) * u, cx + (19 - 12) * u, cy + (13 - 12) * u, 1.5f * u, 1.5f * u, P)
+        c.drawLine(cx - 3 * u, cy + 1 * u, cx - 3 * u, cy + 4 * u, P)
+        c.drawLine(cx + 3 * u, cy + 1 * u, cx + 3 * u, cy + 4 * u, P)
+        c.drawLine(cx, cy + 4 * u, cx, cy + 9 * u, P)
+        c.drawLine(cx - 4 * u, cy - 4 * u, cx - 2 * u, cy - 4 * u, P)
+        c.drawLine(cx + 2 * u, cy - 4 * u, cx + 4 * u, cy - 4 * u, P)
+    }
+
     private fun stroke(color: Int, alpha: Float, w: Float) {
         P.style = Paint.Style.STROKE; P.strokeCap = Paint.Cap.ROUND; P.strokeJoin = Paint.Join.ROUND
         P.strokeWidth = w; P.color = color; P.alpha = (Color.alpha(color) * alpha).toInt()

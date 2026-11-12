@@ -18,8 +18,8 @@ object HomeClock {
      */
     fun date(cal: Calendar): String = format("EEEE d MMMM", cal)
 
-    /** Control Centre clock, 24-hour H:mm (controlcentre.js). */
-    fun ccTime(cal: Calendar): String = format("H:mm", cal)
+    /** Control Centre clock: controlcentre.js refreshClock uses the same 12-hour h:mm as the home clock. */
+    fun ccTime(cal: Calendar): String = clock(cal)
 
     private fun format(pattern: String, cal: Calendar): String =
         SimpleDateFormat(pattern, Locale.UK).apply { timeZone = cal.timeZone }.format(cal.time)

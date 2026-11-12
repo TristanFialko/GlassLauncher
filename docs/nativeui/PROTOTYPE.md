@@ -71,3 +71,14 @@ record the key→frame probe. Per UI it reports:
 The CI job "Native UI prototype (emulator, TV 1080p)" runs both UIs over the same D-pad path. It uploads screenshots,
 gfxinfo, meminfo and the probe logs (artifact `native-ui-prototype`). Emulator timings (software GPU, x86_64) say
 nothing about the VIP7802.
+
+## Control Centre (S4/S8)
+
+The native Control Centre has every tile of `controlcentre.js` (Appearance, Wi-Fi/Ethernet, Bluetooth, Volume with output and bar, This box, Settings, Sound, Display, Search) on the CSS geometry (800 px panel, rows 152/152/160/140/124, gap 20).
+
+- `ControlCentreLogic.kt`: pure rules. Tile table and grid geometry, a navigation table precomputed with the `G.spatial` scoring, volume step (`max(1, round(max/20))`), every subtitle string, and the poll gate.
+- `NativeControlCentre.kt`: drawing and keys only. State arrives as ready-made tiles on the UI thread and subtitles are wrapped then, so `onDraw` formats nothing. Left/Right on Volume adjust it; Tab cycles with wrap; hardware volume keys pass through to the system.
+- `ControlCentreController.kt`: all `SystemControls`/`SettingsLauncher`/preferences access on the worker. Reads everything on open and 400 ms after resume, then Volume, Wi-Fi and Bluetooth every 2 s only while the panel is open and the activity is resumed. A volume key re-reads the volume after 250 ms. The first-ever open asks for `ACCESS_FINE_LOCATION`; the result refreshes Wi-Fi.
+- Search is a hook (`ControlCentreController.openSearch`); until native Search exists the tile closes the panel and shows a toast.
+
+Not ported: grid scrolling (the grid fits at 1080p and the view scales uniformly), pointer hover/click, the tile focus drop shadow.
