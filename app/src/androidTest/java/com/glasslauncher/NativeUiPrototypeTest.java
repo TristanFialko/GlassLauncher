@@ -17,6 +17,7 @@ import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
@@ -25,19 +26,48 @@ import java.nio.charset.StandardCharsets;
  * `input keyevent` (the prototype runs in another process, so ActivityScenario cannot host it). Produces screenshots and
  * logs in <app external files>/nativeui for the CI artifact; asserts the prototype renders, moves focus, opens the
  * Control Centre and that every D-pad key produced a measured frame. Emulator numbers are NOT device performance.
+ *
+ * Every shell command is time-bounded and each test has a JUnit timeout: a stuck command (the CI run of 2f056ef sat in
+ * the native-ui job until its 45-minute limit) now fails fast with the stuck thread's stack trace instead.
  */
 // a_ runs first: it clears the screenshot folder, and b_ leaves HOME routing exercised afterwards
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(AndroidJUnit4.class)
 public class NativeUiPrototypeTest {
     private static final String TAG = "GlassNativeTest";
+    /** Per-test backstop; each test needs about 3 minutes on the CI emulator. */
+    private static final long TEST_TIMEOUT_MS = 8 * 60_000;
+    /** Default bound for one shell command; nothing here legitimately takes longer. */
+    private static final long SH_TIMEOUT_MS = 60_000;
+    /** `am start -W` can block on API 30; bounded and non-fatal, readiness is asserted through logcat / the resumed activity. */
+    private static final long AM_START_TIMEOUT_MS = 20_000;
     private UiAutomation ua;
 
-    private String sh(String cmd) throws Exception {
-        ParcelFileDescriptor pfd = ua.executeShellCommand(cmd);
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader r = new BufferedReader(new InputStreamReader(new ParcelFileDescriptor.AutoCloseInputStream(pfd), StandardCharsets.UTF_8))) {
-            String l; while ((l = r.readLine()) != null) sb.append(l).append('\n');
+    private String sh(String cmd) throws Exception { return sh(cmd, SH_TIMEOUT_MS); }
+
+    /**
+     * Runs a shell command and returns its output. Never blocks longer than {@code timeoutMs}: a command that does not
+     * finish is reported in the returned text and in logcat instead of hanging the instrumentation.
+     */
+    private String sh(String cmd, long timeoutMs) throws Exception {
+        final ParcelFileDescriptor pfd = ua.executeShellCommand(cmd);
+        final StringBuffer sb = new StringBuffer();
+        Thread reader = new Thread(() -> {
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(new ParcelFileDescriptor.AutoCloseInputStream(pfd), StandardCharsets.UTF_8))) {
+                String l; while ((l = r.readLine()) != null) sb.append(l).append('\n');
+            } catch (IOException e) {
+                sb.append("[read failed: ").append(e).append("]\n");
+            }
+        }, "sh-reader");
+        reader.setDaemon(true);
+        reader.start();
+        reader.join(timeoutMs);
+        if (reader.isAlive()) {
+            String msg = "[sh timed out after " + timeoutMs + " ms: " + cmd + "]";
+            Log.w(TAG, msg);
+            try { pfd.close(); } catch (IOException ignored) { }
+            reader.interrupt();
+            return sb.toString() + msg + "\n";
         }
         return sb.toString();
     }
@@ -77,7 +107,7 @@ public class NativeUiPrototypeTest {
         return log;
     }
 
-    @Test public void a_nativeVersusWebView() throws Exception {
+    @Test(timeout = TEST_TIMEOUT_MS) public void a_nativeVersusWebView() throws Exception {
         ua = InstrumentationRegistry.getInstrumentation().getUiAutomation();
         // the Control Centre asks for location on first open (S8, same as the WebView UI); a system dialog would take the keys
         sh("pm grant com.glasslauncher android.permission.ACCESS_FINE_LOCATION");
@@ -88,7 +118,7 @@ public class NativeUiPrototypeTest {
 
         // ---- native prototype ----
         sh("logcat -c");
-        String nStart = sh("am start -W -n com.glasslauncher/.NativeHomeActivity --ez glass.latency true");
+        String nStart = sh("am start -W -n com.glasslauncher/.NativeHomeActivity --ez glass.latency true", AM_START_TIMEOUT_MS);
         report.append("--- native start\n").append(nStart);
         String ready = waitFor("GlassNative:I", "assets ready", 30_000);
         assertTrue("native prototype never finished loading assets:\n" + ready + "\nam start:\n" + nStart + "\nresumed: " + resumed() + "\n" + sh("logcat -d -t 60 *:W"), ready.contains("assets ready"));
@@ -121,7 +151,7 @@ public class NativeUiPrototypeTest {
 
         // ---- WebView UI, same path ----
         sh("logcat -c");
-        report.append("--- webview start\n").append(sh("am start -W -n com.glasslauncher/.MainActivity --ez glass.latency true"));
+        report.append("--- webview start\n").append(sh("am start -W -n com.glasslauncher/.MainActivity --ez glass.latency true", AM_START_TIMEOUT_MS));
         // the emulator's software-GPU WebView paints the clock and rows well after `am start` returns (at 8 s only the
         // wallpaper, header buttons and Recently Used panel were there): wait >= 15 s, then until two shots 2 s apart match
         SystemClock.sleep(15_000);
@@ -155,7 +185,7 @@ public class NativeUiPrototypeTest {
      * only: screenshots go to the CI artifact for visual review. Recently Used needs a configured app installed, which this
      * emulator image lacks, so it is covered by JVM tests and the owner's device checklist.
      */
-    @Test public void b_nativeSurfacesAndRouting() throws Exception {
+    @Test(timeout = TEST_TIMEOUT_MS) public void b_nativeSurfacesAndRouting() throws Exception {
         ua = InstrumentationRegistry.getInstrumentation().getUiAutomation();
         // the Control Centre asks for location on first open (S8, same as the WebView UI); a system dialog would take the keys
         sh("pm grant com.glasslauncher android.permission.ACCESS_FINE_LOCATION");
@@ -163,7 +193,7 @@ public class NativeUiPrototypeTest {
         sh("logcat -c");
         // a_ leaves a task rooted at NativeHomeActivity with MainActivity on top; without a fresh task `am start` only brings
         // that task forward (the WebView UI) and the native activity is never recreated
-        String start = sh("am start -W --activity-clear-task -n com.glasslauncher/.NativeHomeActivity");
+        String start = sh("am start -W --activity-clear-task -n com.glasslauncher/.NativeHomeActivity", AM_START_TIMEOUT_MS);
         String ready = waitFor("GlassNative:I", "assets ready", 30_000);
         assertTrue("native UI never finished loading assets:\n" + ready + "\nam start:\n" + start + "\nresumed: " + resumed() + "\n" + sh("logcat -d -t 60 *:W"), ready.contains("assets ready"));
         Bitmap home = shot("surf-01-home.png");
@@ -203,13 +233,13 @@ public class NativeUiPrototypeTest {
         shot("surf-12-cc-closed.png");
 
         // Opt-in HOME routing: MainActivity hands over to the native UI, and back
-        sh("am start -W -n com.glasslauncher/.MainActivity --es glass.ui native");
+        sh("am start -W -n com.glasslauncher/.MainActivity --es glass.ui native", AM_START_TIMEOUT_MS);
         SystemClock.sleep(2500);
         String r1 = resumed();
         save("routing.txt", "native: " + r1);
         assertTrue("glass.ui=native did not show the native UI: " + r1, r1.contains("NativeHomeActivity"));
         // clear-task also finishes the native HOME instance, so later tests start a fresh native activity
-        sh("am start -W --activity-clear-task -n com.glasslauncher/.MainActivity --es glass.ui webview");
+        sh("am start -W --activity-clear-task -n com.glasslauncher/.MainActivity --es glass.ui webview", AM_START_TIMEOUT_MS);
         SystemClock.sleep(2500);
         String r2 = resumed();
         save("routing.txt", "webview: " + r2);
