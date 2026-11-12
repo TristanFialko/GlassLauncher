@@ -25,10 +25,44 @@ function score(e,q,qc){
 }
 var providers=[], shortcuts=[], settingsOk={};
 
+/* Glass 2.0: the same ranking computed by the Rust core (libglass, AndroidBridge.core*). The index is normalised once per
+   Search session instead of re-normalising every entry on every keystroke. Any problem (no native library, PERF.core:'js',
+   an unexpected entry kind, a bridge error) drops back to the JavaScript path below, which is unchanged. */
+var core={on:null,ents:null,sent:null}, STRIP=/[\u001e\u001f]/g;
+function clean(s){ return String(s||'').replace(STRIP,''); }   // separators are removed by norm() anyway, so ranking is unaffected
+function wire(list){
+  return list.map(function(e){ return [e.kind==='app'?'app':'shortcut',clean(e.title)].concat((e.keywords||[]).map(clean)).join('\u001f'); }).join('\u001e');
+}
+function coreOn(){
+  if(core.on===null) core.on=!(window.PERF&&window.PERF.core==='js')&&G.bridge.available('coreSearch')&&G.bridge.available('coreSearchIndex');
+  return core.on;
+}
+function coreQuery(text,max){
+  if(!coreOn()||!(max===undefined||max>0)) return null;
+  try{
+    if(core.ents===null){
+      var ents=G.registry.entries(), i;
+      /* registry.js orders unknown kinds with an asymmetric comparator; only app/shortcut are ported exactly */
+      for(i=0;i<ents.length;i++) if(ents[i].kind!=='app'&&ents[i].kind!=='shortcut'){ core.ents=false; return null; }
+      var w=wire(ents);
+      if(w!==core.sent){ if(AndroidBridge.coreSearchIndex(w)!==ents.length){ core.on=false; return null; } core.sent=w; }
+      core.ents=ents;
+    }
+    if(!core.ents) return null;
+    var r=AndroidBridge.coreSearch(String(text),max||24);
+    if(typeof r!=='string'){ core.on=false; return null; }
+    if(!r) return [];
+    return r.split(',').map(function(i){ return core.ents[+i]; });
+  }catch(e){ core.on=false; return null; }
+}
+
 G.registry={
   norm:norm,
-  register:function(p){ providers.push(p); },
-  addShortcut:function(e){ e.kind='shortcut'; shortcuts.push(e); },
+  wire:wire,
+  /* entries are snapshotted per Search session for the Rust index; search.js calls this whenever Search opens */
+  invalidate:function(){ core.ents=null; },
+  register:function(p){ providers.push(p); core.ents=null; },
+  addShortcut:function(e){ e.kind='shortcut'; shortcuts.push(e); core.ents=null; },
   /* settings availability is asked from Android once and cached */
   hasSettings:function(kind){
     if(!settingsOk.hasOwnProperty(kind)){ var r=G.bridge.call('hasSettings',kind); settingsOk[kind]=(r===null)?true:(r===true); }
@@ -45,6 +79,7 @@ G.registry={
   },
   query:function(text,max){
     var q=norm(text), qc=compact(q); if(!q) return [];
+    var fast=coreQuery(text,max); if(fast) return fast;
     var res=[];
     G.registry.entries().forEach(function(e){ var s=score(e,q,qc); if(s>0) res.push({e:e,s:s}); });
     res.sort(function(a,b){

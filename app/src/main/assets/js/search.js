@@ -79,7 +79,7 @@ kb=G.keyboard.create($('skb'),{
 function open(o){
   snap=(o&&o.restore)||{zone:st.zone,hdr:G.home.hdrIndex?G.home.hdrIndex():0};
   st.zone='search'; box.classList.add('on'); document.body.classList.add('searchopen');
-  kb.reset(); setQuery(''); G.home.render(true); setFocus('kbd');
+  G.registry.invalidate(); kb.reset(); setQuery(''); G.home.render(true); setFocus('kbd');
   G.perf.watch(700);
 }
 function close(toHome){
