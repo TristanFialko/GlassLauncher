@@ -1,0 +1,493 @@
+<!-- GLASS PHASE 2 - refined home layout (fixed 5-column rows) + Control Centre. Phase 1 kept in assets_baseline/ (previous working copy). -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=1920,initial-scale=1">
+<title>Glass Launcher</title>
+<style>
+html{font-size:1.0417vw}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0b14;color:#fff;font-family:"SamsungOne","Helvetica Neue",Arial,sans-serif}
+#wp{position:fixed;top:0;left:0;right:0;bottom:0;background:center/cover no-repeat}
+#wpd{position:fixed;top:0;left:0;right:0;bottom:0;background:center/cover no-repeat;opacity:0;transition:opacity .7s ease}
+body.dark #wpd{opacity:1}
+#wpd.fallback{filter:brightness(.4) saturate(.8)}
+#shade{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,0) 35%,rgba(0,0,0,.5))}
+.glass{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.26);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 1rem 2.4rem rgba(0,0,0,.28);-webkit-backdrop-filter:blur(2rem) saturate(1.8);backdrop-filter:blur(2rem) saturate(1.8)}
+@supports not (backdrop-filter:blur(1px)){.glass{background:rgba(40,40,52,.78)}}
+
+/* header buttons (Control Centre + sun/moon) */
+#hdrBtns{position:fixed;top:3rem;right:3.6rem;display:flex;gap:1rem;z-index:10}
+.hbtn{height:2.8rem;min-width:2.8rem;border-radius:1.4rem;display:grid;place-items:center;cursor:pointer;transition:transform .25s,box-shadow .25s,opacity .3s;font-size:1rem;font-weight:600}
+.hbtn.text{padding:0 1.3rem}
+.hbtn img{width:1.5rem;height:1.5rem;filter:invert(1) drop-shadow(0 .05rem .2rem rgba(0,0,0,.4))}
+.hbtn.f{transform:scale(1.15);box-shadow:0 0 0 .18rem rgba(255,255,255,.95)}
+#moon img{transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .25s}
+#moon.spin img{transform:rotate(180deg) scale(.4);opacity:0}
+
+/* clock: collapse transform is computed from LAYOUT in JS (single source of truth) */
+#head{pointer-events:none;position:fixed;top:0;left:0;width:100%;text-align:center;transform-origin:50% 0;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .45s}
+#date{font-size:1.5rem;font-weight:600;letter-spacing:.02em;opacity:.9;text-shadow:0 .1rem .6rem rgba(0,0,0,.35);margin-top:5vh}
+#clock{font-size:12rem;font-weight:700;line-height:1.1;letter-spacing:-.02em;background:linear-gradient(180deg,rgba(255,255,255,.96) 10%,rgba(255,255,255,.18) 95%);-webkit-background-clip:text;background-clip:text;color:transparent}
+body.scrolled #head{opacity:.55}
+
+/* app rows: clipped stage, rows positioned from measured layout */
+#stage{position:fixed;top:0;left:0;right:0;bottom:0;overflow:hidden;transition:opacity .3s}
+#rowsWrap{position:absolute;left:0;width:100%;top:0;display:flex;flex-direction:column;align-items:center;row-gap:var(--rowgap,2.4rem);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.row{width:-webkit-fit-content;width:fit-content}
+.rowLabel{display:none;padding-left:1.6rem;margin-bottom:.7rem;font-size:1.15rem;font-weight:700;letter-spacing:.02em;opacity:.65;text-shadow:0 .1rem .5rem rgba(0,0,0,.4)}
+body.labels .rowLabel{display:block}
+.row.active .rowLabel{opacity:1}
+.dock{display:flex;gap:1.6rem;padding:1.6rem 3.6rem;border-radius:2.4rem;overflow:hidden;white-space:nowrap;width:-webkit-fit-content;width:fit-content;min-width:100%}
+.tile{position:relative;width:14rem;height:8.4rem;border-radius:1.1rem;display:grid;place-items:center;font-weight:800;text-align:center;line-height:1;overflow:hidden;background:#222;transition:box-shadow .25s;font-size:1.6rem}
+.tile img{width:100%;height:100%;object-fit:cover}
+.tile::after{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);transform:translateX(-120%)}
+.slot{position:relative;flex:0 0 auto;transform-origin:50% 50%;transition:transform .18s cubic-bezier(.2,.8,.2,1);will-change:transform}
+.slot::before{content:"";position:absolute;top:-.35rem;left:-.35rem;right:-.35rem;bottom:-.35rem;border-radius:1.45rem;border:.12rem solid rgba(255,255,255,.85);background:rgba(255,255,255,.2);box-shadow:inset 0 .08rem 0 rgba(255,255,255,.55),0 .8rem 1.8rem rgba(0,0,0,.35);-webkit-backdrop-filter:blur(.8rem) saturate(1.6);backdrop-filter:blur(.8rem) saturate(1.6);opacity:0;transition:opacity .2s;pointer-events:none}
+.slot.f::before{opacity:1}
+.slot.f .tile{box-shadow:0 1.2rem 2.2rem rgba(0,0,0,.5)}
+.slot.f .tile::after{transform:translateX(120%);transition:transform .7s ease}
+.slot.f{z-index:3}
+
+/* Control Centre */
+#cc{position:fixed;left:50%;top:14vh;width:64rem;padding:1.6rem 1.8rem 1.8rem;border-radius:2.2rem;z-index:15;opacity:0;pointer-events:none;transform:translate(-50%,-1.6rem) scale(.98);transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .3s}
+#cc,body.lite #cc{background:rgba(20,20,32,.9)}
+#cc.on{opacity:1;pointer-events:auto;transform:translate(-50%,0) scale(1)}
+body.ccopen #stage{opacity:.06}
+body.ccopen #head{opacity:.18}
+#cc h2{font-size:1.15rem;font-weight:700;letter-spacing:.04em;opacity:.7;margin:0 0 1rem .4rem}
+.ccgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+.cci{position:relative;display:flex;align-items:center;gap:1rem;min-height:5.6rem;padding:1rem 1.3rem;border-radius:1.3rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);transition:background .2s,box-shadow .2s,transform .2s}
+.cci.wide{grid-column:1 / span 3}
+.cci.half{grid-column:span 1.5}
+.cci.f{background:rgba(255,255,255,.26);box-shadow:0 0 0 .16rem rgba(255,255,255,.95),0 .8rem 1.6rem rgba(0,0,0,.3);transform:scale(1.015)}
+.cci .ico{width:2.1rem;height:2.1rem;flex:0 0 auto;filter:invert(1)}
+body.noinvert .cci .ico{filter:none}
+.cci.noicon .ico{display:none}
+.cci .txt{min-width:0;flex:1}
+.t1{font-size:1.15rem;font-weight:700;display:flex;justify-content:space-between;gap:1rem}
+.t2{font-size:.95rem;opacity:.72;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:.6rem;border-radius:.3rem;background:rgba(255,255,255,.22);margin-top:.6rem;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:rgba(255,255,255,.95);border-radius:.3rem;transition:width .12s}
+.cci.off .bar i{background:rgba(255,255,255,.4)}
+.cci.dim{opacity:.55}
+#ccrow4{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;grid-column:1 / span 3}
+
+#toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:1rem 1.6rem;border-radius:1.2rem;font-size:1.1rem;opacity:0;transition:opacity .3s;pointer-events:none;background:rgba(30,30,40,.85);z-index:30;max-width:50rem;text-align:center}
+#toast.on{opacity:1}
+body.lite .glass,body.lite .slot::before{-webkit-backdrop-filter:none;backdrop-filter:none}
+body.lite .glass{background:rgba(30,30,46,.5)}
+body.lite .slot::before{background:rgba(255,255,255,.3)}
+#ids{display:none;position:fixed;top:8vh;left:10%;width:80%;height:84%;overflow:hidden;padding:2rem 2.6rem;border-radius:1.6rem;font-size:1.15rem;line-height:1.75;z-index:20;background:rgba(18,18,28,.95)}
+#ids.on{display:block}
+#ids h3{font-size:1.4rem;margin-bottom:.8rem}
+#ids b{display:inline-block;width:22rem;font-weight:600}
+#ids span{opacity:.7}
+#empty{text-align:center;padding:1rem;font-size:1.05rem;opacity:.6}
+</style></head>
+<body>
+<div id="wp"></div><div id="wpd"></div><div id="shade"></div>
+<div id="head"><div id="date"></div><div id="clock"></div></div>
+<div id="stage"><div id="rowsWrap"></div></div>
+<div id="hdrBtns">
+  <div id="ccbtn" class="hbtn glass text" title="Control Centre"><img id="ccimg" alt="" style="display:none"><span id="cctxt">Controls</span></div>
+  <div id="moon" class="hbtn glass" title="Light / dark"><img id="moonimg" alt=""></div>
+</div>
+<div id="cc" class="glass"><h2>CONTROL CENTRE</h2><div class="ccgrid" id="ccgrid"></div></div>
+<div id="ids" class="glass"></div>
+<div id="toast" class="glass"></div>
+<script src="apps.js"></script>
+<script>
+(function(){
+var pinnedApps=window.APPS||[], T=window.THEME||{}, ICONS=window.UI_ICONS||{};
+var LAY={columns:5,showLabels:false,rowGap:2.4,clockGap:5.4,clockScale:.6,collapsedClockTop:-1.6,collapsedGap:1.6,bottomMargin:3.2};
+(function(){var u=window.LAYOUT||{}; for(var k in u) LAY[k]=u[k]; LAY.columns=5;})();   // 5 per row, always
+var $=function(id){return document.getElementById(id);};
+var moon=$('moon'), moonimg=$('moonimg'), ccbtn=$('ccbtn'), head=$('head'), clockEl=$('clock'), stage=$('stage'), rowsWrap=$('rowsWrap');
+var zone='rows', hdrIdx=1, dark=false, tt, topRow=0;      // zone: rows | hdr | cc
+var PEAK=0.24, REACH=1.9;
+if(LAY.showLabels) document.body.classList.add('labels');
+if(ICONS.invert===false) document.body.classList.add('noinvert');
+document.documentElement.style.setProperty('--rowgap',LAY.rowGap+'rem');
+
+/* ---------- sounds ---------- */
+var SOUND=window.SOUND||{enabled:true,volume:.6};
+function mkSound(src){
+  var pool=[],n=0,i;
+  for(i=0;i<3;i++){var a=new Audio(src); a.preload='auto'; try{a.load();}catch(e){} pool.push(a);}
+  return function(){
+    if(SOUND.enabled===false) return;
+    var a=pool[n++%pool.length];
+    try{a.volume=(SOUND.volume==null?.6:SOUND.volume); a.currentTime=0; var pr=a.play(); if(pr&&pr.catch) pr.catch(function(){});}catch(e){}
+  };
+}
+var playNav=mkSound('sounds/navigate.wav'), playClick=mkSound('sounds/click.wav');
+
+/* ---------- icons (user supplied) ---------- */
+function setIcon(img,key,holder){
+  var src=ICONS[key]; holder=holder||img.parentNode;
+  if(!src){ holder.classList.add('noicon'); img.removeAttribute('src'); return; }
+  img.onload=function(){holder.classList.remove('noicon');};
+  img.onerror=function(){holder.classList.add('noicon');};
+  img.src=src;
+}
+
+/* ---------- bridge helpers ---------- */
+function bj(fn,a){ try{ var r=(a===undefined)?AndroidBridge[fn]():AndroidBridge[fn](a); return (typeof r==='string')?JSON.parse(r):r; }catch(e){ return null; } }
+function bcall(fn,a){ try{ return (a===undefined)?AndroidBridge[fn]():AndroidBridge[fn](a); }catch(e){ return null; } }
+
+/* ---------- rows ---------- */
+var rows=[];      // {el,dock,items,col,label}
+var vpos=0;
+function initials(n){ if(!n) return '?'; var w=n.trim().split(/\s+/); return (w[0][0]+(w[1]?w[1][0]:'')).toUpperCase(); }
+function buildSlot(a, dock){
+  var s=document.createElement('div'); s.className='slot';
+  var t=document.createElement('div'); t.className='tile';
+  t.style.background=a.bg||'#222'; t.style.color=a.fg||'#fff'; t.style.fontSize=(a.size||1.6)+'rem';
+  var im=null;
+  if(a.icon){im=new Image(); im.onerror=function(){im.style.display='none';t.textContent=a.text||initials(a.name)}; t.appendChild(im);}
+  else t.textContent=a.text||initials(a.name);
+  s.appendChild(t); dock.appendChild(s);
+  return {el:s,tile:t,img:im,item:a};
+}
+function makeRow(labelText){
+  var el=document.createElement('div'); el.className='row';
+  var lb=document.createElement('div'); lb.className='rowLabel'; lb.textContent=labelText||''; if(!labelText) lb.style.display='none';
+  var dock=document.createElement('div'); dock.className='dock glass';
+  el.appendChild(lb); el.appendChild(dock); rowsWrap.appendChild(el);
+  var r={el:el,dock:dock,items:[],col:0,label:lb}; rows.push(r); var ri=rows.length-1;
+  dock.addEventListener('mousemove',function(e){vpos=ri; zone='rows'; layoutRow(r,e.clientX);});
+  dock.addEventListener('mouseleave',function(){render(true);});
+  return r;
+}
+function addToRow(r,a,pinned){
+  var o=buildSlot(a,r.dock); r.items.push(o); var ri=rows.indexOf(r);
+  o.el.addEventListener('mouseenter',function(){vpos=ri; r.col=r.items.indexOf(o); zone='rows'; render();});
+  o.el.addEventListener('click',function(){go(a);});
+  return o;
+}
+
+/* Pinned row(s): from apps.js, 5 per row. Library rows: from the installed-app list, 5 per row. */
+var installed=[], pinnedRowCount=0;
+function pinnedIds(){ return pinnedApps.map(function(a){return a.id;}).filter(Boolean); }
+function rebuildRows(){
+  rowsWrap.innerHTML=''; rows=[];
+  var C=LAY.columns, i, r;
+  for(i=0;i<pinnedApps.length;i+=C){
+    r=makeRow(i===0?'Pinned':''); pinnedApps.slice(i,i+C).forEach(function(a){addToRow(r,a,true);});
+  }
+  pinnedRowCount=rows.length;
+  var pids=pinnedIds();
+  var list=installed.filter(function(x){return x.show!==false && !/^(org\.tizen|com\.samsung|DU\.TV\.PRODA)/i.test(x.id) && pids.indexOf(x.id)===-1;})
+    .sort(function(a,b){return a.name.toLowerCase()<b.name.toLowerCase()?-1:1;});
+  if(!list.length){
+    var e=document.createElement('div'); e.id='empty'; e.textContent='No other apps found.'; rowsWrap.appendChild(e);
+  } else {
+    for(i=0;i<list.length;i+=C){
+      r=makeRow(i===0?'All Apps':''); list.slice(i,i+C).forEach(function(x){addToRow(r,{name:x.name,id:x.id,text:initials(x.name)});});
+    }
+  }
+  if(vpos>=rows.length) vpos=Math.max(0,rows.length-1);
+  applyTheme(false);
+  layout(); render(true);
+}
+function loadInstalled(){
+  try {
+    installed=JSON.parse(AndroidBridge.getInstalledApps()||'[]');
+    pinnedApps.forEach(function(a){ if(!a.id) return;
+      var found=false; for(var j=0;j<installed.length;j++) if(installed[j].id===a.id) found=true;
+      if(!found){ for(var k=0;k<installed.length;k++) if(installed[k].show!==false && a.match && a.match.test(installed[k].name)){a.id=installed[k].id;break;} }
+    });
+  } catch(e) { installed=[]; }
+  rebuildRows();
+}
+
+/* ---------- layout (measured, not hard-coded) ---------- */
+var M={};
+function remPx(){return parseFloat(getComputedStyle(document.documentElement).fontSize)||20;}
+function layout(){
+  var r=remPx(), S=LAY.clockScale;
+  M.headH=head.offsetHeight;                                   // unscaled header height
+  M.expTop=M.headH+LAY.clockGap*r;                             // where the first row sits with the full-size clock
+  var target=LAY.collapsedClockTop*r;                          // y of the shrunken clock's top edge
+  M.dy=clockEl.offsetTop*S-target;                             // lift needed to put it there
+  M.collBottom=clockEl.offsetHeight*S+target;                  // bottom edge of the shrunken clock
+  M.viewTop=M.collBottom+LAY.collapsedGap*r;                   // first visible row position when scrolled
+  M.viewBottom=window.innerHeight-LAY.bottomMargin*r;
+  rowsWrap.style.top=M.expTop+'px';
+  var fade=1.2*r, bf0=M.viewBottom-1.2*r, bf1=M.viewBottom+2.8*r;   // soft fade at the top and bottom edges of the row area
+  var g='linear-gradient(180deg,transparent 0,transparent '+Math.max(0,M.viewTop-fade).toFixed(0)+'px,#000 '+M.viewTop.toFixed(0)+'px,#000 '+bf0.toFixed(0)+'px,transparent '+bf1.toFixed(0)+'px)';
+  stage.style.webkitMaskImage=g; stage.style.maskImage=g;
+}
+function rowTop(i){return rows[i]?rows[i].el.offsetTop:0;}
+function rowBottom(i){return rows[i]?rows[i].el.offsetTop+rows[i].el.offsetHeight:0;}
+function applyScroll(){
+  var collapsed=(zone==='rows' && vpos>=1) || (zone==='cc' && vpos>=1);
+  if(!rows.length||!collapsed){ topRow=0; }
+  else {
+    var avail=M.viewBottom-M.viewTop;
+    if(vpos<topRow) topRow=vpos;
+    while(topRow<vpos && rowBottom(vpos)-rowTop(topRow)>avail) topRow++;
+  }
+  document.body.classList.toggle('scrolled',collapsed);
+  head.style.transform=collapsed?('translateY('+(-M.dy).toFixed(1)+'px) scale('+LAY.clockScale+')'):'';
+  var ty=collapsed?(M.viewTop-(M.expTop+rowTop(topRow))):0;
+  rowsWrap.style.transform=ty?('translateY('+ty.toFixed(1)+'px)'):'';
+}
+
+/* ---------- macOS-style magnification (active row only) ---------- */
+function centerOf(dock,o){return dock.getBoundingClientRect().left+dock.clientLeft+o.el.offsetLeft+o.el.offsetWidth/2;}
+function layoutRow(r, cx){
+  var items=r.items, n=items.length; if(!n) return;
+  var rects=items.map(function(o){return {c:centerOf(r.dock,o),w:o.el.offsetWidth};});
+  var tw=rects[0].w, sc=[], extra=[], tot=0, i;
+  for(i=0;i<n;i++){
+    var d=Math.abs(rects[i].c-cx)/(tw*REACH);
+    var k=d>=1?0:(Math.cos(d*Math.PI)+1)/2;
+    sc[i]=1+PEAK*k; extra[i]=tw*(sc[i]-1); tot+=extra[i];
+  }
+  var run=0;
+  for(i=0;i<n;i++){
+    var shift=run+extra[i]/2-tot/2; run+=extra[i];
+    items[i].el.style.transform='translateX('+shift.toFixed(1)+'px) scale('+sc[i].toFixed(3)+')';
+  }
+}
+function restRow(r, isActive){
+  if(!isActive || !r.items[r.col]){ r.items.forEach(function(o){o.el.style.transform='';}); return; }
+  layoutRow(r, centerOf(r.dock, r.items[r.col]));
+}
+
+/* ---------- focus / render ---------- */
+var lastKey=null;
+function render(silent){
+  var inRows=(zone==='rows');
+  rows.forEach(function(r,ri){
+    r.items.forEach(function(o){o.el.classList.remove('f');});
+    var act=inRows&&ri===vpos;
+    r.el.classList.toggle('active',act);
+    if(act && r.items[r.col]) r.items[r.col].el.classList.add('f');
+    restRow(r,act);
+  });
+  ccbtn.classList.toggle('f', zone==='hdr'&&hdrIdx===0);
+  moon.classList.toggle('f', zone==='hdr'&&hdrIdx===1);
+  applyScroll();
+  var key=zone==='rows'?('r'+vpos+':'+(rows[vpos]?rows[vpos].col:0)):(zone==='hdr'?('h'+hdrIdx):'cc');
+  if(lastKey!==null && key!==lastKey && !silent && zone!=='cc') playNav();
+  lastKey=key;
+}
+moon.addEventListener('mouseenter',function(){zone='hdr';hdrIdx=1;render();});
+ccbtn.addEventListener('mouseenter',function(){zone='hdr';hdrIdx=0;render();});
+moon.addEventListener('click',function(){toggle();});
+ccbtn.addEventListener('click',function(){openCC();});
+
+/* ---------- theme (light / dark) ---------- */
+var wpL=$('wp'), wpD=$('wpd');
+wpL.style.backgroundImage='url('+(T.wallpaperLight||'wallpaper.jpg')+')';
+(function(){var p=new Image();
+  p.onload=function(){wpD.style.backgroundImage='url('+T.wallpaperDark+')';};
+  p.onerror=function(){wpD.style.backgroundImage='url('+(T.wallpaperLight||'wallpaper.jpg')+')';wpD.classList.add('fallback');};
+  p.src=T.wallpaperDark||'wallpaper2.jpg';})();
+function applyTheme(animate){
+  document.body.classList.toggle('dark',dark);
+  rows.forEach(function(r,ri){ if(ri<pinnedRowCount) r.items.forEach(function(o){ if(o.img) o.img.src=(dark&&o.item.dark)?o.item.dark:o.item.icon; }); });
+  var src=dark?(T.iconDark||'moonsun/moon-filled.png'):(T.iconLight||'moonsun/sun-filled.png');
+  if(animate){moon.classList.add('spin'); setTimeout(function(){moonimg.src=src; moon.classList.remove('spin');},250);}
+  else moonimg.src=src;
+  if(ccBuilt) refreshTheme();
+}
+function toggle(){ playClick(); dark=!dark; applyTheme(true); }
+/* auto dark mode: dark from 19:00 to 07:00. The moon/sun button overrides until the next automatic switch. */
+function night(){var h=new Date().getHours();return h>=19||h<7;}
+dark=night(); var lastNight=dark;
+
+/* ---------- Control Centre ---------- */
+var ccBuilt=false, cc=$('cc'), ccgrid=$('ccgrid'), ccEls={}, ccRows=[], ccR=0, ccC=0, ccTimer=null, ccState={vol:null,bri:null};
+function ccItem(id,cls,iconKey,t1,t2,extraHTML){
+  var d=document.createElement('div'); d.className='cci '+(cls||'')+' noicon'; d.id='cc_'+id;
+  var im=document.createElement('img'); im.className='ico'; im.alt='';
+  var tx=document.createElement('div'); tx.className='txt';
+  tx.innerHTML='<div class="t1"><span class="n">'+t1+'</span><span class="v"></span></div>'+(extraHTML||'')+'<div class="t2">'+(t2||'')+'</div>';
+  d.appendChild(im); d.appendChild(tx); ccgrid.appendChild(d);
+  ccEls[id]={el:d,img:im,n:tx.querySelector('.n'),v:tx.querySelector('.v'),t2:tx.querySelector('.t2'),bar:tx.querySelector('.bar i')};
+  if(iconKey) setIcon(im,iconKey,d);
+  return ccEls[id];
+}
+function buildCC(){
+  if(ccBuilt) return; ccBuilt=true;
+  ccItem('wifi','', 'wifi','Wi-Fi','...');
+  ccItem('bt','', 'bluetooth','Bluetooth','...');
+  ccItem('theme','', dark?'themeDark':'themeLight','Appearance','...');
+  ccItem('vol','wide','volume','Volume','...','<div class="bar"><i></i></div>');
+  ccItem('bri','wide','brightness','Brightness','...','<div class="bar"><i></i></div>');
+  var r4=document.createElement('div'); r4.id='ccrow4'; ccgrid.appendChild(r4);
+  var keep=ccgrid; ccgrid=r4;
+  ccItem('dev','','device','This box','...');
+  ccItem('set','','settings','Android Settings','Open the system settings');
+  ccgrid=keep;
+  ccRows=[['wifi','bt','theme'],['vol'],['bri'],['dev','set']];
+}
+function refreshTheme(){
+  var e=ccEls.theme; if(!e) return;
+  e.t2.textContent=dark?'Dark  (OK to switch to light)':'Light  (OK to switch to dark)';
+  setIcon(e.img,dark?'themeDark':'themeLight',e.el);
+}
+function refreshWifi(){
+  var w=bj('getWifiInfo'), e=ccEls.wifi; if(!e) return;
+  if(!w){ e.t2.textContent='Status unavailable'; setIcon(e.img,'wifiOff',e.el); return; }
+  var txt, key;
+  if(w.ethernet){ txt='Wired (Ethernet)'; key='ethernet'; if(w.wifiConnected&&w.ssid) txt+='  +  Wi-Fi '+w.ssid; }
+  else if(w.wifiConnected){ txt='Connected'+(w.ssid?'  \u00b7  '+w.ssid:(w.locationGranted?'':'  (name hidden: location permission off)')); key='wifi'; }
+  else if(w.wifiEnabled){ txt='Not connected'; key='wifiOff'; }
+  else { txt='Off'; key='wifiOff'; }
+  e.t2.textContent=txt+'  \u00b7  OK for Wi-Fi settings'; setIcon(e.img,key,e.el);
+}
+function refreshBT(){
+  var b=bj('getBluetoothInfo'), e=ccEls.bt; if(!e) return;
+  if(!b||!b.supported){ e.t2.textContent='Not available on this box'; setIcon(e.img,'bluetoothOff',e.el); return; }
+  var t=b.enabled?'On':'Off';
+  if(b.enabled) t+='  \u00b7  '+b.paired.length+' paired'+(b.paired.length?': '+b.paired.slice(0,2).join(', ')+(b.paired.length>2?'...':''):'');
+  e.t2.textContent=t; setIcon(e.img,b.enabled?'bluetooth':'bluetoothOff',e.el);
+}
+function refreshVol(){
+  var v=bj('getVolumeInfo'), e=ccEls.vol; if(!e) return; ccState.vol=v;
+  if(!v){ e.t2.textContent='Unavailable'; e.bar.style.width='0'; e.v.textContent=''; return; }
+  var pct=v.max?Math.round(v.cur*100/v.max):0;
+  e.el.classList.toggle('off',!!v.muted); e.el.classList.toggle('dim',!!v.fixed);
+  e.bar.style.width=(v.muted?0:pct)+'%';
+  e.v.textContent=v.fixed?'':(v.muted?'Muted':pct+'%');
+  e.t2.textContent=v.fixed?'This box uses fixed volume: your TV or soundbar controls it. Use your TV volume.':'Left / Right to adjust  \u00b7  OK to mute';
+  setIcon(e.img,v.muted?'volumeMuted':'volume',e.el);
+}
+function refreshBri(){
+  var b=bj('getBrightnessInfo'), e=ccEls.bri; if(!e) return; ccState.bri=b;
+  if(!b||!b.supported){ e.el.classList.add('dim'); e.bar.style.width='0'; e.v.textContent=''; e.t2.textContent='Not available: this box has no brightness setting. Use your TV picture settings.'; return; }
+  if(!b.canWrite){ e.el.classList.add('dim'); e.bar.style.width='0'; e.v.textContent=''; e.t2.textContent='Needs permission to change system settings. Press OK to grant it.'; return; }
+  e.el.classList.remove('dim');
+  var pct=Math.round(b.value*100/255); e.bar.style.width=pct+'%'; e.v.textContent=pct+'%';
+  e.t2.textContent='Left / Right to adjust. Only affects displays this box controls itself; it will not dim a TV over HDMI.';
+}
+function refreshDev(){
+  var d=bj('getDeviceInfo'), e=ccEls.dev; if(!e) return;
+  if(!d){ e.t2.textContent='Unavailable'; return; }
+  e.t2.textContent=(d.model||'')+'  \u00b7  Android '+(d.android||'?')+'  \u00b7  '+(d.ip?d.ip:'no IP')+'  \u00b7  '+(d.freeGb||'?')+' GB free';
+}
+function refreshAll(){ if(!ccBuilt) return; refreshWifi(); refreshBT(); refreshVol(); refreshBri(); refreshDev(); refreshTheme(); }
+window.glassVolumeSync=function(){ if(zone==='cc') refreshVol(); };
+window.glassResume=function(){ if(zone==='cc') refreshAll(); };
+
+function ccFocus(){
+  Object.keys(ccEls).forEach(function(k){ccEls[k].el.classList.remove('f');});
+  var id=ccRows[ccR][Math.min(ccC,ccRows[ccR].length-1)]; ccEls[id].el.classList.add('f');
+}
+function openCC(){
+  buildCC(); zone='cc'; ccR=0; ccC=0;
+  cc.classList.add('on'); document.body.classList.add('ccopen');
+  playClick(); refreshAll(); ccFocus(); render(true);
+  clearInterval(ccTimer); ccTimer=setInterval(function(){refreshVol();refreshWifi();refreshBT();},2000);
+  try{ if(!localStorage.getItem('gl-locasked')){ localStorage.setItem('gl-locasked','1'); AndroidBridge.requestLocationPermission(); } }catch(e){}
+}
+function closeCC(){
+  cc.classList.remove('on'); document.body.classList.remove('ccopen'); clearInterval(ccTimer);
+  zone='hdr'; hdrIdx=0; render(true);
+}
+function openSettings(kind){
+  var ok=bcall('openSettings',kind);
+  if(ok!==true) toast('That settings page is not available on this box.');
+}
+function ccAdjust(id,dir){
+  if(id==='vol'){
+    var v=ccState.vol; if(!v||v.fixed) return;
+    var n=Math.max(0,Math.min(v.max,v.cur+dir)); if(n===v.cur) return;
+    var r=bj('setVolume',n); if(r) { ccState.vol=r; } refreshVol(); playNav();
+  } else if(id==='bri'){
+    var b=ccState.bri; if(!b||!b.supported||!b.canWrite) return;
+    var nv=Math.max(5,Math.min(255,b.value+dir*13));
+    var rr=bj('setBrightness',nv); refreshBri(); playNav();
+    if(rr&&rr.ok===false) toast('This box did not accept the brightness change.');
+  }
+}
+function ccActivate(id){
+  playClick();
+  if(id==='wifi') openSettings('wifi');
+  else if(id==='bt') openSettings('bluetooth');
+  else if(id==='theme'){ dark=!dark; applyTheme(true); }
+  else if(id==='vol'){ var v=ccState.vol; if(v&&!v.fixed){ bj('toggleMute'); refreshVol(); } }
+  else if(id==='bri'){ var b=ccState.bri; if(b&&b.supported&&!b.canWrite){ if(bcall('requestWriteSettings')!==true) toast('This box cannot open the permission screen.'); } }
+  else if(id==='dev') openSettings('device');
+  else if(id==='set') openSettings('main');
+}
+function ccKey(k){
+  var id=ccRows[ccR][Math.min(ccC,ccRows[ccR].length-1)], row=ccRows[ccR], moved=false;
+  if(k===38){ if(ccR>0){ccR--;moved=true;} }
+  else if(k===40){ if(ccR<ccRows.length-1){ccR++;moved=true;} }
+  else if(k===37){ if(id==='vol'||id==='bri') ccAdjust(id,-1); else if(ccC>0){ccC--;moved=true;} }
+  else if(k===39){ if(id==='vol'||id==='bri') ccAdjust(id,1); else if(ccC<row.length-1){ccC++;moved=true;} }
+  else if(k===13){ ccActivate(id); }
+  else if(k===10009){ closeCC(); return; }
+  if(moved){ ccC=Math.min(ccC,ccRows[ccR].length-1); playNav(); }
+  ccFocus();
+}
+(function(){ // header button: icon if the user supplied one, otherwise a text label
+  var im=$('ccimg'), tx=$('cctxt'), b=$('ccbtn'), src=ICONS.controls;
+  if(!src) return; var p=new Image();
+  p.onload=function(){im.src=src;im.style.display='';tx.style.display='none';b.classList.remove('text');};
+  p.src=src;
+})();
+
+/* ---------- launch + keys ---------- */
+function toast(m){var t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(tt); tt=setTimeout(function(){t.classList.remove('on')},3200);}
+function exitApp(){ try{AndroidBridge.goHome();}catch(e){toast('Use Home to leave Glass Launcher');} }
+var idsEl=$('ids');
+function showIds(){
+  idsEl.innerHTML=''; var h=document.createElement('h3'); h.textContent='Installed apps and their IDs (Up/Down to scroll, Back to close)'; idsEl.appendChild(h);
+  if(!installed.length){var m=document.createElement('div'); m.textContent='No app list available.'; idsEl.appendChild(m);}
+  installed.filter(function(x){return x.show!==false&&!/^(org\.tizen|com\.samsung)\./.test(x.id);})
+    .sort(function(a,b){return a.name.toLowerCase()<b.name.toLowerCase()?-1:1;})
+    .forEach(function(x){var d=document.createElement('div'),b=document.createElement('b'),s=document.createElement('span'); b.textContent=x.name; s.textContent=x.id; d.appendChild(b); d.appendChild(s); idsEl.appendChild(d);});
+  idsEl.scrollTop=0; idsEl.classList.add('on');
+}
+function idsOpen(){return idsEl.classList.contains('on');}
+function go(a){
+  playClick();
+  if(a.action==='list'){showIds();return;}
+  if(a.action==='exit'){exitApp();return;}
+  if(!a.id){toast('Set the app ID for '+a.name+' in apps.js');return;}
+  try{ if(!AndroidBridge.launchPackage(a.id)) toast(a.name+' is not installed on this box.'); } catch(e){toast(a.name+' could not be opened.');}
+}
+document.addEventListener('keydown',function(e){
+  var k=e.keyCode, used=true;
+  if(idsOpen()){ if(k===40)idsEl.scrollTop+=120; else if(k===38)idsEl.scrollTop-=120; else if(k===10009||k===13)idsEl.classList.remove('on'); e.preventDefault(); return; }
+  if(zone==='cc'){ if(k===37||k===38||k===39||k===40||k===13||k===10009){ e.preventDefault(); ccKey(k); } return; }
+  if(zone==='hdr'){
+    if(k===37) hdrIdx=0; else if(k===39) hdrIdx=1; else if(k===40){ zone='rows'; }
+    else if(k===13){ if(hdrIdx===1) toggle(); else openCC(); }
+    else if(k===10009) exitApp(); else used=false;
+    if(used){ e.preventDefault(); if(zone!=='cc') render(); }
+    return;
+  }
+  var r=rows[vpos];
+  if(k===37){ if(r) r.col--; }
+  else if(k===39){ if(r) r.col++; }
+  else if(k===38){ if(vpos<=0) { zone='hdr'; } else { var c=r.col; vpos--; rows[vpos].col=c; } }
+  else if(k===40){ if(vpos<rows.length-1){ var c2=r.col; vpos++; rows[vpos].col=c2; } }
+  else if(k===13){ var o=r&&r.items[r.col]; if(o) go(o.item); }
+  else if(k===10009){ exitApp(); }
+  else used=false;
+  if(used){
+    e.preventDefault();
+    var rr=rows[vpos]; if(zone==='rows' && rr) rr.col=Math.max(0,Math.min(rr.col, rr.items.length-1));
+    render();
+  }
+});
+window.addEventListener('resize',function(){layout();render(true);});
+
+function tick(){
+  var d=new Date(), h=d.getHours()%12||12, m=('0'+d.getMinutes()).slice(-2);
+  clockEl.textContent=h+':'+m;
+  var n=night(); if(n!==lastNight){lastNight=n;dark=n;applyTheme(true);}
+  $('date').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+}
+if((window.PERF||{lite:true}).lite!==false) document.body.classList.add('lite');
+tick(); loadInstalled(); setInterval(tick,10000);
+})();
+</script>
+</body></html>

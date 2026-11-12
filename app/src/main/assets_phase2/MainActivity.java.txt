@@ -1,0 +1,232 @@
+package com.glasslauncher;
+
+import android.Manifest;
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.net.ConnectivityManager;
+import android.net.LinkAddress;
+import android.net.LinkProperties;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.StatFs;
+import android.provider.Settings;
+import android.view.KeyEvent;
+import android.view.View;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.net.Inet4Address;
+import java.util.Locale;
+import java.util.Set;
+
+public class MainActivity extends Activity {
+    private WebView web;
+
+    @Override public void onCreate(Bundle state) {
+        super.onCreate(state);
+        getWindow().getDecorView().setSystemUiVisibility(5894 | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        web = new WebView(this);
+        web.setBackgroundColor(0xff0b0b14);
+        WebSettings s=web.getSettings(); s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true); s.setMediaPlaybackRequiresUserGesture(false); s.setAllowFileAccess(true); s.setUseWideViewPort(true); s.setLoadWithOverviewMode(true);
+        web.addJavascriptInterface(new Bridge(), "AndroidBridge");
+        web.setWebChromeClient(new WebChromeClient());
+        web.setWebViewClient(new WebViewClient());
+        setContentView(web);
+        web.loadUrl("file:///android_asset/index.html");
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        // Lets the Control Centre refresh after returning from a system settings screen.
+        if (web != null) web.postDelayed(() -> web.evaluateJavascript("window.glassResume&&glassResume()", null), 400);
+    }
+
+    private static String ok(boolean v) { return v ? "{\"ok\":true}" : "{\"ok\":false}"; }
+
+    public class Bridge {
+        // ---------- Phase 1 (unchanged) ----------
+        @JavascriptInterface public boolean launchPackage(String pkg) {
+            try { Intent i=getPackageManager().getLeanbackLaunchIntentForPackage(pkg); if(i==null)i=getPackageManager().getLaunchIntentForPackage(pkg); if(i==null)return false; i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(i); return true; } catch(Exception e){return false;}
+        }
+        @JavascriptInterface public String getInstalledApps() {
+            JSONArray a=new JSONArray();
+            try { for(PackageInfo p:getPackageManager().getInstalledPackages(PackageManager.GET_META_DATA)) {
+                Intent i=getPackageManager().getLeanbackLaunchIntentForPackage(p.packageName); if(i==null)i=getPackageManager().getLaunchIntentForPackage(p.packageName); if(i==null)continue;
+                JSONObject o=new JSONObject(); o.put("id",p.packageName); o.put("name",p.applicationInfo.loadLabel(getPackageManager()).toString()); o.put("show",true); a.put(o);
+            }} catch(Exception ignored){} return a.toString();
+        }
+        @JavascriptInterface public void goHome(){ runOnUiThread(()->{ Intent i=new Intent(Intent.ACTION_MAIN); i.addCategory(Intent.CATEGORY_HOME); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(i); }); }
+
+        // ---------- Phase 2: Control Centre ----------
+        private AudioManager audio() { return (AudioManager) getSystemService(Context.AUDIO_SERVICE); }
+
+        @JavascriptInterface public String getVolumeInfo() {
+            try {
+                AudioManager am = audio(); JSONObject o = new JSONObject();
+                o.put("cur", am.getStreamVolume(AudioManager.STREAM_MUSIC));
+                o.put("max", am.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+                o.put("muted", am.isStreamMute(AudioManager.STREAM_MUSIC));
+                o.put("fixed", am.isVolumeFixed());   // true when the box leaves volume to the TV / soundbar
+                return o.toString();
+            } catch (Exception e) { return "null"; }
+        }
+        @JavascriptInterface public String setVolume(int level) {
+            try { audio().setStreamVolume(AudioManager.STREAM_MUSIC, level, 0); } catch (Exception ignored) {}
+            return getVolumeInfo();
+        }
+        @JavascriptInterface public String toggleMute() {
+            try {
+                AudioManager am = audio();
+                boolean m = am.isStreamMute(AudioManager.STREAM_MUSIC);
+                am.adjustStreamVolume(AudioManager.STREAM_MUSIC, m ? AudioManager.ADJUST_UNMUTE : AudioManager.ADJUST_MUTE, 0);
+            } catch (Exception ignored) {}
+            return getVolumeInfo();
+        }
+
+        @JavascriptInterface public String getWifiInfo() {
+            try {
+                JSONObject o = new JSONObject();
+                WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                boolean eth = false, wifi = false;
+                Network[] nets = cm.getAllNetworks();
+                for (Network n : nets) {
+                    NetworkCapabilities c = cm.getNetworkCapabilities(n);
+                    if (c == null || !c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) continue;
+                    if (c.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) eth = true;
+                    if (c.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) wifi = true;
+                }
+                boolean loc = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+                String ssid = "";
+                if (wm != null && wifi) {
+                    WifiInfo wi = wm.getConnectionInfo();
+                    if (wi != null && wi.getSSID() != null && !wi.getSSID().contains("unknown ssid")) ssid = wi.getSSID().replace("\"", "");
+                }
+                o.put("wifiEnabled", wm != null && wm.isWifiEnabled());
+                o.put("wifiConnected", wifi);
+                o.put("ethernet", eth);
+                o.put("ssid", ssid);
+                o.put("locationGranted", loc);
+                return o.toString();
+            } catch (Exception e) { return "null"; }
+        }
+
+        @JavascriptInterface public String getBluetoothInfo() {
+            try {
+                JSONObject o = new JSONObject();
+                BluetoothAdapter a = BluetoothAdapter.getDefaultAdapter();
+                if (a == null) { o.put("supported", false); return o.toString(); }
+                o.put("supported", true); o.put("enabled", a.isEnabled());
+                JSONArray names = new JSONArray();
+                if (a.isEnabled()) {
+                    Set<BluetoothDevice> bonded = a.getBondedDevices();
+                    if (bonded != null) for (BluetoothDevice d : bonded) { String n = d.getName(); names.put(n == null ? d.getAddress() : n); }
+                }
+                o.put("paired", names);   // paired devices; Android gives apps no general "connected" list for all device types
+                return o.toString();
+            } catch (Exception e) { return "{\"supported\":false}"; }
+        }
+
+        @JavascriptInterface public String getBrightnessInfo() {
+            try {
+                JSONObject o = new JSONObject();
+                int v = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, -1);
+                o.put("supported", v >= 0); o.put("value", Math.max(v, 0));
+                o.put("canWrite", Settings.System.canWrite(MainActivity.this));
+                return o.toString();
+            } catch (Exception e) { return "{\"supported\":false}"; }
+        }
+        @JavascriptInterface public String setBrightness(int v) {
+            try {
+                if (!Settings.System.canWrite(MainActivity.this)) return ok(false);
+                v = Math.max(1, Math.min(255, v));
+                Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+                Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, v);
+                return ok(true);
+            } catch (Exception e) { return ok(false); }
+        }
+        @JavascriptInterface public boolean requestWriteSettings() {
+            try {
+                Intent i = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(i); return true;
+            } catch (Exception e) { return false; }
+        }
+        @JavascriptInterface public boolean requestLocationPermission() {
+            try {
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) return false;
+                runOnUiThread(() -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 7));
+                return true;
+            } catch (Exception e) { return false; }
+        }
+
+        @JavascriptInterface public String getDeviceInfo() {
+            try {
+                JSONObject o = new JSONObject();
+                o.put("model", (Build.MANUFACTURER + " " + Build.MODEL).trim());
+                o.put("android", Build.VERSION.RELEASE); o.put("sdk", Build.VERSION.SDK_INT);
+                String ip = "";
+                ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                Network n = cm.getActiveNetwork();
+                if (n != null) {
+                    LinkProperties lp = cm.getLinkProperties(n);
+                    if (lp != null) for (LinkAddress la : lp.getLinkAddresses()) if (la.getAddress() instanceof Inet4Address && !la.getAddress().isLoopbackAddress()) { ip = la.getAddress().getHostAddress(); break; }
+                }
+                o.put("ip", ip);
+                StatFs st = new StatFs(Environment.getDataDirectory().getPath());
+                o.put("freeGb", String.format(Locale.US, "%.1f", st.getAvailableBytes() / 1073741824.0));
+                o.put("totalGb", String.format(Locale.US, "%.1f", st.getTotalBytes() / 1073741824.0));
+                return o.toString();
+            } catch (Exception e) { return "null"; }
+        }
+
+        /** kind: wifi | bluetooth | device | display | sound | main. Returns false if this firmware has no such screen. */
+        @JavascriptInterface public boolean openSettings(String kind) {
+            String action;
+            switch (kind == null ? "" : kind) {
+                case "wifi": action = Settings.ACTION_WIFI_SETTINGS; break;
+                case "bluetooth": action = Settings.ACTION_BLUETOOTH_SETTINGS; break;
+                case "device": action = Settings.ACTION_DEVICE_INFO_SETTINGS; break;
+                case "display": action = Settings.ACTION_DISPLAY_SETTINGS; break;
+                case "sound": action = Settings.ACTION_SOUND_SETTINGS; break;
+                default: action = Settings.ACTION_SETTINGS;
+            }
+            try { Intent i = new Intent(action); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(i); return true; }
+            catch (Exception e) {
+                if (!action.equals(Settings.ACTION_SETTINGS)) {
+                    try { Intent i = new Intent(Settings.ACTION_SETTINGS); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(i); return true; } catch (Exception ignored) {}
+                }
+                return false;
+            }
+        }
+    }
+
+    @Override public boolean dispatchKeyEvent(KeyEvent event) {
+        int kc = event.getKeyCode();
+        if (kc == KeyEvent.KEYCODE_VOLUME_UP || kc == KeyEvent.KEYCODE_VOLUME_DOWN || kc == KeyEvent.KEYCODE_VOLUME_MUTE) {
+            boolean r = super.dispatchKeyEvent(event);
+            // Keep the Control Centre slider in step with the physical remote volume keys.
+            if (event.getAction() == KeyEvent.ACTION_DOWN && web != null)
+                web.postDelayed(() -> web.evaluateJavascript("window.glassVolumeSync&&glassVolumeSync()", null), 250);
+            return r;
+        }
+        if(kc==KeyEvent.KEYCODE_BACK && event.getAction()==KeyEvent.ACTION_UP) { if(web!=null) web.evaluateJavascript("(function(){var e=new KeyboardEvent('keydown',{bubbles:true});Object.defineProperty(e,'keyCode',{get:function(){return 10009;}});document.dispatchEvent(e);})();",null); return true; }
+        return super.dispatchKeyEvent(event);
+    }
+    @Override public void onBackPressed(){ if(web!=null) web.evaluateJavascript("(function(){var e=new KeyboardEvent('keydown',{bubbles:true});Object.defineProperty(e,'keyCode',{get:function(){return 10009;}});document.dispatchEvent(e);})();",null); else super.onBackPressed(); }
+}

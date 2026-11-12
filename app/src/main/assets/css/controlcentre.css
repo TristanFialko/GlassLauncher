@@ -1,0 +1,61 @@
+/* GLASS Control Centre — visual consistency and restrained focus refinement. */
+#ccScrim{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .35s var(--ease),visibility 0s linear .35s;background:linear-gradient(90deg,rgba(6,8,14,0) 38%,rgba(6,8,14,.34) 100%)}
+body.ccopen #ccScrim{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .35s var(--ease),visibility 0s}
+#cc{position:fixed;top:1.6rem;right:1.6rem;bottom:1.6rem;width:40rem;z-index:15;border-radius:var(--r-panel);padding:1.5rem 1.6rem 1.4rem;display:flex;flex-direction:column;
+  opacity:0;transform:translateX(calc(100% + 3rem));visibility:hidden;will-change:transform;
+  background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.055)),rgba(25,29,40,.66);
+  border:1px solid rgba(255,255,255,.19);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 1.8rem 4.4rem rgba(0,0,0,.30);
+  -webkit-backdrop-filter:blur(1.5rem) saturate(1.5);backdrop-filter:blur(1.5rem) saturate(1.5);
+  transition:transform .42s var(--ease),opacity .3s ease,visibility 0s linear .42s}
+#cc.on{opacity:1;transform:translateX(0);visibility:visible;transition:transform .42s var(--ease),opacity .3s ease,visibility 0s}
+#cchead{flex:0 0 auto;text-align:right;padding:.1rem .9rem 1rem 0}
+#cctime{font-size:3.6rem;font-weight:600;letter-spacing:-.01em;line-height:1;text-shadow:0 .1rem .6rem rgba(0,0,0,.25)}
+#ccdate{font-size:1.15rem;font-weight:500;color:var(--txt2);margin-top:.35rem}
+
+/* Native scrolling avoids the old translateY scroll jump and keeps tiles from vanishing at viewport edges. */
+#ccbody{flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;position:relative;margin:-.4rem;padding:.4rem;overscroll-behavior:contain;scrollbar-width:none}
+#ccbody::-webkit-scrollbar{display:none}
+#ccinner{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:7.6rem 7.6rem 8rem 7rem 6.2rem;gap:1rem;padding:.15rem .25rem .8rem;transition:none}
+
+.cci{display:flex;align-items:center;gap:1.1rem;padding:1rem 1.3rem;border-radius:var(--r-tile);min-width:0;overflow:hidden;
+  color:rgba(255,255,255,.96);background:linear-gradient(145deg,rgba(255,255,255,.145),rgba(255,255,255,.065));
+  border:1px solid rgba(255,255,255,.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.19),0 .35rem .9rem rgba(0,0,0,.10);
+  transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease),box-shadow .18s var(--ease),opacity .18s}
+.cci .chip{flex:0 0 auto;width:3.5rem;height:3.5rem;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.17);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);transition:background .18s var(--ease),color .18s var(--ease)}
+.cci .ico{width:1.8rem;height:1.8rem}
+.cci .txt{min-width:0;flex:1}
+.cci .t1{font-size:1.25rem;font-weight:650;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cci .v{font-weight:600;font-size:1.02rem;opacity:.82;white-space:nowrap}
+.cci .t2{font-size:1rem;color:rgba(255,255,255,.68);margin-top:.18rem;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;transition:color .18s}
+.cci.f{background:linear-gradient(145deg,rgba(255,255,255,.29),rgba(255,255,255,.16));color:#fff;border-color:rgba(255,255,255,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.34),0 .65rem 1.5rem rgba(0,0,0,.20);transform:scale(1.018);z-index:2}
+.cci.f .t2{color:rgba(255,255,255,.78)}
+.cci.on .chip{background:rgba(255,255,255,.25);color:#fff}
+.cci.f .chip,.cci.f.on .chip{background:rgba(255,255,255,.34);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.cci.dim{opacity:.58}
+
+/* sizes */
+.cci.big{flex-direction:column;align-items:flex-start;justify-content:space-between;padding:1.5rem}
+.cci.big .chip{width:4.6rem;height:4.6rem}
+.cci.big .ico{width:2.25rem;height:2.25rem}
+.cci.big .txt{flex:0 0 auto;width:100%}
+.cci.big .t1{font-size:1.4rem}
+.cci.wide .t1{display:block}
+.cci.wide .v{display:block;margin-top:.1rem}
+.cci.wide .t2{-webkit-line-clamp:1}
+.cci.full .t1{display:flex;justify-content:space-between;gap:1rem}
+.cci.mini{flex-direction:column;justify-content:center;align-items:center;gap:.5rem;padding:.6rem .4rem;text-align:center}
+.cci.mini .chip{width:3rem;height:3rem}
+.cci.mini .ico{width:1.55rem;height:1.55rem}
+.cci.mini .t1{font-size:.95rem;font-weight:600}
+.cci.mini .txt{flex:0 0 auto;width:100%}
+
+/* volume bar uses the same neutral glass palette in every appearance mode */
+.bar{height:.6rem;border-radius:.3rem;background:rgba(255,255,255,.22);margin:.55rem 0 .15rem;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:rgba(255,255,255,.88);border-radius:.3rem;transition:width .14s,background .18s}
+.cci.off .bar i{opacity:.45}
+
+/* No staggered tile entrance: it caused a distracting disappear/reappear effect. */
+#cc.on .cci{animation:none}
+body.lite #cc{background:linear-gradient(145deg,rgba(255,255,255,.15),rgba(255,255,255,.065)),rgba(25,29,40,.70)}

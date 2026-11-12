@@ -1,0 +1,29 @@
+/* GLASS - Control Centre: right-side sliding panel over the home screen */
+#ccScrim{position:fixed;top:0;left:0;right:0;bottom:0;z-index:14;pointer-events:none;opacity:0;transition:opacity .3s;background:linear-gradient(90deg,rgba(4,8,20,0) 30%,rgba(4,8,20,.5) 100%)}
+body.ccopen #ccScrim{opacity:1}
+#cc{position:fixed;top:1.6rem;right:1.6rem;bottom:1.6rem;width:36rem;z-index:15;border-radius:2.2rem;padding:1.6rem 1.6rem 1.2rem;display:flex;flex-direction:column;
+  transform:translateX(calc(100% + 3rem));visibility:hidden;transition:transform .38s cubic-bezier(.2,.8,.2,1),visibility 0s linear .38s}
+#cc,body.lite #cc{background:rgba(16,22,44,.9)}
+#cc.on{transform:translateX(0);visibility:visible;transition:transform .38s cubic-bezier(.2,.8,.2,1),visibility 0s}
+#cc h2{font-size:1.2rem;font-weight:700;letter-spacing:.06em;opacity:.75;margin:.2rem 0 .8rem .5rem;flex:0 0 auto}
+#ccbody{flex:1 1 auto;overflow:hidden;position:relative}
+#ccinner{padding:.25rem;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.ccsec{font-size:.85rem;font-weight:700;letter-spacing:.1em;opacity:.55;margin:.9rem 0 .45rem .5rem;text-transform:uppercase}
+.ccsec:first-child{margin-top:0}
+.cci{position:relative;display:flex;align-items:center;gap:1rem;min-height:4.6rem;padding:.8rem 1.1rem;margin-bottom:.55rem;border-radius:1.2rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);transition:background .18s,box-shadow .18s}
+.cci.f{background:rgba(255,255,255,.26);box-shadow:0 0 0 .15rem rgba(255,255,255,.95)}
+.cci .ico{width:1.9rem;height:1.9rem;flex:0 0 auto}
+.cci .txt{min-width:0;flex:1}
+.t1{font-size:1.1rem;font-weight:700;display:flex;justify-content:space-between;gap:1rem}
+.t1 .v{font-weight:600;opacity:.8;white-space:nowrap}
+.t2{font-size:.9rem;opacity:.68;margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{flex:0 0 auto;font-size:1.5rem;opacity:.5;line-height:1}
+.cci.dim{opacity:.5}
+.bar{height:.55rem;border-radius:.3rem;background:rgba(255,255,255,.22);margin:.5rem 0 .1rem;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:rgba(255,255,255,.95);border-radius:.3rem;transition:width .12s}
+.cci.off .bar i{background:rgba(255,255,255,.4)}
+/* appearance switch */
+.sw{flex:0 0 auto;width:3.4rem;height:1.9rem;border-radius:1rem;background:rgba(255,255,255,.25);position:relative;transition:background .25s}
+.sw::after{content:"";position:absolute;top:.2rem;left:.2rem;width:1.5rem;height:1.5rem;border-radius:50%;background:#fff;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.sw.on{background:#4c8dff}
+.sw.on::after{transform:translateX(1.5rem)}

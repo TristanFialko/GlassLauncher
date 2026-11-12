@@ -1,0 +1,68 @@
+/* GLASS - base: design tokens, glass material, wallpaper, header buttons, toast */
+html{font-size:1.0417vw}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --tint:rgba(24,27,36,.30);                 /* neutral smoke, not blue: the wallpaper supplies the colour */
+  --sheen:linear-gradient(135deg,rgba(255,255,255,.26) 0%,rgba(255,255,255,.09) 36%,rgba(255,255,255,.04) 62%,rgba(255,255,255,.15) 100%);
+  --edge:rgba(255,255,255,.20);
+  --hi:rgba(255,255,255,.46);
+  --ink:#14161c;                              /* text on a focused (bright) surface */
+  --txt2:rgba(255,255,255,.68);
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --r-panel:2.6rem; --r-tile:1.8rem; --r-key:1.35rem;
+}
+body.dark{--tint:rgba(10,12,18,.44)}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0b14;color:#fff;font-family:"SamsungOne","Helvetica Neue",Arial,sans-serif}
+#wp{position:fixed;top:0;left:0;right:0;bottom:0;background:center/cover no-repeat}
+#wpd{position:fixed;top:0;left:0;right:0;bottom:0;background:center/cover no-repeat;opacity:0;transition:opacity .7s ease}
+body.dark #wpd{opacity:1}
+#wpd.fallback{filter:brightness(.4) saturate(.8)}
+#shade{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,0) 35%,rgba(0,0,0,.5))}
+
+/* ---- the glass material: tint + sheen over a real backdrop blur, hairline edge, top highlight, soft depth ---- */
+.glass{position:relative;background:var(--sheen),var(--tint);border:1px solid var(--edge);
+  box-shadow:inset 0 1px 0 var(--hi),inset 0 -1px 0 rgba(255,255,255,.05),inset 0 0 1.8rem rgba(255,255,255,.035),0 1.8rem 4.4rem rgba(0,0,0,.26),0 .2rem .6rem rgba(0,0,0,.16);
+  -webkit-backdrop-filter:blur(1.5rem) saturate(1.55);backdrop-filter:blur(1.5rem) saturate(1.55)}
+/* no blur available (or switched off by Glass.perf): a denser smoke gradient, still layered, never a flat colour */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:var(--sheen),rgba(40,44,56,.84)}}
+body.noblur .glass{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--sheen),rgba(38,42,54,.80)}
+body.dark.noblur .glass{background:var(--sheen),rgba(18,20,28,.86)}
+body.lite .slot::before{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,.3)}
+
+/* inner surface (tiles, rows, keys): lighter glass on top of the blurred panel. No second blur, which keeps it cheap. */
+.gt{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.17),rgba(255,255,255,.075));border:1px solid rgba(255,255,255,.11);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 .35rem .9rem rgba(0,0,0,.12);color:#fff;
+  transition:background .18s var(--ease),color .18s var(--ease),transform .2s var(--ease),box-shadow .2s var(--ease)}
+.gt.f{background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(238,241,248,.90));color:var(--ink);border-color:rgba(255,255,255,.9);
+  box-shadow:inset 0 1px 0 #fff,0 .8rem 2rem rgba(0,0,0,.30);transform:scale(1.035);z-index:2}
+
+/* icons (user PNG or built-in SVG). SVGs follow the text colour, so they invert with the focus state. */
+.uiimg{width:100%;height:100%;object-fit:contain;filter:invert(1)}
+body.noinvert .uiimg{filter:none}
+.f .uiimg{filter:none}
+body.noinvert .f .uiimg{filter:brightness(0)}
+.gsvg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gsvg .fill{fill:currentColor;stroke:none}
+
+/* header buttons: Search + Control Centre (home screen; only restyled to match the new system) */
+#hdrBtns{position:fixed;top:3rem;right:3.6rem;display:flex;gap:1rem;z-index:10;transition:opacity .3s}
+.hbtn{width:3.4rem;height:3.4rem;border-radius:1.7rem;display:grid;place-items:center;cursor:pointer;color:#fff;box-shadow:inset 0 1px 0 var(--hi),0 .5rem 1.4rem rgba(0,0,0,.2)}
+.hbtn .hi{width:1.6rem;height:1.6rem;filter:drop-shadow(0 .05rem .2rem rgba(0,0,0,.35))}
+.hbtn{transition:transform .2s var(--ease),background .18s var(--ease),color .18s var(--ease),box-shadow .2s var(--ease)}
+.hbtn.f{transform:scale(1.1);background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(238,241,248,.9));color:var(--ink);border-color:#fff;box-shadow:inset 0 1px 0 #fff,0 .7rem 1.6rem rgba(0,0,0,.3)}
+.hbtn.f .hi{filter:none}
+body.lite .hbtn.glass{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--sheen),rgba(30,34,46,.5)}
+body.lite .hbtn.glass.f{background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(238,241,248,.9))}
+body.ccopen #hdrBtns,body.searchopen #hdrBtns{opacity:0}
+
+#toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:1rem 1.8rem;border-radius:1.4rem;font-size:1.1rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:40;max-width:50rem;text-align:center;color:#fff}
+#toast,body.noblur #toast{background:var(--sheen),rgba(24,27,36,.82)}
+#toast.on{opacity:1}
+
+/* installed-apps/ID list (kept from Phase 2) */
+#ids{display:none;position:fixed;top:8vh;left:10%;width:80%;height:84%;overflow:hidden;padding:2rem 2.6rem;border-radius:1.6rem;font-size:1.15rem;line-height:1.75;z-index:30}
+#ids,body.noblur #ids{background:var(--sheen),rgba(18,20,28,.93)}
+#ids.on{display:block}
+#ids h3{font-size:1.4rem;margin-bottom:.8rem}
+#ids b{display:inline-block;width:22rem;font-weight:600}
+#ids span{opacity:.7}
