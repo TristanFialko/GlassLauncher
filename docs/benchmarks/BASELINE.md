@@ -27,15 +27,19 @@ Android SDK platform 35 / build-tools 34.0.0, Node v24.22.2.
 `assets_baseline/`, `assets_phase1..3/` are **not** packaged (only `src/main/assets/` is).
 
 ## Runtime metrics (target device)
-| Metric | Baseline | Source / status |
+First VIP7802 run (2026-11-12, owner-run, harness **v1**): Android 11, armeabi-v7a, 1920×1080, 320 DPI. Several v1
+measurements turned out unreliable (`METHODOLOGY.md`), so this table separates what holds from what must be re-measured
+with harness v2.
+
+| Metric | Baseline 1.5 (v1 run) | Usable? |
 |---|---:|---|
-| Cold start (`am start -S -W` TotalTime) median / p95 | not measured | needs device — `bench-device.ps1` |
-| Warm start median / p95 | not measured | needs device |
-| D-pad frame pacing (gfxinfo janky %, p90/p99) | not measured | needs device |
+| Cold start (`am start -S -W` TotalTime) median | 1209.5 ms | Indicative only: LaunchState not validated, spread not reported. **Repeat with v2.** |
+| Warm start median | 1193 ms (all 10 samples identical) | **Invalid.** Glass was probably never backgrounded. **Repeat with v2.** |
+| Frame times during D-pad animation (gfxinfo) | p50 61 ms, p95 77 ms; 2,090 of 2,100 frames janky | The jank finding holds: frames take ~3–4 vsyncs, so ~15–16 fps while animating. The percentiles are 4 ms histogram buckets; there was no idle control and the refresh rate wasn't recorded. **Repeat with v2.** |
 | Search response (per keystroke) | not measured on device | host proxy below |
-| Control Centre open | not measured | needs device (Perfetto) |
-| Idle CPU (foreground) / CPU with another app in front | not measured | needs device |
-| Memory PSS | not measured | needs device |
+| Control Centre open | not measured | needs device (Perfetto, `-Trace`) |
+| CPU, foreground idle / behind another app | 1.983 % / 1.55 % | App process only (WebView renderer excluded); one 60 s window each; "behind another app" was behind Settings. **Repeat with v2.** |
+| Memory PSS | null | v1 parse failure. **Repeat with v2.** |
 
 ## Host proxy: search ranking cost of the original JavaScript (observed)
 `node tools/parity/search-parity.js --bench` runs the **production** `registry.js` + `shortcuts.js` under Node/V8 on a
@@ -57,11 +61,6 @@ ARM is expected to be several times slower, and this excludes DOM rebuild and ic
 - Rendering: `backdrop-filter` blur on `.glass` docks (also in lite mode); 800×480 card art drawn at 280×168; forced layout per home key press.
 
 ## How to record the device baseline
-```bat
-rem CI artifact "glasslauncher-baseline-1.5-debug-apk" is the baseline build.
-tools\bench\bench-device.bat -Label baseline -Apk glasslauncher-baseline-1.5-debug.apk
-tools\bench\bench-device.bat -Label glass2   -Apk glasslauncher-debug.apk
-powershell -ExecutionPolicy Bypass -File tools\bench\compare.ps1 bench-baseline-*\summary.json bench-glass2-*\summary.json
-```
-Use the same box, resolution/density, WebView version and app data state for both runs (the script records them and
-`compare.ps1` warns on differences).
+Follow "Running a valid A/B comparison" in `METHODOLOGY.md`. Use harness v2, `-CompileSpeed` on both builds, the same
+hour band, and alternate A, B, A, B. CI artifact `glasslauncher-baseline-1.5-debug-apk` is the baseline build.
+`compare.ps1` warns when device conditions differ and refuses v1 summaries.

@@ -2,8 +2,8 @@
 
 Every row states where the number came from. "Emulator" = Android 11 (API 30) x86_64 emulator on a GitHub Actions
 `ubuntu-24.04` runner (CI runs `43214807069`, `43215959721`, `43217231667`, job "Instrumented test"; runner speed varies between runs, so each row compares both builds within the same run); "host" = Linux x86_64 machine running Node/Rust
-directly. **Nothing here was measured on the ARRIS VIP7802**; device rows stay "pending" until
-`tools/bench/bench-device.ps1` has been run there for both APKs.
+directly. The first VIP7802 comparison (harness v1) is in its own section below; most of its numbers must be repeated.
+"Emulator" and "host" rows are not hardware results.
 
 ## Summary
 | Metric | Baseline 1.5 | Glass 2.0 (this branch) | Change | Evidence |
@@ -19,7 +19,26 @@ directly. **Nothing here was measured on the ARRIS VIP7802**; device rows stay "
 | APK, debug (clean build) | 2,617,976 B | 3,211,564 B | +593,588 B (+22.7 %) | Build output. Native: `armeabi-v7a` 242,848 B + `arm64-v8a` 329,728 B (stored uncompressed). |
 | APK, release unsigned (clean build) | 2,601,760 B | 3,196,840 B | +595,080 B (+22.9 %) | Build output. |
 | APK with `-Pglass.rust=false` (clean build) | 2,617,976 B | 2,622,524 B | +4,548 B | Build output. Incremental builds pad the APK; compare clean builds only. |
-| Cold / warm start, PSS, idle CPU, D-pad jank | not measured | not measured | pending | Device only — `tools/bench`. |
+| Cold / warm start, PSS, CPU, D-pad frames on the VIP7802 | see below | see below | **not established** | First device run used harness v1; see the next section. |
+
+## VIP7802, first comparison (owner-run 2026-11-12, harness v1): what the numbers can and cannot say
+Device: ARRIS VIP7802, Android 11, armeabi-v7a, 1920×1080, 320 DPI. One run per build. The raw folders were not
+available for this review; the assessment below comes from the reported summary and the v1 harness code
+(details: `METHODOLOGY.md`).
+
+| Metric | Baseline 1.5 | Glass 2.0 | Reported change | Verdict |
+|---|---:|---:|---|---|
+| Cold start median | 1209.5 ms | 1249.5 ms | +40 ms | **Unproven either way.** LaunchState not validated, spread unknown, one run each. No startup-path cause is known: the Rust library loads only on the first search. The new startup work is constructing `AppDiscovery` in `onCreate` and an icon-URL prefix check per WebView request. Repeat with v2. |
+| Warm start median | 1193 ms (10 identical) | 1246 ms (10 identical) | +53 ms | **Invalid measurement** (identical samples ≈ cold time; Glass most likely never left the screen). Repeat with v2. |
+| Foreground idle CPU | 1.983 % | 1.483 % | −0.5 pt | **Not claimable.** App process only, excluding the WebView renderer; one 60 s window each. |
+| Background CPU | 1.55 % | 1.20 % | −0.35 pt | **Not claimable.** Same limits, and measured behind Settings, which may not hide Glass. |
+| gfxinfo frame p50 / p95 during D-pad | 61 / 77 ms | 61 / 73 ms | p95 −4 ms | **No change shown.** 77 → 73 is one 4 ms histogram bucket in a single run. |
+| Janky frames during D-pad | 2090 / 2100 | 2088 / 2106 | none | **Valid as a finding, the same in both builds:** almost every frame takes ~3–4 vsync periods (~15–16 fps) while the focus animations run. Rendering is the main smoothness cost on this box, and this migration has not changed it. |
+| PSS | null | null | — | **Not measured** (v1 parse failure). |
+| APK | 2.62 MB | 3.21 MB | +0.59 MB | **Valid** (two native libraries). The box reported armeabi-v7a. If its ABI list (`device.abis` in a v2 summary) has no arm64-v8a, building with `-Pglass.rustAbis=armeabi-v7a` saves ~0.33 MB (ADR 0003). |
+
+**Conclusion:** the first device run shows no reliable performance improvement or regression in start time, CPU or
+memory. It does show, credibly, that frame rendering during focus animation is far over budget on the VIP7802 in both builds.
 
 ### Reading these honestly
 - The search speed-up through the real bridge (−22 % to −33 % on the emulator) is much smaller than the engine-only ratio, because one

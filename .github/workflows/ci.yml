@@ -46,6 +46,9 @@ jobs:
         with:
           name: parity-report
           path: parity.txt
+      - name: Device benchmark harness - parser unit tests
+        shell: pwsh
+        run: ./tools/bench/test-bench-lib.ps1
 
   android:
     name: Android build + JVM/JNI tests

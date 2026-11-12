@@ -12,7 +12,7 @@ _Last updated: 2026-11-12 · branch `glasslauncher-2.0-migration` · baseline ta
 | 4 Simplify the bridge | **Started** | Search: 1 coarse call per query + 1 per session. Icons: no bridge call any more (served to the WebView directly). A Control Centre status snapshot (3 calls → 1 per 2 s) was evaluated and deferred: one round trip measured ~0.1–0.25 ms on the emulator, so the saving is < 0.5 ms per 2 s. |
 | 5 Performance optimisation | **In progress** | App discovery O(N)→O(1) Binder calls (−76…79 %); WebView timers paused in background; app icons no longer block the JS thread (55 → 0.7 ms for 13 icons). Results in `docs/benchmarks/RESULTS.md`. |
 | 6 Rendering decision | Not started | Needs device frame-pacing data (ADR 0001: keep WebView until then). |
-| 7 Device validation | **Blocked: needs the VIP7802** | Emulator-only so far; emulator success is not hardware validation. |
+| 7 Device validation | **In progress** | First VIP7802 A/B run done with harness v1; its method was flawed (see below). Harness v2 written and tested off-device; device rerun pending. |
 | 8 Release hardening | Not started | No signing config in repo (by design); release APK is unsigned. |
 
 ## Completed work (commits on this branch)
@@ -30,21 +30,22 @@ _Last updated: 2026-11-12 · branch `glasslauncher-2.0-migration` · baseline ta
 | Host — Node | parity: 4,409 norm strings, 8,832 rankings | 0 differences |
 | Host — JVM | `RustCoreJniTest` (real JNI against host `libglass`) | 5/5 pass |
 | Emulator (API 30, x86_64) | `RustCoreInstrumentedTest`, `GlassEndToEndTest` ×5 (search parity, discovery parity, icon paths, icon cost, background poll) | 6/6 pass |
-| Physical device | — | **not run (no hardware available)** |
+| Host — PowerShell | `tools/bench/test-bench-lib.ps1` (benchmark parsers vs Android 11/12+ fixtures) + end-to-end runs against a simulated Android 11 device | 65/65 pass |
+| Physical device | VIP7802 A/B with harness v1 (owner) | ran; method flawed, see `docs/benchmarks/METHODOLOGY.md` |
 
 ## Performance (details and caveats: `docs/benchmarks/RESULTS.md`)
 | Metric | Baseline | Current | Target | Evidence |
 |---|---:|---:|---:|---|
-| Cold start to usable | not measured | not measured | set after device baseline | device needed |
-| Warm resume | not measured | not measured | set after device baseline | device needed |
-| D-pad focus latency / jank | not measured | not measured | set after device baseline | device needed |
+| Cold start (to first frame) | 1209.5 ms (v1) | 1249.5 ms (v1) | set after v2 baseline | VIP7802, v1: unvalidated, spread unknown; repeat |
+| Warm resume | invalid (v1) | invalid (v1) | set after v2 baseline | VIP7802, v1: 10 identical samples; repeat |
+| Frames during D-pad animation | p50 61 ms, 99.5 % janky (v1) | p50 61 ms, 99.1 % janky (v1) | set after v2 baseline | VIP7802: ~15–16 fps while animating in both builds (finding holds); latency not measured (needs `-Trace`) |
 | Search response (per query, in WebView) | 184–325 µs | 123–254 µs (−22…33 %) | no regression | emulator, 3 runs |
 | App discovery (Java) | 14.9–57.1 ms | 3.4–12.2 ms (−76…79 %) | — | emulator, 84 packages, 3 runs |
 | JS thread blocked by 13 first-time icons | 55.1 ms | 0.7 ms | — | emulator |
 | Control Centre open | not measured | not measured | — | device needed |
 | Background poll while hidden | 5 calls / 10 s | 0 | 0 | emulator |
-| Idle / active CPU | not measured | not measured | set after baseline | device needed |
-| Memory PSS | not measured | not measured | no regression | device needed |
+| Idle CPU (app process only) | 1.983 % (v1) | 1.483 % (v1) | set after v2 baseline | VIP7802, v1: renderer excluded, one window; not claimable |
+| Memory PSS | null (v1) | null (v1) | no regression | VIP7802, v1 parse failure; repeat |
 | APK size (debug, clean build) | 2,617,976 B | 3,211,564 B | monitor | build output |
 
 ## Feature preservation
@@ -53,7 +54,7 @@ _Last updated: 2026-11-12 · branch `glasslauncher-2.0-migration` · baseline ta
 - Feature checklist status per item: `docs/architecture/FEATURE_INVENTORY.md` (static). Device test of the full checklist is pending.
 
 ## Open issues / limitations
-- **No hardware validation.** Everything about the VIP7802 (ABI list, WebView version, real timings, remote input) is unverified. Run `tools\bench\bench-device.bat` for the baseline APK and this build (see `docs/benchmarks/BASELINE.md`).
+- **Device numbers not yet reliable.** The first VIP7802 run used harness v1, which had method flaws (`docs/benchmarks/METHODOLOGY.md`). Only the APK size and the rendering finding (~15–16 fps during focus animation, both builds) are usable. Start time, CPU and memory must be re-measured with harness v2. Remote-control feature checklist not yet run.
 - Pre-existing lint errors kept as-is (not regressions): `MissingPermission` ×2 (`BLUETOOTH_CONNECT`, irrelevant at targetSdk 30), `MissingTvBanner`. `ExpiredTargetSdkVersion` disabled because targetSdk 30 is deliberate.
 - Gradle 9.6 reports deprecations that will break with Gradle 10 (AGP 8.7.3 is older than this Gradle); no AGP/Gradle upgrade done (out of scope, risky).
 - Static findings not acted on because they need device numbers or touch visuals (see TARGET_ARCHITECTURE "Next candidates"): forced layout per D-pad key, 800×480 card art drawn at 280×168, `noblur` fallback likely not applying to `#cc` (CSS specificity — visual, needs review).
@@ -66,7 +67,7 @@ _Last updated: 2026-11-12 · branch `glasslauncher-2.0-migration` · baseline ta
 - Partial: `-Pglass.rust=false` (no native code), `PERF.core:'js'` (original search ranking) or `PERF.icons:'bridge'` (original icon path) in `apps.js`.
 
 ## Next actions
-1. **Owner:** run the device benchmark for baseline and this build on the VIP7802 and attach both `summary.json` files; run the feature checklist with the remote.
-2. Use the device benchmark to find the next bottleneck (D-pad jank and cold start are the main unknowns); only then pick the next optimisation.
+1. **Owner:** rerun both builds with harness v2 as described in `docs/benchmarks/METHODOLOGY.md` (`-CompileSpeed`, same hour band, A/B/A/B) and send the four result folders (zipped), including the old v1 folders if still available. Run the feature checklist with the remote.
+2. Rendering: the v1 run already shows ~61 ms frames during focus animation. Use v2 (idle control, refresh rate, `-Trace`) to find what dominates the frame (blur compositing, raster of 800×480 art, layout) before any Phase 6 decision. Visual changes need owner review.
 3. Measure the home D-pad path (forced layout per key, unthrottled key repeat) with the gfxinfo part of the benchmark.
 4. Set performance targets from the device baseline; then the Phase 6 rendering decision.
