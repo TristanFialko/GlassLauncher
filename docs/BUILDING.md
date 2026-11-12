@@ -37,7 +37,7 @@ echo "sdk.dir=$ANDROID_HOME" > local.properties
 | `gradlew assembleDebug` / `assembleRelease` | APKs with `libglass.so` for `armeabi-v7a` + `arm64-v8a` (release is unsigned unless you add a signing config locally). |
 | `gradlew testDebugUnitTest` | JVM tests, including real JNI calls into a host build of `libglass`. |
 | `gradlew connectedDebugAndroidTest -Pglass.rustAbis=x86_64` | Instrumented tests on an x86_64 emulator (`rustup target add x86_64-linux-android` first). |
-| `-Pglass.rust=false` | Build without Rust; the app uses its original JavaScript search (behaviour identical, the APK is ~0.59 MB smaller). |
+| `-Pglass.rust=false` | Build without Rust; the app uses its original JavaScript search (behaviour identical, the APK is ~0.59 MB smaller). Run `clean` after toggling it, or a stale `libglass.so` can stay in the APK. |
 | `-Pglass.rustAbis=armeabi-v7a` | Only 32-bit ARM (if the box turns out to be 32-bit only). |
 | `cd rust && cargo fmt --all -- --check && cargo clippy --all-targets -- -D warnings && cargo test` | Rust checks (same as CI). |
 | `cargo build --release -p glass-cli --manifest-path rust/Cargo.toml && node tools/parity/search-parity.js --bench` | Search parity (registry.js vs Rust) and host benchmark. |

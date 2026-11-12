@@ -11,6 +11,7 @@ Evidence for every claim below is in `MIGRATION_STATUS.md` and `docs/benchmarks/
 │                (Glass 2.0: pauses WebView timers while in background) │
 │ GlassBridge    the only object exposed to JS ("AndroidBridge")        │
 │ AppDiscovery   PackageManager: app list (3 queries, not N), launch,   │
+│                icons served to the WebView (shouldInterceptRequest)   │
 │                icons                                                   │
 │ SystemControls audio / Wi-Fi / Bluetooth / device info                │
 │ SettingsLauncher settings intents                                     │
@@ -83,10 +84,24 @@ Parity is checked by `tools/parity/search-parity.js`, which loads the production
 - Properties: `glass.rust=false` (no native core; app runs the original JS paths), `glass.rustAbis`, `glass.cargo`, `glass.rustProfile`.
 - No `cargo-ndk`, no CMake, no UniFFI (see ADR 0002).
 
+## App icon flow (Glass 2.0)
+
+1.5 path: `icons.js packageIcon` → `setTimeout(0)` → synchronous `AndroidBridge.getAppIcon(pkg)` (bitmap → PNG → base64
+on the JavaBridge thread while JavaScript waits) → `data:` URI.
+
+2.0 path: `packageIcon` creates an `Image` for `https://appassets.androidplatform.net/glass-icon/<pkg>` (a host reserved
+for app-local content; nothing goes to the network). `MainActivity`'s `WebViewClient.shouldInterceptRequest` answers it on
+WebView's loader threads with the same 128 px PNG bytes (`AppDiscovery.iconPng`, LRU-cached), or a 404 if the package has
+no icon. The callback still receives a URL only after the image has loaded, or `null`, so every caller (home tiles,
+Recently Used, Search results) behaves exactly as before. `PERF.icons:'bridge'` in `apps.js` restores the 1.5 path, and
+`getAppIcon` remains on the bridge.
+
 ## Next candidates (only with measurement — see MIGRATION_STATUS.md)
 
-1. Control Centre status snapshot: replace the three synchronous bridge calls every 2 s with one batched call (Phase 4).
-2. Icon pipeline: `getAppIcon` encodes a 128 px PNG + base64 synchronously per icon; candidates are a faster encoder (Rust) or
-   serving icons through `shouldInterceptRequest` so decoding leaves the JS thread. Needs device timing first.
-3. Home D-pad path: forced layout per key press and unthrottled key repeat (static finding) — JS-side, measure with the D-pad gfxinfo benchmark.
-4. Card art decoded at 800×480 for 280×168 tiles (memory) — asset change, visual review required before any change.
+1. Home D-pad path: forced layout per key press and unthrottled key repeat (static finding). JS-side; measure with the
+   D-pad gfxinfo part of `tools/bench` first.
+2. Card art decoded at 800×480 for 280×168 tiles (memory). This is an asset change, so it needs visual review before anything changes.
+3. Control Centre status snapshot (3 bridge calls → 1 per 2 s tick): deferred. One round trip measured ~0.1–0.25 ms on the
+   emulator, so the saving is under 0.5 ms every 2 s.
+4. Phase 6 rendering decision, once device frame-pacing data exists (ADR 0001).
+
