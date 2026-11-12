@@ -286,6 +286,8 @@ Check "native total = app" $s.memory.total_pss_kb.median 53686
 Check "native frames" $s.frames.nav.frames 240
 Check "native latency n" $s.frames.key_to_frame_ms.n 8
 Check "native latency median" $s.frames.key_to_frame_ms.median 35
+Check "native main process reported" ($null -ne $s.memory.main_process) "True"
+Check "native main process not running" ($null -eq $s.memory.main_process.pid) "True"
 
 Write-Host "bench-device simulation tests: $($script:pass) passed, $($script:fail) failed"
 if ($script:fail -gt 0) { exit 1 }

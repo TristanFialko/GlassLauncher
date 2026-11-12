@@ -15,6 +15,7 @@
                  default 15) before timing am start -W of Glass. Anything else is rejected with a diagnostic, never averaged in.
     memory       dumpsys meminfo <pid>, 3 samples, app process AND Glass's WebView renderer process(es), attributed via
                  dumpsys activity services; ambiguous renderers are rejected, never summed.
+                 native (-Activity .NativeHomeActivity): a live main $Pkg process is reported in memory.main_process, never summed.
     CPU          /proc/<pid>/stat utime+stime for the app AND renderer process(es), 3 windows each.
     frames       gfxinfo over a scripted D-pad sequence AND over an idle window of the same length (control), plus
                  framestats, histogram and the display refresh rate. These are rendering frame times, not input latency.
@@ -316,9 +317,22 @@ for ($s = 1; $s -le 3; $s++) {
   Start-Sleep -Seconds 5
 }
 foreach ($e in ($memErr | Select-Object -Unique)) { Warn "meminfo: $e" }
+# v5.1: native mode measures only $Proc. The main $Pkg process (MainActivity/router) can also be alive: the router
+# trampoline leaves it cached when native is HOME, and Android relaunches a WebView-mode Glass set as default HOME after
+# am start -S. Reported so the PSS gate is judged knowingly; never added to total_pss_kb.
+$mainProc = $null
+if ($Ui -eq "native") {
+  $mp = (Invoke-AdbShell "pidof $Pkg").Trim()
+  $mainProc = [ordered]@{ pid = $(if ($mp) { $mp } else { $null }); pss_kb = $null }
+  if ($mp) {
+    $mmo = Invoke-AdbShell "dumpsys meminfo $mp"; Save "meminfo.txt" "--- main process $Pkg pid $mp`n$mmo"
+    $mainProc.pss_kb = (ConvertFrom-Meminfo $mmo).pss_kb
+    Warn "native run: main process $Pkg (pid $mp) is also alive, PSS $($mainProc.pss_kb) KB; not included in total_pss_kb (see memory.main_process)"
+  }
+}
 $memory = [ordered]@{ app_pss_kb = (Get-Stats $memApp); renderer_pss_kb = (Get-Stats $memRend); total_pss_kb = (Get-Stats $memTot)
                       renderer_processes = @($rend | ForEach-Object { $_.name + " (pid " + $_.pid + ")" })
-                      renderer_attribution = $sel.attribution; renderer_rejected = $sel.error
+                      renderer_attribution = $sel.attribution; renderer_rejected = $sel.error; main_process = $mainProc
                       webview_mode = $(if ($rend.Length -gt 0) { "multiprocess (renderer in a separate process)" } elseif ($sel.error) { "unknown (renderer ambiguous)" } else { "single-process (no Glass renderer process found)" }) }
 
 # ---------- foreground idle CPU ----------

@@ -44,6 +44,8 @@ The previous agent's local workspace could not be reached, and GitHub had nothin
 | `7f0acd9` | Bounded shell reads in `NativeUiPrototypeTest`: 60 s per command, 20 s per `am start -W` (non-fatal), 8 min per test. A stuck command now ends the test with a `[sh timed out …]` log line instead of hanging CI |
 | `26f8055` | Search `onDraw` no longer allocates (font metrics were re-read per bar, row and key: about 50 objects per frame). Search's settings shortcuts call `startActivity` on the `pm` executor instead of the UI thread. Navigate/click sound `openFd` moved from `onCreate` to the worker |
 
+Harness v5.1 (`tools/bench`): native runs also report the main `com.glasslauncher` process in `memory.main_process` (never summed). It can stay cached after the router hands over to native HOME, or be relaunched by Android when a WebView-mode Glass is the default HOME, and the PSS gate should not ignore it silently.
+
 Not verified yet: CI for `7f0acd9`/`26f8055` was still running when this was written; check the PR. Nothing in this session ran on the VIP7802.
 
 ### Rendering and threading review (code reading only; change after a device trace)
