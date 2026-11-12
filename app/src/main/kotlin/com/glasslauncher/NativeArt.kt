@@ -8,6 +8,7 @@ import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
+import android.graphics.LinearGradient
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
@@ -18,14 +19,15 @@ import android.graphics.Shader
  * draw pass only blits bitmaps that already have their display size and rounded corners.
  */
 object NativeArt {
-    /** Decodes an asset at the smallest power-of-two sample that stays >= the target, or null. */
+    /** Decodes an asset at the smallest power-of-two sample that stays >= the target, or null. [mutable] allows drawing into it. */
     @JvmStatic
-    fun decode(am: AssetManager, path: String, reqW: Int, reqH: Int): Bitmap? = try {
+    @JvmOverloads
+    fun decode(am: AssetManager, path: String, reqW: Int, reqH: Int, mutable: Boolean = false): Bitmap? = try {
         val o = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         am.open(path).use { BitmapFactory.decodeStream(it, null, o) }
         var s = 1
         while (o.outWidth / (s * 2) >= reqW && o.outHeight / (s * 2) >= reqH) s *= 2
-        val d = BitmapFactory.Options().apply { inSampleSize = s }
+        val d = BitmapFactory.Options().apply { inSampleSize = s; inMutable = mutable }
         am.open(path).use { BitmapFactory.decodeStream(it, null, d) }
     } catch (t: Throwable) {
         null
@@ -79,6 +81,24 @@ object NativeArt {
         p.shader = BitmapShader(flat, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
         Canvas(out).drawRoundRect(RectF(0f, 0f, w.toFloat(), h.toFloat()), radius, radius, p)
         flat.recycle()
+        return out
+    }
+
+    /** The home shade over the wallpaper (#bg::after): black .12 at the top, clear at 35 %, black .5 at the bottom. */
+    @JvmField val SHADE_COLORS = intArrayOf(0x1F000000, 0x00000000, 0x80000000.toInt())
+    @JvmField val SHADE_STOPS = floatArrayOf(0f, .35f, 1f)
+
+    /**
+     * [wall] with the home shade drawn in once, so NativeHomeView does not paint a full-screen gradient every frame. Bakes
+     * in place when [wall] is mutable, else into a copy (recycling [wall]). Blur first: the glass backdrops are made from
+     * the unshaded wallpaper.
+     */
+    @JvmStatic
+    fun shaded(wall: Bitmap): Bitmap {
+        val out = if (wall.isMutable) wall else (wall.copy(Bitmap.Config.ARGB_8888, true) ?: return wall).also { wall.recycle() }
+        val h = out.height.toFloat()
+        val p = Paint().apply { shader = LinearGradient(0f, 0f, 0f, h, SHADE_COLORS, SHADE_STOPS, Shader.TileMode.CLAMP) }
+        Canvas(out).drawRect(0f, 0f, out.width.toFloat(), h, p)
         return out
     }
 

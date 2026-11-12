@@ -88,7 +88,9 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
             v.requestFocus()
             probe = FrameLatencyProbe.attachIfRequested(this, "native")
             initSounds(c)
-            worker.execute { loadAssets(c, v) }
+            val dark0 = v.dark
+            wallLoading[if (dark0) 1 else 0] = true   // the first wallpaper is on its way
+            worker.execute { loadAssets(c, v, dark0) }
             prefs = getSharedPreferences("glass_native_home", MODE_PRIVATE)
             v.restoreFocus(b?.getIntArray(STATE_FOCUS))
             pm.execute { loadRecent(); loadInstalled() }
@@ -96,31 +98,31 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         } finally { Trace.endSection() }
     }
 
-    /** Wallpapers (both themes), their blurred backdrops, baked shadows, then card art: current theme first. */
-    private fun loadAssets(cfg: NativeHomeConfig, view: NativeHomeView) {
+    /**
+     * The current theme's wallpaper (shade baked in) and blurred backdrop, baked shadows and card art; then the other
+     * theme's blurred backdrop and art. Its full-size wallpaper is not kept: [wallpaperNeeded] decodes it on a theme flip.
+     */
+    private fun loadAssets(cfg: NativeHomeConfig, view: NativeHomeView, dark: Boolean) {
         Trace.beginSection("Glass:nativeLoadAssets")
         try {
-            val dark = view.dark
             val am = assets
-            // theme.js:11: a dark wallpaper that fails to decode falls back to the light one at brightness .4 / saturation .8
-            fun wall(isDark: Boolean): Bitmap? {
-                if (!isDark) return NativeArt.decode(am, cfg.wallpaperLight, 1920, 1080)
-                NativeArt.decode(am, cfg.wallpaperDark, 1920, 1080)?.let { return it }
-                return NativeArt.decode(am, cfg.wallpaperLight, 1920, 1080)?.let { NativeArt.dimmedFallback(it) }
-            }
-            val wl = wall(dark)
-            val bl = wl?.let { NativeArt.blurred(it, 240, 135, 3) }
+            val wl = wall(cfg, dark, true)
+            val bl = wl?.let { NativeArt.blurred(it, 240, 135, 3) }   // from the unshaded wallpaper, so before shaded()
+            val ws = wl?.let { NativeArt.shaded(it) }
             val ds = NativeArt.shadow(NativeHomeView.DOCK_W.toInt(), NativeHomeView.DOCK_H.toInt(), NativeHomeView.DOCK_R, 44f, 0xFF000000.toInt())
             val ts = NativeArt.shadow(NativeHomeView.TILE_W.toInt(), NativeHomeView.TILE_H.toInt(), NativeHomeView.TILE_R, 14f, 0xFF000000.toInt())
             ui.post {
-                if (dark) { view.wallDark = wl; view.blurDark = bl } else { view.wallLight = wl; view.blurLight = bl }
-                view.dockShadow = ds; view.tileShadow = ts; view.invalidate()
+                if (dark) view.blurDark = bl else view.blurLight = bl
+                view.dockShadow = ds; view.tileShadow = ts
+                wallLoading[if (dark) 1 else 0] = false
+                view.wallpaperLoaded(dark, ws)
             }
             loadArt(cfg, view, dark)
-            val w2 = wall(!dark)
+            val w2 = wall(cfg, !dark, false)
             val b2 = w2?.let { NativeArt.blurred(it, 240, 135, 3) }
+            w2?.recycle()   // never handed to the view, so no display list holds it
             ui.post {
-                if (dark) { view.wallLight = w2; view.blurLight = b2 } else { view.wallDark = w2; view.blurDark = b2 }
+                if (dark) view.blurLight = b2 else view.blurDark = b2
                 view.invalidate()
             }
             loadArt(cfg, view, !dark)   // the other theme's art is warmed so switching never flashes (home.js:21)
@@ -392,6 +394,38 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     }
 
     override fun exitPrototype() { if (!asHome) finish() }
+
+    /** Index 0 light, 1 dark: that wallpaper's decode is queued on [worker]. UI thread only. */
+    private val wallLoading = BooleanArray(2)
+
+    /**
+     * A theme's full-size wallpaper, or null. theme.js:11: a dark wallpaper that fails to decode falls back to the light
+     * one at brightness .4 / saturation .8. [mutable] lets NativeArt.shaded bake the shade in place. Worker thread.
+     */
+    private fun wall(cfg: NativeHomeConfig, isDark: Boolean, mutable: Boolean): Bitmap? {
+        val am = assets
+        if (!isDark) return NativeArt.decode(am, cfg.wallpaperLight, 1920, 1080, mutable)
+        NativeArt.decode(am, cfg.wallpaperDark, 1920, 1080, mutable)?.let { return it }
+        val light = NativeArt.decode(am, cfg.wallpaperLight, 1920, 1080) ?: return null
+        return NativeArt.dimmedFallback(light).also { light.recycle() }
+    }
+
+    /** NativeHomeView keeps only the on-screen theme's wallpaper; a theme flip decodes the other one again here. */
+    override fun wallpaperNeeded(dark: Boolean): Boolean {
+        val c = cfg ?: return false
+        val v = view ?: return false
+        val i = if (dark) 1 else 0
+        if (wallLoading[i]) return true
+        try {
+            worker.execute {
+                Trace.beginSection("Glass:nativeWallpaper")
+                val bm = try { wall(c, dark, true)?.let { NativeArt.shaded(it) } } catch (t: Throwable) { Log.e(TAG, "wallpaper", t); null } finally { Trace.endSection() }
+                ui.post { wallLoading[i] = false; v.wallpaperLoaded(dark, bm) }
+            }
+        } catch (e: java.util.concurrent.RejectedExecutionException) { return false }
+        wallLoading[i] = true
+        return true
+    }
 
     override fun dispatchKeyEvent(e: KeyEvent): Boolean {
         val volumeKey = e.keyCode == KeyEvent.KEYCODE_VOLUME_UP || e.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || e.keyCode == KeyEvent.KEYCODE_VOLUME_MUTE

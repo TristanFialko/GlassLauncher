@@ -78,6 +78,30 @@ Candidates for the owner's `-Trace` run, in rough order of expected cost on the 
 
 Checked and fine: Home, Control Centre and icon drawing preallocate paints, paths, shaders and rects; the docks' fade layer exists only while rows scroll; art is decoded off the UI thread at display size; Control Centre system calls and polling run on its worker. UI-thread file reads left on purpose: `NativeHomeConfig.load` (`home.json`) in `onCreate` and `UiRouter.mode` in `MainActivity`. Both are small and needed before the first frame or the routing decision.
 
+### Rendering changes from that review (branch `glasslauncher-2.0-render-opt`, not on a device yet)
+
+All four candidates above are implemented on `glasslauncher-2.0-render-opt` (draft PR into `glasslauncher-2.0-consolidated`). They were written by code reading in a sandbox with no Gradle, Kotlin compiler or emulator, so **CI is the first compile**. They need the owner's `-Trace` run and the A/B/PSS bench before merging.
+
+| Item | Change | Files |
+|---|---|---|
+| 1. Search dimming layer | The full-screen `saveLayerAlpha` is gone. `drawRowsMasked(c, alpha)` uses one layer for both the Search dimming and the scroll fade mask, limited to what the rows paint (60 px halo above; the baked dock shadow, 124 px, below), and only while the rows are dimmed or reach a fade band. At rest with Search closed there is still no layer. | `NativeHomeView` |
+| 2. Backdrop overdraw | The home shade (`#bg::after`) is baked into each full-size wallpaper once (`NativeArt.shaded`), after the blurred glass backdrop is made from the unshaded image. `drawBackdrop` draws the shade only over the bare base colour (no wallpaper yet, or a failed decode). Source-over is affine in the destination, so the crossfade gives the same pixels as before. | `NativeArt`, `NativeHomeView`, `NativeHomeActivity` |
+| 3. Memory (PSS gate) | Only the on-screen theme keeps its full-size wallpaper (about 8 MB at 1920x1080 instead of 16 MB). The other theme's wallpaper is decoded only to make its 240x135 blur, then recycled. A theme flip asks the activity (`Host.wallpaperNeeded`) to decode it on the worker, and the 700 ms crossfade starts when it arrives (`wallpaperLoaded`). After the crossfade settles, the hidden wallpaper is dropped (never `recycle()`d, since display lists may still hold it). Both blurred backdrops and both themes' card art stay loaded, so Search, Control Centre and the cards never wait. | `NativeHomeView`, `NativeHomeActivity` |
+| 4. Per key press | `anim()` reuses each slot's `ValueAnimator` (`setFloatValues` + `start`) and every caller passes a preallocated `Setter`, so `moved()`, Control Centre, Search and toast animations no longer allocate an animator, value holder, listener and lambda per press. The interpolator is set explicitly (`ACCEL_DECEL`, ValueAnimator's default) because a reused animator keeps the previous one. | `NativeHomeView`, `NativeControlCentre` |
+
+Smaller fixes in the same change:
+
+- The bottom dock shadow was clipped at +60 px while the rows scrolled through the fade band (the layer used the 60 px halo, but the baked shadow reaches 124 px below the dock). The layer now covers it, so the shadow fades instead of being cut.
+- The theme crossfade could stop a hair short of 1 (float lerp), leaving the dark wallpaper drawn at alpha 254 over the light one for good. Its end now snaps to the target, which also lets the hidden wallpaper be dropped.
+- `loadAssets` takes the theme from `onCreate` instead of reading `view.dark` on the worker thread.
+
+Trade-offs and what to check on the box:
+
+- **Theme flip latency:** a manual flip (Control Centre > Appearance, Search theme toggle, or the day/night change) now waits for one 1920x1080 JPEG decode before the crossfade starts. Expected about 100-300 ms on the VIP7802; look for the `Glass:nativeWallpaper` section in the `-Trace` run. If it feels slow, keep both wallpapers again (revert item 3 only) and accept the extra 8 MB.
+- **Frames with Search open:** `Glass:nativeDraw` should get cheaper while typing in Search; compare against `glasslauncher-2.0-consolidated` in the same harness run.
+- **PSS:** the native process should be about 8 MB smaller from startup on, since the second theme's full-size wallpaper is no longer kept.
+- `NativeUiPrototypeTest`'s Appearance check sleeps 800 ms after the toggle; the decode makes the crossfade start later, but any change in the backdrop still counts as a difference.
+
 ## Language and process layout
 
 | Layer | Language | Files |
