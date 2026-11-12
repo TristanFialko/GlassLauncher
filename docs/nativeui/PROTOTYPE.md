@@ -45,7 +45,7 @@ Known visual differences, to be judged on the device:
 - The glass blur is a pre-blurred wallpaper, not a live backdrop: identical while the wallpaper is static, but cards behind the Control Centre are covered rather than blurred.
 - Text is drawn in Android's sans-serif (Roboto). The CSS asks for SamsungOne/Helvetica Neue/Arial, which the WebView also resolves to Roboto on this box (unverified).
 - The vertical positions marked ≈ in the checklist are estimates.
-- Date: the prototype prints "Thursday 12 November". The CI emulator's older WebView prints "Thursday, 12 November"; the box's WebView 157 en-GB output must be checked on the device.
+- Date: the prototype prints "Thursday 12 November" (modern en-GB CLDR, no comma), as the box's current WebView does; older WebViews printed "Thursday, 12 November". Check the box's WebView 157 output on the device.
 - CI emulator caveat: that emulator image's system WebView does not support flex `gap`, so its WebView screenshots show touching cards and rows. Compare spacing against the box, not against those shots.
 
 ## Build and install
