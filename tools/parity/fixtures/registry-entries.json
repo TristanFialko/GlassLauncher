@@ -1,0 +1,7840 @@
+{
+ "generated_from": "app/src/main/assets/js/registry.js G.registry.entries() (pre-snapshot-migration production path)",
+ "cases": [
+  {
+   "name": "fixture box, storage page missing",
+   "entries": [
+    {
+     "kind": "app",
+     "id": "app:com.google.android.youtube.tv",
+     "title": "YouTube",
+     "subtitle": "com.google.android.youtube.tv",
+     "pkg": "com.google.android.youtube.tv",
+     "tag": "App",
+     "keywords": [
+      "yt",
+      "videos"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.netflix.ninja",
+     "title": "Netflix",
+     "subtitle": "com.netflix.ninja",
+     "pkg": "com.netflix.ninja",
+     "tag": "App",
+     "keywords": [
+      "films",
+      "movies"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.amazon.amazonvideo.livingroom",
+     "title": "Prime Video",
+     "subtitle": "com.amazon.amazonvideo.livingroom",
+     "pkg": "com.amazon.amazonvideo.livingroom",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.disney.disneyplus",
+     "title": "Disney+",
+     "subtitle": "com.disney.disneyplus",
+     "pkg": "com.disney.disneyplus",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.spotify.tv.android",
+     "title": "Spotify",
+     "subtitle": "com.spotify.tv.android",
+     "pkg": "com.spotify.tv.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.stremio.one",
+     "title": "Stremio",
+     "subtitle": "com.stremio.one",
+     "pkg": "com.stremio.one",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.limelight",
+     "title": "Moonlight",
+     "subtitle": "com.limelight",
+     "pkg": "com.limelight",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.retroarch",
+     "title": "RetroArch",
+     "subtitle": "com.retroarch",
+     "pkg": "com.retroarch",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.vending",
+     "title": "Google Play Store",
+     "subtitle": "com.android.vending",
+     "pkg": "com.android.vending",
+     "tag": "App",
+     "keywords": [
+      "play store",
+      "google play",
+      "store",
+      "app store",
+      "download apps"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.tv.settings",
+     "title": "Settings",
+     "subtitle": "com.android.tv.settings",
+     "pkg": "com.android.tv.settings",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.settings",
+     "title": "Settings",
+     "subtitle": "com.android.settings",
+     "pkg": "com.android.settings",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.tvlauncher",
+     "title": "Android TV Home",
+     "subtitle": "com.google.android.tvlauncher",
+     "pkg": "com.google.android.tvlauncher",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.apps.tv.launcherx",
+     "title": "Google TV Home",
+     "subtitle": "com.google.android.apps.tv.launcherx",
+     "pkg": "com.google.android.apps.tv.launcherx",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.music",
+     "title": "YouTube Music",
+     "subtitle": "com.google.android.music",
+     "pkg": "com.google.android.music",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.videos",
+     "title": "Google TV",
+     "subtitle": "com.google.android.videos",
+     "pkg": "com.google.android.videos",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.plexapp.android",
+     "title": "Plex: Stream Movies & TV",
+     "subtitle": "com.plexapp.android",
+     "pkg": "com.plexapp.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:org.xbmc.kodi",
+     "title": "Kodi",
+     "subtitle": "org.xbmc.kodi",
+     "pkg": "org.xbmc.kodi",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:tv.twitch.android.app",
+     "title": "Twitch",
+     "subtitle": "tv.twitch.android.app",
+     "pkg": "tv.twitch.android.app",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.hbo.hbonow",
+     "title": "Max",
+     "subtitle": "com.hbo.hbonow",
+     "pkg": "com.hbo.hbonow",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.apple.atve.androidtv.appletv",
+     "title": "Apple TV",
+     "subtitle": "com.apple.atve.androidtv.appletv",
+     "pkg": "com.apple.atve.androidtv.appletv",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:bbc.iplayer.android",
+     "title": "BBC iPlayer",
+     "subtitle": "bbc.iplayer.android",
+     "pkg": "bbc.iplayer.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:air.ITVMobilePlayer",
+     "title": "ITVX",
+     "subtitle": "air.ITVMobilePlayer",
+     "pkg": "air.ITVMobilePlayer",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.channel4.ondemand",
+     "title": "Channel 4",
+     "subtitle": "com.channel4.ondemand",
+     "pkg": "com.channel4.ondemand",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:uk.co.uktv.dave",
+     "title": "U",
+     "subtitle": "uk.co.uktv.dave",
+     "pkg": "uk.co.uktv.dave",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.mxtech.videoplayer.ad",
+     "title": "MX Player",
+     "subtitle": "com.mxtech.videoplayer.ad",
+     "pkg": "com.mxtech.videoplayer.ad",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:org.videolan.vlc",
+     "title": "VLC",
+     "subtitle": "org.videolan.vlc",
+     "pkg": "org.videolan.vlc",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.chrome",
+     "title": "Chrome",
+     "subtitle": "com.android.chrome",
+     "pkg": "com.android.chrome",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.opera.browser",
+     "title": "Opera",
+     "subtitle": "com.opera.browser",
+     "pkg": "com.opera.browser",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.tv.dvr",
+     "title": "Live Channels",
+     "subtitle": "com.android.tv.dvr",
+     "pkg": "com.android.tv.dvr",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.gallery3d",
+     "title": "Gallery",
+     "subtitle": "com.android.gallery3d",
+     "pkg": "com.android.gallery3d",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.katniss",
+     "title": "Google",
+     "subtitle": "com.google.android.katniss",
+     "pkg": "com.google.android.katniss",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.documentsui",
+     "title": "Files",
+     "subtitle": "com.android.documentsui",
+     "pkg": "com.android.documentsui",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.estrongs.android.pop",
+     "title": "ES File Explorer",
+     "subtitle": "com.estrongs.android.pop",
+     "pkg": "com.estrongs.android.pop",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.teamviewer.quicksupport.market",
+     "title": "TeamViewer QuickSupport",
+     "subtitle": "com.teamviewer.quicksupport.market",
+     "pkg": "com.teamviewer.quicksupport.market",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.arris.vip.setup",
+     "title": "ARRIS Setup",
+     "subtitle": "com.arris.vip.setup",
+     "pkg": "com.arris.vip.setup",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.spocky.projengmenu",
+     "title": "Projectivy Launcher",
+     "subtitle": "com.spocky.projengmenu",
+     "pkg": "com.spocky.projengmenu",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.glasslauncher.utilityhub",
+     "title": "Glass Utility Hub",
+     "subtitle": "com.glasslauncher.utilityhub",
+     "pkg": "com.glasslauncher.utilityhub",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode1",
+     "title": "Ünïcödé Player",
+     "subtitle": "com.example.unicode1",
+     "pkg": "com.example.unicode1",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode2",
+     "title": "日本のテレビ",
+     "subtitle": "com.example.unicode2",
+     "pkg": "com.example.unicode2",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode3",
+     "title": "🎮 Game Hub",
+     "subtitle": "com.example.unicode3",
+     "pkg": "com.example.unicode3",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode4",
+     "title": "ΣΊΣΥΦΟΣ TV",
+     "subtitle": "com.example.unicode4",
+     "pkg": "com.example.unicode4",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode5",
+     "title": "İstanbul TV",
+     "subtitle": "com.example.unicode5",
+     "pkg": "com.example.unicode5",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode6",
+     "title": "Ｆｕｌｌｗｉｄｔｈ Ｍｅｄｉａ",
+     "subtitle": "com.example.unicode6",
+     "pkg": "com.example.unicode6",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode7",
+     "title": "Café Radio",
+     "subtitle": "com.example.unicode7",
+     "pkg": "com.example.unicode7",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode8",
+     "title": "Tab\tName",
+     "subtitle": "com.example.unicode8",
+     "pkg": "com.example.unicode8",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode9",
+     "title": "Ideo　Space",
+     "subtitle": "com.example.unicode9",
+     "pkg": "com.example.unicode9",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup1",
+     "title": "Media Center",
+     "subtitle": "com.example.dup1",
+     "pkg": "com.example.dup1",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup2",
+     "title": "Media Center",
+     "subtitle": "com.example.dup2",
+     "pkg": "com.example.dup2",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup3",
+     "title": "media center",
+     "subtitle": "com.example.dup3",
+     "pkg": "com.example.dup3",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.punct",
+     "title": "!!!",
+     "subtitle": "com.example.punct",
+     "pkg": "com.example.punct",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.empty",
+     "title": "",
+     "subtitle": "com.example.empty",
+     "pkg": "com.example.empty",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.digits",
+     "title": "4K Demo 2024",
+     "subtitle": "com.example.digits",
+     "pkg": "com.example.digits",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.long",
+     "title": "The Extremely Long Application Name That Goes On And On For Testing Purposes",
+     "subtitle": "com.example.long",
+     "pkg": "com.example.long",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.astral",
+     "title": "𝔉𝔯𝔞𝔨𝔱𝔲𝔯 Stream",
+     "subtitle": "com.example.astral",
+     "pkg": "com.example.astral",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.combining",
+     "title": "éclair TV",
+     "subtitle": "com.example.combining",
+     "pkg": "com.example.combining",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.sep",
+     "title": "Sep\u001eara\u001ftor",
+     "subtitle": "com.example.sep",
+     "pkg": "com.example.sep",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app0",
+     "title": "News Sports System",
+     "subtitle": "com.vendor0.app0",
+     "pkg": "com.vendor0.app0",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app1",
+     "title": "Player Kids",
+     "subtitle": "com.vendor1.app1",
+     "pkg": "com.vendor1.app1",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app2",
+     "title": "Service Weather",
+     "subtitle": "com.vendor2.app2",
+     "pkg": "com.vendor2.app2",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app3",
+     "title": "System",
+     "subtitle": "com.vendor3.app3",
+     "pkg": "com.vendor3.app3",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app4",
+     "title": "Media Smart 4",
+     "subtitle": "com.vendor4.app4",
+     "pkg": "com.vendor4.app4",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app5",
+     "title": "Music Music 5",
+     "subtitle": "com.vendor5.app5",
+     "pkg": "com.vendor5.app5",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app6",
+     "title": "Weather Fitness Live",
+     "subtitle": "com.vendor6.app6",
+     "pkg": "com.vendor6.app6",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app7",
+     "title": "Service Video Live 7",
+     "subtitle": "com.vendor0.app7",
+     "pkg": "com.vendor0.app7",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app8",
+     "title": "Video",
+     "subtitle": "com.vendor1.app8",
+     "pkg": "com.vendor1.app8",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app9",
+     "title": "Fitness 9",
+     "subtitle": "com.vendor2.app9",
+     "pkg": "com.vendor2.app9",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app10",
+     "title": "System Service Sports",
+     "subtitle": "com.vendor3.app10",
+     "pkg": "com.vendor3.app10",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app11",
+     "title": "System Remote 11",
+     "subtitle": "com.vendor4.app11",
+     "pkg": "com.vendor4.app11",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app12",
+     "title": "Update Fitness Music",
+     "subtitle": "com.vendor5.app12",
+     "pkg": "com.vendor5.app12",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app13",
+     "title": "Photo Service",
+     "subtitle": "com.vendor6.app13",
+     "pkg": "com.vendor6.app13",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app14",
+     "title": "Home",
+     "subtitle": "com.vendor0.app14",
+     "pkg": "com.vendor0.app14",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app15",
+     "title": "Home Fitness Player",
+     "subtitle": "com.vendor1.app15",
+     "pkg": "com.vendor1.app15",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app16",
+     "title": "Music Fitness Remote",
+     "subtitle": "com.vendor2.app16",
+     "pkg": "com.vendor2.app16",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app17",
+     "title": "Home Kids Sports",
+     "subtitle": "com.vendor3.app17",
+     "pkg": "com.vendor3.app17",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app18",
+     "title": "Player",
+     "subtitle": "com.vendor4.app18",
+     "pkg": "com.vendor4.app18",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app19",
+     "title": "Sports",
+     "subtitle": "com.vendor5.app19",
+     "pkg": "com.vendor5.app19",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app20",
+     "title": "News Live Kids 20",
+     "subtitle": "com.vendor6.app20",
+     "pkg": "com.vendor6.app20",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app21",
+     "title": "Service Music 21",
+     "subtitle": "com.vendor0.app21",
+     "pkg": "com.vendor0.app21",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app22",
+     "title": "Kids Service System 22",
+     "subtitle": "com.vendor1.app22",
+     "pkg": "com.vendor1.app22",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app23",
+     "title": "Game Game",
+     "subtitle": "com.vendor2.app23",
+     "pkg": "com.vendor2.app23",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app24",
+     "title": "Player Remote",
+     "subtitle": "com.vendor3.app24",
+     "pkg": "com.vendor3.app24",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app25",
+     "title": "Radio Game",
+     "subtitle": "com.vendor4.app25",
+     "pkg": "com.vendor4.app25",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app26",
+     "title": "Media Service 26",
+     "subtitle": "com.vendor5.app26",
+     "pkg": "com.vendor5.app26",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app27",
+     "title": "Player Media 27",
+     "subtitle": "com.vendor6.app27",
+     "pkg": "com.vendor6.app27",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app28",
+     "title": "Photo Media",
+     "subtitle": "com.vendor0.app28",
+     "pkg": "com.vendor0.app28",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app29",
+     "title": "Game Video Radio",
+     "subtitle": "com.vendor1.app29",
+     "pkg": "com.vendor1.app29",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app30",
+     "title": "Service",
+     "subtitle": "com.vendor2.app30",
+     "pkg": "com.vendor2.app30",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app31",
+     "title": "Live System",
+     "subtitle": "com.vendor3.app31",
+     "pkg": "com.vendor3.app31",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app32",
+     "title": "Cast",
+     "subtitle": "com.vendor4.app32",
+     "pkg": "com.vendor4.app32",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app33",
+     "title": "Game News Fitness",
+     "subtitle": "com.vendor5.app33",
+     "pkg": "com.vendor5.app33",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app34",
+     "title": "Radio",
+     "subtitle": "com.vendor6.app34",
+     "pkg": "com.vendor6.app34",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app35",
+     "title": "Cast Weather Media",
+     "subtitle": "com.vendor0.app35",
+     "pkg": "com.vendor0.app35",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app36",
+     "title": "Player News",
+     "subtitle": "com.vendor1.app36",
+     "pkg": "com.vendor1.app36",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app37",
+     "title": "Photo",
+     "subtitle": "com.vendor2.app37",
+     "pkg": "com.vendor2.app37",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app38",
+     "title": "Game Video",
+     "subtitle": "com.vendor3.app38",
+     "pkg": "com.vendor3.app38",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app39",
+     "title": "Radio System",
+     "subtitle": "com.vendor4.app39",
+     "pkg": "com.vendor4.app39",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app40",
+     "title": "Home Photo 40",
+     "subtitle": "com.vendor5.app40",
+     "pkg": "com.vendor5.app40",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app41",
+     "title": "News Sports",
+     "subtitle": "com.vendor6.app41",
+     "pkg": "com.vendor6.app41",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app42",
+     "title": "Game Cast Radio",
+     "subtitle": "com.vendor0.app42",
+     "pkg": "com.vendor0.app42",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app43",
+     "title": "Smart 43",
+     "subtitle": "com.vendor1.app43",
+     "pkg": "com.vendor1.app43",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app44",
+     "title": "Weather Video Player 44",
+     "subtitle": "com.vendor2.app44",
+     "pkg": "com.vendor2.app44",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app45",
+     "title": "News",
+     "subtitle": "com.vendor3.app45",
+     "pkg": "com.vendor3.app45",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app46",
+     "title": "System Sports 46",
+     "subtitle": "com.vendor4.app46",
+     "pkg": "com.vendor4.app46",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app47",
+     "title": "News News Photo",
+     "subtitle": "com.vendor5.app47",
+     "pkg": "com.vendor5.app47",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app48",
+     "title": "Video 48",
+     "subtitle": "com.vendor6.app48",
+     "pkg": "com.vendor6.app48",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app49",
+     "title": "Media Cast",
+     "subtitle": "com.vendor0.app49",
+     "pkg": "com.vendor0.app49",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app50",
+     "title": "System 50",
+     "subtitle": "com.vendor1.app50",
+     "pkg": "com.vendor1.app50",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app51",
+     "title": "Remote",
+     "subtitle": "com.vendor2.app51",
+     "pkg": "com.vendor2.app51",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app52",
+     "title": "Live Music System",
+     "subtitle": "com.vendor3.app52",
+     "pkg": "com.vendor3.app52",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app53",
+     "title": "Home Player",
+     "subtitle": "com.vendor4.app53",
+     "pkg": "com.vendor4.app53",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app54",
+     "title": "Smart 54",
+     "subtitle": "com.vendor5.app54",
+     "pkg": "com.vendor5.app54",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app55",
+     "title": "System News System 55",
+     "subtitle": "com.vendor6.app55",
+     "pkg": "com.vendor6.app55",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app56",
+     "title": "Update Cast System 56",
+     "subtitle": "com.vendor0.app56",
+     "pkg": "com.vendor0.app56",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app57",
+     "title": "Photo Cast 57",
+     "subtitle": "com.vendor1.app57",
+     "pkg": "com.vendor1.app57",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app58",
+     "title": "Music 58",
+     "subtitle": "com.vendor2.app58",
+     "pkg": "com.vendor2.app58",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app59",
+     "title": "Game News",
+     "subtitle": "com.vendor3.app59",
+     "pkg": "com.vendor3.app59",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app60",
+     "title": "News Smart Home",
+     "subtitle": "com.vendor4.app60",
+     "pkg": "com.vendor4.app60",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app61",
+     "title": "Photo Live",
+     "subtitle": "com.vendor5.app61",
+     "pkg": "com.vendor5.app61",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app62",
+     "title": "Photo",
+     "subtitle": "com.vendor6.app62",
+     "pkg": "com.vendor6.app62",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app63",
+     "title": "System",
+     "subtitle": "com.vendor0.app63",
+     "pkg": "com.vendor0.app63",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app64",
+     "title": "News",
+     "subtitle": "com.vendor1.app64",
+     "pkg": "com.vendor1.app64",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app65",
+     "title": "Weather 65",
+     "subtitle": "com.vendor2.app65",
+     "pkg": "com.vendor2.app65",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app66",
+     "title": "Cast System Fitness",
+     "subtitle": "com.vendor3.app66",
+     "pkg": "com.vendor3.app66",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app67",
+     "title": "Kids",
+     "subtitle": "com.vendor4.app67",
+     "pkg": "com.vendor4.app67",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app68",
+     "title": "Photo Video Cast",
+     "subtitle": "com.vendor5.app68",
+     "pkg": "com.vendor5.app68",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app69",
+     "title": "Smart 69",
+     "subtitle": "com.vendor6.app69",
+     "pkg": "com.vendor6.app69",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app70",
+     "title": "Update System",
+     "subtitle": "com.vendor0.app70",
+     "pkg": "com.vendor0.app70",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app71",
+     "title": "Sports Kids Remote",
+     "subtitle": "com.vendor1.app71",
+     "pkg": "com.vendor1.app71",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app72",
+     "title": "Game 72",
+     "subtitle": "com.vendor2.app72",
+     "pkg": "com.vendor2.app72",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app73",
+     "title": "System Media",
+     "subtitle": "com.vendor3.app73",
+     "pkg": "com.vendor3.app73",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app74",
+     "title": "Remote Live Music 74",
+     "subtitle": "com.vendor4.app74",
+     "pkg": "com.vendor4.app74",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app75",
+     "title": "System Update Home",
+     "subtitle": "com.vendor5.app75",
+     "pkg": "com.vendor5.app75",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app76",
+     "title": "Live Kids",
+     "subtitle": "com.vendor6.app76",
+     "pkg": "com.vendor6.app76",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app77",
+     "title": "Service Music Cast",
+     "subtitle": "com.vendor0.app77",
+     "pkg": "com.vendor0.app77",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app78",
+     "title": "Smart Game",
+     "subtitle": "com.vendor1.app78",
+     "pkg": "com.vendor1.app78",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app79",
+     "title": "Photo",
+     "subtitle": "com.vendor2.app79",
+     "pkg": "com.vendor2.app79",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app80",
+     "title": "Cast Photo Video 80",
+     "subtitle": "com.vendor3.app80",
+     "pkg": "com.vendor3.app80",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app81",
+     "title": "Player Cast",
+     "subtitle": "com.vendor4.app81",
+     "pkg": "com.vendor4.app81",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app82",
+     "title": "Home Game",
+     "subtitle": "com.vendor5.app82",
+     "pkg": "com.vendor5.app82",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app83",
+     "title": "Cast Live",
+     "subtitle": "com.vendor6.app83",
+     "pkg": "com.vendor6.app83",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app84",
+     "title": "Service Player Video 84",
+     "subtitle": "com.vendor0.app84",
+     "pkg": "com.vendor0.app84",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app85",
+     "title": "Sports Player Home",
+     "subtitle": "com.vendor1.app85",
+     "pkg": "com.vendor1.app85",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app86",
+     "title": "Cast Photo 86",
+     "subtitle": "com.vendor2.app86",
+     "pkg": "com.vendor2.app86",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app87",
+     "title": "Smart Cast 87",
+     "subtitle": "com.vendor3.app87",
+     "pkg": "com.vendor3.app87",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app88",
+     "title": "Smart Service 88",
+     "subtitle": "com.vendor4.app88",
+     "pkg": "com.vendor4.app88",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app89",
+     "title": "Sports Weather",
+     "subtitle": "com.vendor5.app89",
+     "pkg": "com.vendor5.app89",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app90",
+     "title": "Fitness Home",
+     "subtitle": "com.vendor6.app90",
+     "pkg": "com.vendor6.app90",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app91",
+     "title": "Radio",
+     "subtitle": "com.vendor0.app91",
+     "pkg": "com.vendor0.app91",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app92",
+     "title": "Sports 92",
+     "subtitle": "com.vendor1.app92",
+     "pkg": "com.vendor1.app92",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app93",
+     "title": "Home Kids 93",
+     "subtitle": "com.vendor2.app93",
+     "pkg": "com.vendor2.app93",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app94",
+     "title": "Smart 94",
+     "subtitle": "com.vendor3.app94",
+     "pkg": "com.vendor3.app94",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app95",
+     "title": "Smart 95",
+     "subtitle": "com.vendor4.app95",
+     "pkg": "com.vendor4.app95",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app96",
+     "title": "Photo Game Home",
+     "subtitle": "com.vendor5.app96",
+     "pkg": "com.vendor5.app96",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app97",
+     "title": "Update Game Kids 97",
+     "subtitle": "com.vendor6.app97",
+     "pkg": "com.vendor6.app97",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app98",
+     "title": "Player",
+     "subtitle": "com.vendor0.app98",
+     "pkg": "com.vendor0.app98",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app99",
+     "title": "Service Music Radio",
+     "subtitle": "com.vendor1.app99",
+     "pkg": "com.vendor1.app99",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app100",
+     "title": "Update Smart 100",
+     "subtitle": "com.vendor2.app100",
+     "pkg": "com.vendor2.app100",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app101",
+     "title": "Cast 101",
+     "subtitle": "com.vendor3.app101",
+     "pkg": "com.vendor3.app101",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app102",
+     "title": "Sports Home 102",
+     "subtitle": "com.vendor4.app102",
+     "pkg": "com.vendor4.app102",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app103",
+     "title": "Kids 103",
+     "subtitle": "com.vendor5.app103",
+     "pkg": "com.vendor5.app103",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app104",
+     "title": "Remote",
+     "subtitle": "com.vendor6.app104",
+     "pkg": "com.vendor6.app104",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app105",
+     "title": "Cast",
+     "subtitle": "com.vendor0.app105",
+     "pkg": "com.vendor0.app105",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app106",
+     "title": "System News Media",
+     "subtitle": "com.vendor1.app106",
+     "pkg": "com.vendor1.app106",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app107",
+     "title": "Service Sports News",
+     "subtitle": "com.vendor2.app107",
+     "pkg": "com.vendor2.app107",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app108",
+     "title": "Remote Player",
+     "subtitle": "com.vendor3.app108",
+     "pkg": "com.vendor3.app108",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app109",
+     "title": "Video",
+     "subtitle": "com.vendor4.app109",
+     "pkg": "com.vendor4.app109",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app110",
+     "title": "Game",
+     "subtitle": "com.vendor5.app110",
+     "pkg": "com.vendor5.app110",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app111",
+     "title": "Sports Photo System",
+     "subtitle": "com.vendor6.app111",
+     "pkg": "com.vendor6.app111",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app112",
+     "title": "Live Smart Photo",
+     "subtitle": "com.vendor0.app112",
+     "pkg": "com.vendor0.app112",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app113",
+     "title": "Player Cast Smart",
+     "subtitle": "com.vendor1.app113",
+     "pkg": "com.vendor1.app113",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app114",
+     "title": "Game Music 114",
+     "subtitle": "com.vendor2.app114",
+     "pkg": "com.vendor2.app114",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app115",
+     "title": "Player Music Cast",
+     "subtitle": "com.vendor3.app115",
+     "pkg": "com.vendor3.app115",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app116",
+     "title": "Service Sports Sports 116",
+     "subtitle": "com.vendor4.app116",
+     "pkg": "com.vendor4.app116",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app117",
+     "title": "Service",
+     "subtitle": "com.vendor5.app117",
+     "pkg": "com.vendor5.app117",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app118",
+     "title": "News Kids",
+     "subtitle": "com.vendor6.app118",
+     "pkg": "com.vendor6.app118",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app119",
+     "title": "Media",
+     "subtitle": "com.vendor0.app119",
+     "pkg": "com.vendor0.app119",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app120",
+     "title": "Music Remote",
+     "subtitle": "com.vendor1.app120",
+     "pkg": "com.vendor1.app120",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app121",
+     "title": "Fitness Live Radio",
+     "subtitle": "com.vendor2.app121",
+     "pkg": "com.vendor2.app121",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app122",
+     "title": "Video Cast",
+     "subtitle": "com.vendor3.app122",
+     "pkg": "com.vendor3.app122",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app123",
+     "title": "Home Kids Game 123",
+     "subtitle": "com.vendor4.app123",
+     "pkg": "com.vendor4.app123",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app124",
+     "title": "Media News 124",
+     "subtitle": "com.vendor5.app124",
+     "pkg": "com.vendor5.app124",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app125",
+     "title": "Game Photo Media",
+     "subtitle": "com.vendor6.app125",
+     "pkg": "com.vendor6.app125",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app126",
+     "title": "Sports Radio Radio",
+     "subtitle": "com.vendor0.app126",
+     "pkg": "com.vendor0.app126",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app127",
+     "title": "Video Home",
+     "subtitle": "com.vendor1.app127",
+     "pkg": "com.vendor1.app127",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app128",
+     "title": "Player Kids",
+     "subtitle": "com.vendor2.app128",
+     "pkg": "com.vendor2.app128",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app129",
+     "title": "Game",
+     "subtitle": "com.vendor3.app129",
+     "pkg": "com.vendor3.app129",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app130",
+     "title": "System Home",
+     "subtitle": "com.vendor4.app130",
+     "pkg": "com.vendor4.app130",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app131",
+     "title": "Player",
+     "subtitle": "com.vendor5.app131",
+     "pkg": "com.vendor5.app131",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app132",
+     "title": "Video",
+     "subtitle": "com.vendor6.app132",
+     "pkg": "com.vendor6.app132",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app133",
+     "title": "Home System Game",
+     "subtitle": "com.vendor0.app133",
+     "pkg": "com.vendor0.app133",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app134",
+     "title": "System News Radio",
+     "subtitle": "com.vendor1.app134",
+     "pkg": "com.vendor1.app134",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app135",
+     "title": "Update Video",
+     "subtitle": "com.vendor2.app135",
+     "pkg": "com.vendor2.app135",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app136",
+     "title": "News 136",
+     "subtitle": "com.vendor3.app136",
+     "pkg": "com.vendor3.app136",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app137",
+     "title": "Media 137",
+     "subtitle": "com.vendor4.app137",
+     "pkg": "com.vendor4.app137",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app138",
+     "title": "Fitness Cast",
+     "subtitle": "com.vendor5.app138",
+     "pkg": "com.vendor5.app138",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app139",
+     "title": "Cast Kids Kids",
+     "subtitle": "com.vendor6.app139",
+     "pkg": "com.vendor6.app139",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app140",
+     "title": "Sports Fitness",
+     "subtitle": "com.vendor0.app140",
+     "pkg": "com.vendor0.app140",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app141",
+     "title": "Weather News System",
+     "subtitle": "com.vendor1.app141",
+     "pkg": "com.vendor1.app141",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app142",
+     "title": "Music Fitness System",
+     "subtitle": "com.vendor2.app142",
+     "pkg": "com.vendor2.app142",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app143",
+     "title": "Live Smart",
+     "subtitle": "com.vendor3.app143",
+     "pkg": "com.vendor3.app143",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app144",
+     "title": "Home Media 144",
+     "subtitle": "com.vendor4.app144",
+     "pkg": "com.vendor4.app144",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app145",
+     "title": "Game Update 145",
+     "subtitle": "com.vendor5.app145",
+     "pkg": "com.vendor5.app145",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app146",
+     "title": "System Weather Kids",
+     "subtitle": "com.vendor6.app146",
+     "pkg": "com.vendor6.app146",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app147",
+     "title": "News",
+     "subtitle": "com.vendor0.app147",
+     "pkg": "com.vendor0.app147",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app148",
+     "title": "Player",
+     "subtitle": "com.vendor1.app148",
+     "pkg": "com.vendor1.app148",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app149",
+     "title": "Photo Kids",
+     "subtitle": "com.vendor2.app149",
+     "pkg": "com.vendor2.app149",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app150",
+     "title": "Update Music Live",
+     "subtitle": "com.vendor3.app150",
+     "pkg": "com.vendor3.app150",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app151",
+     "title": "Video Photo Kids",
+     "subtitle": "com.vendor4.app151",
+     "pkg": "com.vendor4.app151",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app152",
+     "title": "Photo Kids",
+     "subtitle": "com.vendor5.app152",
+     "pkg": "com.vendor5.app152",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app153",
+     "title": "Kids Update Remote",
+     "subtitle": "com.vendor6.app153",
+     "pkg": "com.vendor6.app153",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app154",
+     "title": "Fitness",
+     "subtitle": "com.vendor0.app154",
+     "pkg": "com.vendor0.app154",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app155",
+     "title": "Kids",
+     "subtitle": "com.vendor1.app155",
+     "pkg": "com.vendor1.app155",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app156",
+     "title": "Radio Sports 156",
+     "subtitle": "com.vendor2.app156",
+     "pkg": "com.vendor2.app156",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app157",
+     "title": "News News Video",
+     "subtitle": "com.vendor3.app157",
+     "pkg": "com.vendor3.app157",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app158",
+     "title": "Smart Video Radio",
+     "subtitle": "com.vendor4.app158",
+     "pkg": "com.vendor4.app158",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app159",
+     "title": "Fitness Sports System",
+     "subtitle": "com.vendor5.app159",
+     "pkg": "com.vendor5.app159",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:wifi",
+     "title": "Wi-Fi",
+     "subtitle": "Network settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "wifi",
+      "wireless",
+      "network",
+      "internet",
+      "connection"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:bluetooth",
+     "title": "Bluetooth",
+     "subtitle": "Bluetooth settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "pairing",
+      "remote",
+      "headphones",
+      "devices"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:display",
+     "title": "Display",
+     "subtitle": "Display settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "screen",
+      "resolution",
+      "hdmi",
+      "picture"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:sound",
+     "title": "Sound",
+     "subtitle": "Sound settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "audio",
+      "speaker",
+      "surround"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:apps",
+     "title": "Apps",
+     "subtitle": "Manage installed applications",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "application management",
+      "uninstall",
+      "manage apps",
+      "permissions"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:datetime",
+     "title": "Date & time",
+     "subtitle": "Date and time settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "clock",
+      "timezone",
+      "time zone"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:keyboard",
+     "title": "Keyboard",
+     "subtitle": "Keyboard and input settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "input",
+      "typing",
+      "language"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:accessibility",
+     "title": "Accessibility",
+     "subtitle": "Accessibility settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "captions",
+      "talkback",
+      "high contrast"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:device",
+     "title": "About this box",
+     "subtitle": "Model, Android version, status",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "device info",
+      "device information",
+      "about",
+      "version",
+      "model",
+      "system info"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:cc",
+     "title": "Control Centre",
+     "subtitle": "Wi-Fi, Bluetooth, volume and appearance",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "controls",
+      "quick settings",
+      "panel"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:volume",
+     "title": "Volume",
+     "subtitle": "Open the Glass volume controls",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "sound level",
+      "mute",
+      "louder",
+      "quieter"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:theme",
+     "title": "Appearance",
+     "subtitle": "Switch between light and dark",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "dark mode",
+      "light mode",
+      "theme",
+      "night",
+      "day"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "no settings app installed (main Settings shortcut kept)",
+   "entries": [
+    {
+     "kind": "app",
+     "id": "app:com.google.android.youtube.tv",
+     "title": "YouTube",
+     "subtitle": "com.google.android.youtube.tv",
+     "pkg": "com.google.android.youtube.tv",
+     "tag": "App",
+     "keywords": [
+      "yt",
+      "videos"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.netflix.ninja",
+     "title": "Netflix",
+     "subtitle": "com.netflix.ninja",
+     "pkg": "com.netflix.ninja",
+     "tag": "App",
+     "keywords": [
+      "films",
+      "movies"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.amazon.amazonvideo.livingroom",
+     "title": "Prime Video",
+     "subtitle": "com.amazon.amazonvideo.livingroom",
+     "pkg": "com.amazon.amazonvideo.livingroom",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.disney.disneyplus",
+     "title": "Disney+",
+     "subtitle": "com.disney.disneyplus",
+     "pkg": "com.disney.disneyplus",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.spotify.tv.android",
+     "title": "Spotify",
+     "subtitle": "com.spotify.tv.android",
+     "pkg": "com.spotify.tv.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.stremio.one",
+     "title": "Stremio",
+     "subtitle": "com.stremio.one",
+     "pkg": "com.stremio.one",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.limelight",
+     "title": "Moonlight",
+     "subtitle": "com.limelight",
+     "pkg": "com.limelight",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.retroarch",
+     "title": "RetroArch",
+     "subtitle": "com.retroarch",
+     "pkg": "com.retroarch",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.vending",
+     "title": "Google Play Store",
+     "subtitle": "com.android.vending",
+     "pkg": "com.android.vending",
+     "tag": "App",
+     "keywords": [
+      "play store",
+      "google play",
+      "store",
+      "app store",
+      "download apps"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.tvlauncher",
+     "title": "Android TV Home",
+     "subtitle": "com.google.android.tvlauncher",
+     "pkg": "com.google.android.tvlauncher",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.apps.tv.launcherx",
+     "title": "Google TV Home",
+     "subtitle": "com.google.android.apps.tv.launcherx",
+     "pkg": "com.google.android.apps.tv.launcherx",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.music",
+     "title": "YouTube Music",
+     "subtitle": "com.google.android.music",
+     "pkg": "com.google.android.music",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.videos",
+     "title": "Google TV",
+     "subtitle": "com.google.android.videos",
+     "pkg": "com.google.android.videos",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.plexapp.android",
+     "title": "Plex: Stream Movies & TV",
+     "subtitle": "com.plexapp.android",
+     "pkg": "com.plexapp.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:org.xbmc.kodi",
+     "title": "Kodi",
+     "subtitle": "org.xbmc.kodi",
+     "pkg": "org.xbmc.kodi",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:tv.twitch.android.app",
+     "title": "Twitch",
+     "subtitle": "tv.twitch.android.app",
+     "pkg": "tv.twitch.android.app",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.hbo.hbonow",
+     "title": "Max",
+     "subtitle": "com.hbo.hbonow",
+     "pkg": "com.hbo.hbonow",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.apple.atve.androidtv.appletv",
+     "title": "Apple TV",
+     "subtitle": "com.apple.atve.androidtv.appletv",
+     "pkg": "com.apple.atve.androidtv.appletv",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:bbc.iplayer.android",
+     "title": "BBC iPlayer",
+     "subtitle": "bbc.iplayer.android",
+     "pkg": "bbc.iplayer.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:air.ITVMobilePlayer",
+     "title": "ITVX",
+     "subtitle": "air.ITVMobilePlayer",
+     "pkg": "air.ITVMobilePlayer",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.channel4.ondemand",
+     "title": "Channel 4",
+     "subtitle": "com.channel4.ondemand",
+     "pkg": "com.channel4.ondemand",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:uk.co.uktv.dave",
+     "title": "U",
+     "subtitle": "uk.co.uktv.dave",
+     "pkg": "uk.co.uktv.dave",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.mxtech.videoplayer.ad",
+     "title": "MX Player",
+     "subtitle": "com.mxtech.videoplayer.ad",
+     "pkg": "com.mxtech.videoplayer.ad",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:org.videolan.vlc",
+     "title": "VLC",
+     "subtitle": "org.videolan.vlc",
+     "pkg": "org.videolan.vlc",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.chrome",
+     "title": "Chrome",
+     "subtitle": "com.android.chrome",
+     "pkg": "com.android.chrome",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.opera.browser",
+     "title": "Opera",
+     "subtitle": "com.opera.browser",
+     "pkg": "com.opera.browser",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.tv.dvr",
+     "title": "Live Channels",
+     "subtitle": "com.android.tv.dvr",
+     "pkg": "com.android.tv.dvr",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.gallery3d",
+     "title": "Gallery",
+     "subtitle": "com.android.gallery3d",
+     "pkg": "com.android.gallery3d",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.katniss",
+     "title": "Google",
+     "subtitle": "com.google.android.katniss",
+     "pkg": "com.google.android.katniss",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.documentsui",
+     "title": "Files",
+     "subtitle": "com.android.documentsui",
+     "pkg": "com.android.documentsui",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.estrongs.android.pop",
+     "title": "ES File Explorer",
+     "subtitle": "com.estrongs.android.pop",
+     "pkg": "com.estrongs.android.pop",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.teamviewer.quicksupport.market",
+     "title": "TeamViewer QuickSupport",
+     "subtitle": "com.teamviewer.quicksupport.market",
+     "pkg": "com.teamviewer.quicksupport.market",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.arris.vip.setup",
+     "title": "ARRIS Setup",
+     "subtitle": "com.arris.vip.setup",
+     "pkg": "com.arris.vip.setup",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.spocky.projengmenu",
+     "title": "Projectivy Launcher",
+     "subtitle": "com.spocky.projengmenu",
+     "pkg": "com.spocky.projengmenu",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.glasslauncher.utilityhub",
+     "title": "Glass Utility Hub",
+     "subtitle": "com.glasslauncher.utilityhub",
+     "pkg": "com.glasslauncher.utilityhub",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode1",
+     "title": "Ünïcödé Player",
+     "subtitle": "com.example.unicode1",
+     "pkg": "com.example.unicode1",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode2",
+     "title": "日本のテレビ",
+     "subtitle": "com.example.unicode2",
+     "pkg": "com.example.unicode2",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode3",
+     "title": "🎮 Game Hub",
+     "subtitle": "com.example.unicode3",
+     "pkg": "com.example.unicode3",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode4",
+     "title": "ΣΊΣΥΦΟΣ TV",
+     "subtitle": "com.example.unicode4",
+     "pkg": "com.example.unicode4",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode5",
+     "title": "İstanbul TV",
+     "subtitle": "com.example.unicode5",
+     "pkg": "com.example.unicode5",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode6",
+     "title": "Ｆｕｌｌｗｉｄｔｈ Ｍｅｄｉａ",
+     "subtitle": "com.example.unicode6",
+     "pkg": "com.example.unicode6",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode7",
+     "title": "Café Radio",
+     "subtitle": "com.example.unicode7",
+     "pkg": "com.example.unicode7",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode8",
+     "title": "Tab\tName",
+     "subtitle": "com.example.unicode8",
+     "pkg": "com.example.unicode8",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode9",
+     "title": "Ideo　Space",
+     "subtitle": "com.example.unicode9",
+     "pkg": "com.example.unicode9",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup1",
+     "title": "Media Center",
+     "subtitle": "com.example.dup1",
+     "pkg": "com.example.dup1",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup2",
+     "title": "Media Center",
+     "subtitle": "com.example.dup2",
+     "pkg": "com.example.dup2",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup3",
+     "title": "media center",
+     "subtitle": "com.example.dup3",
+     "pkg": "com.example.dup3",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.punct",
+     "title": "!!!",
+     "subtitle": "com.example.punct",
+     "pkg": "com.example.punct",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.empty",
+     "title": "",
+     "subtitle": "com.example.empty",
+     "pkg": "com.example.empty",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.digits",
+     "title": "4K Demo 2024",
+     "subtitle": "com.example.digits",
+     "pkg": "com.example.digits",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.long",
+     "title": "The Extremely Long Application Name That Goes On And On For Testing Purposes",
+     "subtitle": "com.example.long",
+     "pkg": "com.example.long",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.astral",
+     "title": "𝔉𝔯𝔞𝔨𝔱𝔲𝔯 Stream",
+     "subtitle": "com.example.astral",
+     "pkg": "com.example.astral",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.combining",
+     "title": "éclair TV",
+     "subtitle": "com.example.combining",
+     "pkg": "com.example.combining",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.sep",
+     "title": "Sep\u001eara\u001ftor",
+     "subtitle": "com.example.sep",
+     "pkg": "com.example.sep",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app0",
+     "title": "News Sports System",
+     "subtitle": "com.vendor0.app0",
+     "pkg": "com.vendor0.app0",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app1",
+     "title": "Player Kids",
+     "subtitle": "com.vendor1.app1",
+     "pkg": "com.vendor1.app1",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app2",
+     "title": "Service Weather",
+     "subtitle": "com.vendor2.app2",
+     "pkg": "com.vendor2.app2",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app3",
+     "title": "System",
+     "subtitle": "com.vendor3.app3",
+     "pkg": "com.vendor3.app3",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app4",
+     "title": "Media Smart 4",
+     "subtitle": "com.vendor4.app4",
+     "pkg": "com.vendor4.app4",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app5",
+     "title": "Music Music 5",
+     "subtitle": "com.vendor5.app5",
+     "pkg": "com.vendor5.app5",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app6",
+     "title": "Weather Fitness Live",
+     "subtitle": "com.vendor6.app6",
+     "pkg": "com.vendor6.app6",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app7",
+     "title": "Service Video Live 7",
+     "subtitle": "com.vendor0.app7",
+     "pkg": "com.vendor0.app7",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app8",
+     "title": "Video",
+     "subtitle": "com.vendor1.app8",
+     "pkg": "com.vendor1.app8",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app9",
+     "title": "Fitness 9",
+     "subtitle": "com.vendor2.app9",
+     "pkg": "com.vendor2.app9",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app10",
+     "title": "System Service Sports",
+     "subtitle": "com.vendor3.app10",
+     "pkg": "com.vendor3.app10",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app11",
+     "title": "System Remote 11",
+     "subtitle": "com.vendor4.app11",
+     "pkg": "com.vendor4.app11",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app12",
+     "title": "Update Fitness Music",
+     "subtitle": "com.vendor5.app12",
+     "pkg": "com.vendor5.app12",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app13",
+     "title": "Photo Service",
+     "subtitle": "com.vendor6.app13",
+     "pkg": "com.vendor6.app13",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app14",
+     "title": "Home",
+     "subtitle": "com.vendor0.app14",
+     "pkg": "com.vendor0.app14",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app15",
+     "title": "Home Fitness Player",
+     "subtitle": "com.vendor1.app15",
+     "pkg": "com.vendor1.app15",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app16",
+     "title": "Music Fitness Remote",
+     "subtitle": "com.vendor2.app16",
+     "pkg": "com.vendor2.app16",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app17",
+     "title": "Home Kids Sports",
+     "subtitle": "com.vendor3.app17",
+     "pkg": "com.vendor3.app17",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app18",
+     "title": "Player",
+     "subtitle": "com.vendor4.app18",
+     "pkg": "com.vendor4.app18",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app19",
+     "title": "Sports",
+     "subtitle": "com.vendor5.app19",
+     "pkg": "com.vendor5.app19",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app20",
+     "title": "News Live Kids 20",
+     "subtitle": "com.vendor6.app20",
+     "pkg": "com.vendor6.app20",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app21",
+     "title": "Service Music 21",
+     "subtitle": "com.vendor0.app21",
+     "pkg": "com.vendor0.app21",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app22",
+     "title": "Kids Service System 22",
+     "subtitle": "com.vendor1.app22",
+     "pkg": "com.vendor1.app22",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app23",
+     "title": "Game Game",
+     "subtitle": "com.vendor2.app23",
+     "pkg": "com.vendor2.app23",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app24",
+     "title": "Player Remote",
+     "subtitle": "com.vendor3.app24",
+     "pkg": "com.vendor3.app24",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app25",
+     "title": "Radio Game",
+     "subtitle": "com.vendor4.app25",
+     "pkg": "com.vendor4.app25",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app26",
+     "title": "Media Service 26",
+     "subtitle": "com.vendor5.app26",
+     "pkg": "com.vendor5.app26",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app27",
+     "title": "Player Media 27",
+     "subtitle": "com.vendor6.app27",
+     "pkg": "com.vendor6.app27",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app28",
+     "title": "Photo Media",
+     "subtitle": "com.vendor0.app28",
+     "pkg": "com.vendor0.app28",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app29",
+     "title": "Game Video Radio",
+     "subtitle": "com.vendor1.app29",
+     "pkg": "com.vendor1.app29",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app30",
+     "title": "Service",
+     "subtitle": "com.vendor2.app30",
+     "pkg": "com.vendor2.app30",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app31",
+     "title": "Live System",
+     "subtitle": "com.vendor3.app31",
+     "pkg": "com.vendor3.app31",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app32",
+     "title": "Cast",
+     "subtitle": "com.vendor4.app32",
+     "pkg": "com.vendor4.app32",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app33",
+     "title": "Game News Fitness",
+     "subtitle": "com.vendor5.app33",
+     "pkg": "com.vendor5.app33",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app34",
+     "title": "Radio",
+     "subtitle": "com.vendor6.app34",
+     "pkg": "com.vendor6.app34",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app35",
+     "title": "Cast Weather Media",
+     "subtitle": "com.vendor0.app35",
+     "pkg": "com.vendor0.app35",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app36",
+     "title": "Player News",
+     "subtitle": "com.vendor1.app36",
+     "pkg": "com.vendor1.app36",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app37",
+     "title": "Photo",
+     "subtitle": "com.vendor2.app37",
+     "pkg": "com.vendor2.app37",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app38",
+     "title": "Game Video",
+     "subtitle": "com.vendor3.app38",
+     "pkg": "com.vendor3.app38",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app39",
+     "title": "Radio System",
+     "subtitle": "com.vendor4.app39",
+     "pkg": "com.vendor4.app39",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app40",
+     "title": "Home Photo 40",
+     "subtitle": "com.vendor5.app40",
+     "pkg": "com.vendor5.app40",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app41",
+     "title": "News Sports",
+     "subtitle": "com.vendor6.app41",
+     "pkg": "com.vendor6.app41",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app42",
+     "title": "Game Cast Radio",
+     "subtitle": "com.vendor0.app42",
+     "pkg": "com.vendor0.app42",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app43",
+     "title": "Smart 43",
+     "subtitle": "com.vendor1.app43",
+     "pkg": "com.vendor1.app43",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app44",
+     "title": "Weather Video Player 44",
+     "subtitle": "com.vendor2.app44",
+     "pkg": "com.vendor2.app44",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app45",
+     "title": "News",
+     "subtitle": "com.vendor3.app45",
+     "pkg": "com.vendor3.app45",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app46",
+     "title": "System Sports 46",
+     "subtitle": "com.vendor4.app46",
+     "pkg": "com.vendor4.app46",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app47",
+     "title": "News News Photo",
+     "subtitle": "com.vendor5.app47",
+     "pkg": "com.vendor5.app47",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app48",
+     "title": "Video 48",
+     "subtitle": "com.vendor6.app48",
+     "pkg": "com.vendor6.app48",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app49",
+     "title": "Media Cast",
+     "subtitle": "com.vendor0.app49",
+     "pkg": "com.vendor0.app49",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app50",
+     "title": "System 50",
+     "subtitle": "com.vendor1.app50",
+     "pkg": "com.vendor1.app50",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app51",
+     "title": "Remote",
+     "subtitle": "com.vendor2.app51",
+     "pkg": "com.vendor2.app51",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app52",
+     "title": "Live Music System",
+     "subtitle": "com.vendor3.app52",
+     "pkg": "com.vendor3.app52",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app53",
+     "title": "Home Player",
+     "subtitle": "com.vendor4.app53",
+     "pkg": "com.vendor4.app53",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app54",
+     "title": "Smart 54",
+     "subtitle": "com.vendor5.app54",
+     "pkg": "com.vendor5.app54",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app55",
+     "title": "System News System 55",
+     "subtitle": "com.vendor6.app55",
+     "pkg": "com.vendor6.app55",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app56",
+     "title": "Update Cast System 56",
+     "subtitle": "com.vendor0.app56",
+     "pkg": "com.vendor0.app56",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app57",
+     "title": "Photo Cast 57",
+     "subtitle": "com.vendor1.app57",
+     "pkg": "com.vendor1.app57",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app58",
+     "title": "Music 58",
+     "subtitle": "com.vendor2.app58",
+     "pkg": "com.vendor2.app58",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app59",
+     "title": "Game News",
+     "subtitle": "com.vendor3.app59",
+     "pkg": "com.vendor3.app59",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app60",
+     "title": "News Smart Home",
+     "subtitle": "com.vendor4.app60",
+     "pkg": "com.vendor4.app60",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app61",
+     "title": "Photo Live",
+     "subtitle": "com.vendor5.app61",
+     "pkg": "com.vendor5.app61",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app62",
+     "title": "Photo",
+     "subtitle": "com.vendor6.app62",
+     "pkg": "com.vendor6.app62",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app63",
+     "title": "System",
+     "subtitle": "com.vendor0.app63",
+     "pkg": "com.vendor0.app63",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app64",
+     "title": "News",
+     "subtitle": "com.vendor1.app64",
+     "pkg": "com.vendor1.app64",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app65",
+     "title": "Weather 65",
+     "subtitle": "com.vendor2.app65",
+     "pkg": "com.vendor2.app65",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app66",
+     "title": "Cast System Fitness",
+     "subtitle": "com.vendor3.app66",
+     "pkg": "com.vendor3.app66",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app67",
+     "title": "Kids",
+     "subtitle": "com.vendor4.app67",
+     "pkg": "com.vendor4.app67",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app68",
+     "title": "Photo Video Cast",
+     "subtitle": "com.vendor5.app68",
+     "pkg": "com.vendor5.app68",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app69",
+     "title": "Smart 69",
+     "subtitle": "com.vendor6.app69",
+     "pkg": "com.vendor6.app69",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app70",
+     "title": "Update System",
+     "subtitle": "com.vendor0.app70",
+     "pkg": "com.vendor0.app70",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app71",
+     "title": "Sports Kids Remote",
+     "subtitle": "com.vendor1.app71",
+     "pkg": "com.vendor1.app71",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app72",
+     "title": "Game 72",
+     "subtitle": "com.vendor2.app72",
+     "pkg": "com.vendor2.app72",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app73",
+     "title": "System Media",
+     "subtitle": "com.vendor3.app73",
+     "pkg": "com.vendor3.app73",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app74",
+     "title": "Remote Live Music 74",
+     "subtitle": "com.vendor4.app74",
+     "pkg": "com.vendor4.app74",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app75",
+     "title": "System Update Home",
+     "subtitle": "com.vendor5.app75",
+     "pkg": "com.vendor5.app75",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app76",
+     "title": "Live Kids",
+     "subtitle": "com.vendor6.app76",
+     "pkg": "com.vendor6.app76",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app77",
+     "title": "Service Music Cast",
+     "subtitle": "com.vendor0.app77",
+     "pkg": "com.vendor0.app77",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app78",
+     "title": "Smart Game",
+     "subtitle": "com.vendor1.app78",
+     "pkg": "com.vendor1.app78",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app79",
+     "title": "Photo",
+     "subtitle": "com.vendor2.app79",
+     "pkg": "com.vendor2.app79",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app80",
+     "title": "Cast Photo Video 80",
+     "subtitle": "com.vendor3.app80",
+     "pkg": "com.vendor3.app80",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app81",
+     "title": "Player Cast",
+     "subtitle": "com.vendor4.app81",
+     "pkg": "com.vendor4.app81",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app82",
+     "title": "Home Game",
+     "subtitle": "com.vendor5.app82",
+     "pkg": "com.vendor5.app82",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app83",
+     "title": "Cast Live",
+     "subtitle": "com.vendor6.app83",
+     "pkg": "com.vendor6.app83",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app84",
+     "title": "Service Player Video 84",
+     "subtitle": "com.vendor0.app84",
+     "pkg": "com.vendor0.app84",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app85",
+     "title": "Sports Player Home",
+     "subtitle": "com.vendor1.app85",
+     "pkg": "com.vendor1.app85",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app86",
+     "title": "Cast Photo 86",
+     "subtitle": "com.vendor2.app86",
+     "pkg": "com.vendor2.app86",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app87",
+     "title": "Smart Cast 87",
+     "subtitle": "com.vendor3.app87",
+     "pkg": "com.vendor3.app87",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app88",
+     "title": "Smart Service 88",
+     "subtitle": "com.vendor4.app88",
+     "pkg": "com.vendor4.app88",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app89",
+     "title": "Sports Weather",
+     "subtitle": "com.vendor5.app89",
+     "pkg": "com.vendor5.app89",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app90",
+     "title": "Fitness Home",
+     "subtitle": "com.vendor6.app90",
+     "pkg": "com.vendor6.app90",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app91",
+     "title": "Radio",
+     "subtitle": "com.vendor0.app91",
+     "pkg": "com.vendor0.app91",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app92",
+     "title": "Sports 92",
+     "subtitle": "com.vendor1.app92",
+     "pkg": "com.vendor1.app92",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app93",
+     "title": "Home Kids 93",
+     "subtitle": "com.vendor2.app93",
+     "pkg": "com.vendor2.app93",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app94",
+     "title": "Smart 94",
+     "subtitle": "com.vendor3.app94",
+     "pkg": "com.vendor3.app94",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app95",
+     "title": "Smart 95",
+     "subtitle": "com.vendor4.app95",
+     "pkg": "com.vendor4.app95",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app96",
+     "title": "Photo Game Home",
+     "subtitle": "com.vendor5.app96",
+     "pkg": "com.vendor5.app96",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app97",
+     "title": "Update Game Kids 97",
+     "subtitle": "com.vendor6.app97",
+     "pkg": "com.vendor6.app97",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app98",
+     "title": "Player",
+     "subtitle": "com.vendor0.app98",
+     "pkg": "com.vendor0.app98",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app99",
+     "title": "Service Music Radio",
+     "subtitle": "com.vendor1.app99",
+     "pkg": "com.vendor1.app99",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app100",
+     "title": "Update Smart 100",
+     "subtitle": "com.vendor2.app100",
+     "pkg": "com.vendor2.app100",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app101",
+     "title": "Cast 101",
+     "subtitle": "com.vendor3.app101",
+     "pkg": "com.vendor3.app101",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app102",
+     "title": "Sports Home 102",
+     "subtitle": "com.vendor4.app102",
+     "pkg": "com.vendor4.app102",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app103",
+     "title": "Kids 103",
+     "subtitle": "com.vendor5.app103",
+     "pkg": "com.vendor5.app103",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app104",
+     "title": "Remote",
+     "subtitle": "com.vendor6.app104",
+     "pkg": "com.vendor6.app104",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app105",
+     "title": "Cast",
+     "subtitle": "com.vendor0.app105",
+     "pkg": "com.vendor0.app105",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app106",
+     "title": "System News Media",
+     "subtitle": "com.vendor1.app106",
+     "pkg": "com.vendor1.app106",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app107",
+     "title": "Service Sports News",
+     "subtitle": "com.vendor2.app107",
+     "pkg": "com.vendor2.app107",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app108",
+     "title": "Remote Player",
+     "subtitle": "com.vendor3.app108",
+     "pkg": "com.vendor3.app108",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app109",
+     "title": "Video",
+     "subtitle": "com.vendor4.app109",
+     "pkg": "com.vendor4.app109",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app110",
+     "title": "Game",
+     "subtitle": "com.vendor5.app110",
+     "pkg": "com.vendor5.app110",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app111",
+     "title": "Sports Photo System",
+     "subtitle": "com.vendor6.app111",
+     "pkg": "com.vendor6.app111",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app112",
+     "title": "Live Smart Photo",
+     "subtitle": "com.vendor0.app112",
+     "pkg": "com.vendor0.app112",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app113",
+     "title": "Player Cast Smart",
+     "subtitle": "com.vendor1.app113",
+     "pkg": "com.vendor1.app113",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app114",
+     "title": "Game Music 114",
+     "subtitle": "com.vendor2.app114",
+     "pkg": "com.vendor2.app114",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app115",
+     "title": "Player Music Cast",
+     "subtitle": "com.vendor3.app115",
+     "pkg": "com.vendor3.app115",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app116",
+     "title": "Service Sports Sports 116",
+     "subtitle": "com.vendor4.app116",
+     "pkg": "com.vendor4.app116",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app117",
+     "title": "Service",
+     "subtitle": "com.vendor5.app117",
+     "pkg": "com.vendor5.app117",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app118",
+     "title": "News Kids",
+     "subtitle": "com.vendor6.app118",
+     "pkg": "com.vendor6.app118",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app119",
+     "title": "Media",
+     "subtitle": "com.vendor0.app119",
+     "pkg": "com.vendor0.app119",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app120",
+     "title": "Music Remote",
+     "subtitle": "com.vendor1.app120",
+     "pkg": "com.vendor1.app120",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app121",
+     "title": "Fitness Live Radio",
+     "subtitle": "com.vendor2.app121",
+     "pkg": "com.vendor2.app121",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app122",
+     "title": "Video Cast",
+     "subtitle": "com.vendor3.app122",
+     "pkg": "com.vendor3.app122",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app123",
+     "title": "Home Kids Game 123",
+     "subtitle": "com.vendor4.app123",
+     "pkg": "com.vendor4.app123",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app124",
+     "title": "Media News 124",
+     "subtitle": "com.vendor5.app124",
+     "pkg": "com.vendor5.app124",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app125",
+     "title": "Game Photo Media",
+     "subtitle": "com.vendor6.app125",
+     "pkg": "com.vendor6.app125",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app126",
+     "title": "Sports Radio Radio",
+     "subtitle": "com.vendor0.app126",
+     "pkg": "com.vendor0.app126",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app127",
+     "title": "Video Home",
+     "subtitle": "com.vendor1.app127",
+     "pkg": "com.vendor1.app127",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app128",
+     "title": "Player Kids",
+     "subtitle": "com.vendor2.app128",
+     "pkg": "com.vendor2.app128",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app129",
+     "title": "Game",
+     "subtitle": "com.vendor3.app129",
+     "pkg": "com.vendor3.app129",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app130",
+     "title": "System Home",
+     "subtitle": "com.vendor4.app130",
+     "pkg": "com.vendor4.app130",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app131",
+     "title": "Player",
+     "subtitle": "com.vendor5.app131",
+     "pkg": "com.vendor5.app131",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app132",
+     "title": "Video",
+     "subtitle": "com.vendor6.app132",
+     "pkg": "com.vendor6.app132",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app133",
+     "title": "Home System Game",
+     "subtitle": "com.vendor0.app133",
+     "pkg": "com.vendor0.app133",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app134",
+     "title": "System News Radio",
+     "subtitle": "com.vendor1.app134",
+     "pkg": "com.vendor1.app134",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app135",
+     "title": "Update Video",
+     "subtitle": "com.vendor2.app135",
+     "pkg": "com.vendor2.app135",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app136",
+     "title": "News 136",
+     "subtitle": "com.vendor3.app136",
+     "pkg": "com.vendor3.app136",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app137",
+     "title": "Media 137",
+     "subtitle": "com.vendor4.app137",
+     "pkg": "com.vendor4.app137",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app138",
+     "title": "Fitness Cast",
+     "subtitle": "com.vendor5.app138",
+     "pkg": "com.vendor5.app138",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app139",
+     "title": "Cast Kids Kids",
+     "subtitle": "com.vendor6.app139",
+     "pkg": "com.vendor6.app139",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app140",
+     "title": "Sports Fitness",
+     "subtitle": "com.vendor0.app140",
+     "pkg": "com.vendor0.app140",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app141",
+     "title": "Weather News System",
+     "subtitle": "com.vendor1.app141",
+     "pkg": "com.vendor1.app141",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app142",
+     "title": "Music Fitness System",
+     "subtitle": "com.vendor2.app142",
+     "pkg": "com.vendor2.app142",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app143",
+     "title": "Live Smart",
+     "subtitle": "com.vendor3.app143",
+     "pkg": "com.vendor3.app143",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app144",
+     "title": "Home Media 144",
+     "subtitle": "com.vendor4.app144",
+     "pkg": "com.vendor4.app144",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app145",
+     "title": "Game Update 145",
+     "subtitle": "com.vendor5.app145",
+     "pkg": "com.vendor5.app145",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app146",
+     "title": "System Weather Kids",
+     "subtitle": "com.vendor6.app146",
+     "pkg": "com.vendor6.app146",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app147",
+     "title": "News",
+     "subtitle": "com.vendor0.app147",
+     "pkg": "com.vendor0.app147",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app148",
+     "title": "Player",
+     "subtitle": "com.vendor1.app148",
+     "pkg": "com.vendor1.app148",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app149",
+     "title": "Photo Kids",
+     "subtitle": "com.vendor2.app149",
+     "pkg": "com.vendor2.app149",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app150",
+     "title": "Update Music Live",
+     "subtitle": "com.vendor3.app150",
+     "pkg": "com.vendor3.app150",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app151",
+     "title": "Video Photo Kids",
+     "subtitle": "com.vendor4.app151",
+     "pkg": "com.vendor4.app151",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app152",
+     "title": "Photo Kids",
+     "subtitle": "com.vendor5.app152",
+     "pkg": "com.vendor5.app152",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app153",
+     "title": "Kids Update Remote",
+     "subtitle": "com.vendor6.app153",
+     "pkg": "com.vendor6.app153",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app154",
+     "title": "Fitness",
+     "subtitle": "com.vendor0.app154",
+     "pkg": "com.vendor0.app154",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app155",
+     "title": "Kids",
+     "subtitle": "com.vendor1.app155",
+     "pkg": "com.vendor1.app155",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app156",
+     "title": "Radio Sports 156",
+     "subtitle": "com.vendor2.app156",
+     "pkg": "com.vendor2.app156",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app157",
+     "title": "News News Video",
+     "subtitle": "com.vendor3.app157",
+     "pkg": "com.vendor3.app157",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app158",
+     "title": "Smart Video Radio",
+     "subtitle": "com.vendor4.app158",
+     "pkg": "com.vendor4.app158",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app159",
+     "title": "Fitness Sports System",
+     "subtitle": "com.vendor5.app159",
+     "pkg": "com.vendor5.app159",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:wifi",
+     "title": "Wi-Fi",
+     "subtitle": "Network settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "wifi",
+      "wireless",
+      "network",
+      "internet",
+      "connection"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:bluetooth",
+     "title": "Bluetooth",
+     "subtitle": "Bluetooth settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "pairing",
+      "remote",
+      "headphones",
+      "devices"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:display",
+     "title": "Display",
+     "subtitle": "Display settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "screen",
+      "resolution",
+      "hdmi",
+      "picture"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:sound",
+     "title": "Sound",
+     "subtitle": "Sound settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "audio",
+      "speaker",
+      "surround"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:apps",
+     "title": "Apps",
+     "subtitle": "Manage installed applications",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "application management",
+      "uninstall",
+      "manage apps",
+      "permissions"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:storage",
+     "title": "Storage",
+     "subtitle": "Storage settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "space",
+      "memory",
+      "disk"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:datetime",
+     "title": "Date & time",
+     "subtitle": "Date and time settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "clock",
+      "timezone",
+      "time zone"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:keyboard",
+     "title": "Keyboard",
+     "subtitle": "Keyboard and input settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "input",
+      "typing",
+      "language"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:accessibility",
+     "title": "Accessibility",
+     "subtitle": "Accessibility settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "captions",
+      "talkback",
+      "high contrast"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:device",
+     "title": "About this box",
+     "subtitle": "Model, Android version, status",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "device info",
+      "device information",
+      "about",
+      "version",
+      "model",
+      "system info"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:main",
+     "title": "Settings",
+     "subtitle": "Android TV Settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "android settings",
+      "system",
+      "preferences",
+      "tv settings"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:cc",
+     "title": "Control Centre",
+     "subtitle": "Wi-Fi, Bluetooth, volume and appearance",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "controls",
+      "quick settings",
+      "panel"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:volume",
+     "title": "Volume",
+     "subtitle": "Open the Glass volume controls",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "sound level",
+      "mute",
+      "louder",
+      "quieter"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:theme",
+     "title": "Appearance",
+     "subtitle": "Switch between light and dark",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "dark mode",
+      "light mode",
+      "theme",
+      "night",
+      "day"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "only phone settings installed",
+   "entries": [
+    {
+     "kind": "app",
+     "id": "app:com.google.android.youtube.tv",
+     "title": "YouTube",
+     "subtitle": "com.google.android.youtube.tv",
+     "pkg": "com.google.android.youtube.tv",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.netflix.ninja",
+     "title": "Netflix",
+     "subtitle": "com.netflix.ninja",
+     "pkg": "com.netflix.ninja",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.amazon.amazonvideo.livingroom",
+     "title": "Prime Video",
+     "subtitle": "com.amazon.amazonvideo.livingroom",
+     "pkg": "com.amazon.amazonvideo.livingroom",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.disney.disneyplus",
+     "title": "Disney+",
+     "subtitle": "com.disney.disneyplus",
+     "pkg": "com.disney.disneyplus",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.spotify.tv.android",
+     "title": "Spotify",
+     "subtitle": "com.spotify.tv.android",
+     "pkg": "com.spotify.tv.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.stremio.one",
+     "title": "Stremio",
+     "subtitle": "com.stremio.one",
+     "pkg": "com.stremio.one",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.limelight",
+     "title": "Moonlight",
+     "subtitle": "com.limelight",
+     "pkg": "com.limelight",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.retroarch",
+     "title": "RetroArch",
+     "subtitle": "com.retroarch",
+     "pkg": "com.retroarch",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.vending",
+     "title": "Google Play Store",
+     "subtitle": "com.android.vending",
+     "pkg": "com.android.vending",
+     "tag": "App",
+     "keywords": [
+      "play store",
+      "google play",
+      "store",
+      "app store",
+      "download apps"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.settings",
+     "title": "Settings",
+     "subtitle": "com.android.settings",
+     "pkg": "com.android.settings",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.tvlauncher",
+     "title": "Android TV Home",
+     "subtitle": "com.google.android.tvlauncher",
+     "pkg": "com.google.android.tvlauncher",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.apps.tv.launcherx",
+     "title": "Google TV Home",
+     "subtitle": "com.google.android.apps.tv.launcherx",
+     "pkg": "com.google.android.apps.tv.launcherx",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.music",
+     "title": "YouTube Music",
+     "subtitle": "com.google.android.music",
+     "pkg": "com.google.android.music",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.videos",
+     "title": "Google TV",
+     "subtitle": "com.google.android.videos",
+     "pkg": "com.google.android.videos",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.plexapp.android",
+     "title": "Plex: Stream Movies & TV",
+     "subtitle": "com.plexapp.android",
+     "pkg": "com.plexapp.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:org.xbmc.kodi",
+     "title": "Kodi",
+     "subtitle": "org.xbmc.kodi",
+     "pkg": "org.xbmc.kodi",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:tv.twitch.android.app",
+     "title": "Twitch",
+     "subtitle": "tv.twitch.android.app",
+     "pkg": "tv.twitch.android.app",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.hbo.hbonow",
+     "title": "Max",
+     "subtitle": "com.hbo.hbonow",
+     "pkg": "com.hbo.hbonow",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.apple.atve.androidtv.appletv",
+     "title": "Apple TV",
+     "subtitle": "com.apple.atve.androidtv.appletv",
+     "pkg": "com.apple.atve.androidtv.appletv",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:bbc.iplayer.android",
+     "title": "BBC iPlayer",
+     "subtitle": "bbc.iplayer.android",
+     "pkg": "bbc.iplayer.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:air.ITVMobilePlayer",
+     "title": "ITVX",
+     "subtitle": "air.ITVMobilePlayer",
+     "pkg": "air.ITVMobilePlayer",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.channel4.ondemand",
+     "title": "Channel 4",
+     "subtitle": "com.channel4.ondemand",
+     "pkg": "com.channel4.ondemand",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:uk.co.uktv.dave",
+     "title": "U",
+     "subtitle": "uk.co.uktv.dave",
+     "pkg": "uk.co.uktv.dave",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.mxtech.videoplayer.ad",
+     "title": "MX Player",
+     "subtitle": "com.mxtech.videoplayer.ad",
+     "pkg": "com.mxtech.videoplayer.ad",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:org.videolan.vlc",
+     "title": "VLC",
+     "subtitle": "org.videolan.vlc",
+     "pkg": "org.videolan.vlc",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.chrome",
+     "title": "Chrome",
+     "subtitle": "com.android.chrome",
+     "pkg": "com.android.chrome",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.opera.browser",
+     "title": "Opera",
+     "subtitle": "com.opera.browser",
+     "pkg": "com.opera.browser",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.tv.dvr",
+     "title": "Live Channels",
+     "subtitle": "com.android.tv.dvr",
+     "pkg": "com.android.tv.dvr",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.gallery3d",
+     "title": "Gallery",
+     "subtitle": "com.android.gallery3d",
+     "pkg": "com.android.gallery3d",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.katniss",
+     "title": "Google",
+     "subtitle": "com.google.android.katniss",
+     "pkg": "com.google.android.katniss",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.documentsui",
+     "title": "Files",
+     "subtitle": "com.android.documentsui",
+     "pkg": "com.android.documentsui",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.estrongs.android.pop",
+     "title": "ES File Explorer",
+     "subtitle": "com.estrongs.android.pop",
+     "pkg": "com.estrongs.android.pop",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.teamviewer.quicksupport.market",
+     "title": "TeamViewer QuickSupport",
+     "subtitle": "com.teamviewer.quicksupport.market",
+     "pkg": "com.teamviewer.quicksupport.market",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.arris.vip.setup",
+     "title": "ARRIS Setup",
+     "subtitle": "com.arris.vip.setup",
+     "pkg": "com.arris.vip.setup",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.spocky.projengmenu",
+     "title": "Projectivy Launcher",
+     "subtitle": "com.spocky.projengmenu",
+     "pkg": "com.spocky.projengmenu",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.glasslauncher.utilityhub",
+     "title": "Glass Utility Hub",
+     "subtitle": "com.glasslauncher.utilityhub",
+     "pkg": "com.glasslauncher.utilityhub",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode1",
+     "title": "Ünïcödé Player",
+     "subtitle": "com.example.unicode1",
+     "pkg": "com.example.unicode1",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode2",
+     "title": "日本のテレビ",
+     "subtitle": "com.example.unicode2",
+     "pkg": "com.example.unicode2",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode3",
+     "title": "🎮 Game Hub",
+     "subtitle": "com.example.unicode3",
+     "pkg": "com.example.unicode3",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode4",
+     "title": "ΣΊΣΥΦΟΣ TV",
+     "subtitle": "com.example.unicode4",
+     "pkg": "com.example.unicode4",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode5",
+     "title": "İstanbul TV",
+     "subtitle": "com.example.unicode5",
+     "pkg": "com.example.unicode5",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode6",
+     "title": "Ｆｕｌｌｗｉｄｔｈ Ｍｅｄｉａ",
+     "subtitle": "com.example.unicode6",
+     "pkg": "com.example.unicode6",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode7",
+     "title": "Café Radio",
+     "subtitle": "com.example.unicode7",
+     "pkg": "com.example.unicode7",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode8",
+     "title": "Tab\tName",
+     "subtitle": "com.example.unicode8",
+     "pkg": "com.example.unicode8",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.unicode9",
+     "title": "Ideo　Space",
+     "subtitle": "com.example.unicode9",
+     "pkg": "com.example.unicode9",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup1",
+     "title": "Media Center",
+     "subtitle": "com.example.dup1",
+     "pkg": "com.example.dup1",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup2",
+     "title": "Media Center",
+     "subtitle": "com.example.dup2",
+     "pkg": "com.example.dup2",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup3",
+     "title": "media center",
+     "subtitle": "com.example.dup3",
+     "pkg": "com.example.dup3",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.punct",
+     "title": "!!!",
+     "subtitle": "com.example.punct",
+     "pkg": "com.example.punct",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.empty",
+     "title": "",
+     "subtitle": "com.example.empty",
+     "pkg": "com.example.empty",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.digits",
+     "title": "4K Demo 2024",
+     "subtitle": "com.example.digits",
+     "pkg": "com.example.digits",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.long",
+     "title": "The Extremely Long Application Name That Goes On And On For Testing Purposes",
+     "subtitle": "com.example.long",
+     "pkg": "com.example.long",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.astral",
+     "title": "𝔉𝔯𝔞𝔨𝔱𝔲𝔯 Stream",
+     "subtitle": "com.example.astral",
+     "pkg": "com.example.astral",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.combining",
+     "title": "éclair TV",
+     "subtitle": "com.example.combining",
+     "pkg": "com.example.combining",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.sep",
+     "title": "Sep\u001eara\u001ftor",
+     "subtitle": "com.example.sep",
+     "pkg": "com.example.sep",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app0",
+     "title": "News Sports System",
+     "subtitle": "com.vendor0.app0",
+     "pkg": "com.vendor0.app0",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app1",
+     "title": "Player Kids",
+     "subtitle": "com.vendor1.app1",
+     "pkg": "com.vendor1.app1",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app2",
+     "title": "Service Weather",
+     "subtitle": "com.vendor2.app2",
+     "pkg": "com.vendor2.app2",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app3",
+     "title": "System",
+     "subtitle": "com.vendor3.app3",
+     "pkg": "com.vendor3.app3",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app4",
+     "title": "Media Smart 4",
+     "subtitle": "com.vendor4.app4",
+     "pkg": "com.vendor4.app4",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app5",
+     "title": "Music Music 5",
+     "subtitle": "com.vendor5.app5",
+     "pkg": "com.vendor5.app5",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app6",
+     "title": "Weather Fitness Live",
+     "subtitle": "com.vendor6.app6",
+     "pkg": "com.vendor6.app6",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app7",
+     "title": "Service Video Live 7",
+     "subtitle": "com.vendor0.app7",
+     "pkg": "com.vendor0.app7",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app8",
+     "title": "Video",
+     "subtitle": "com.vendor1.app8",
+     "pkg": "com.vendor1.app8",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app9",
+     "title": "Fitness 9",
+     "subtitle": "com.vendor2.app9",
+     "pkg": "com.vendor2.app9",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app10",
+     "title": "System Service Sports",
+     "subtitle": "com.vendor3.app10",
+     "pkg": "com.vendor3.app10",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app11",
+     "title": "System Remote 11",
+     "subtitle": "com.vendor4.app11",
+     "pkg": "com.vendor4.app11",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app12",
+     "title": "Update Fitness Music",
+     "subtitle": "com.vendor5.app12",
+     "pkg": "com.vendor5.app12",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app13",
+     "title": "Photo Service",
+     "subtitle": "com.vendor6.app13",
+     "pkg": "com.vendor6.app13",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app14",
+     "title": "Home",
+     "subtitle": "com.vendor0.app14",
+     "pkg": "com.vendor0.app14",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app15",
+     "title": "Home Fitness Player",
+     "subtitle": "com.vendor1.app15",
+     "pkg": "com.vendor1.app15",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app16",
+     "title": "Music Fitness Remote",
+     "subtitle": "com.vendor2.app16",
+     "pkg": "com.vendor2.app16",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app17",
+     "title": "Home Kids Sports",
+     "subtitle": "com.vendor3.app17",
+     "pkg": "com.vendor3.app17",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app18",
+     "title": "Player",
+     "subtitle": "com.vendor4.app18",
+     "pkg": "com.vendor4.app18",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app19",
+     "title": "Sports",
+     "subtitle": "com.vendor5.app19",
+     "pkg": "com.vendor5.app19",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app20",
+     "title": "News Live Kids 20",
+     "subtitle": "com.vendor6.app20",
+     "pkg": "com.vendor6.app20",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app21",
+     "title": "Service Music 21",
+     "subtitle": "com.vendor0.app21",
+     "pkg": "com.vendor0.app21",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app22",
+     "title": "Kids Service System 22",
+     "subtitle": "com.vendor1.app22",
+     "pkg": "com.vendor1.app22",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app23",
+     "title": "Game Game",
+     "subtitle": "com.vendor2.app23",
+     "pkg": "com.vendor2.app23",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app24",
+     "title": "Player Remote",
+     "subtitle": "com.vendor3.app24",
+     "pkg": "com.vendor3.app24",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app25",
+     "title": "Radio Game",
+     "subtitle": "com.vendor4.app25",
+     "pkg": "com.vendor4.app25",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app26",
+     "title": "Media Service 26",
+     "subtitle": "com.vendor5.app26",
+     "pkg": "com.vendor5.app26",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app27",
+     "title": "Player Media 27",
+     "subtitle": "com.vendor6.app27",
+     "pkg": "com.vendor6.app27",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app28",
+     "title": "Photo Media",
+     "subtitle": "com.vendor0.app28",
+     "pkg": "com.vendor0.app28",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app29",
+     "title": "Game Video Radio",
+     "subtitle": "com.vendor1.app29",
+     "pkg": "com.vendor1.app29",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app30",
+     "title": "Service",
+     "subtitle": "com.vendor2.app30",
+     "pkg": "com.vendor2.app30",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app31",
+     "title": "Live System",
+     "subtitle": "com.vendor3.app31",
+     "pkg": "com.vendor3.app31",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app32",
+     "title": "Cast",
+     "subtitle": "com.vendor4.app32",
+     "pkg": "com.vendor4.app32",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app33",
+     "title": "Game News Fitness",
+     "subtitle": "com.vendor5.app33",
+     "pkg": "com.vendor5.app33",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app34",
+     "title": "Radio",
+     "subtitle": "com.vendor6.app34",
+     "pkg": "com.vendor6.app34",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app35",
+     "title": "Cast Weather Media",
+     "subtitle": "com.vendor0.app35",
+     "pkg": "com.vendor0.app35",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app36",
+     "title": "Player News",
+     "subtitle": "com.vendor1.app36",
+     "pkg": "com.vendor1.app36",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app37",
+     "title": "Photo",
+     "subtitle": "com.vendor2.app37",
+     "pkg": "com.vendor2.app37",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app38",
+     "title": "Game Video",
+     "subtitle": "com.vendor3.app38",
+     "pkg": "com.vendor3.app38",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app39",
+     "title": "Radio System",
+     "subtitle": "com.vendor4.app39",
+     "pkg": "com.vendor4.app39",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app40",
+     "title": "Home Photo 40",
+     "subtitle": "com.vendor5.app40",
+     "pkg": "com.vendor5.app40",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app41",
+     "title": "News Sports",
+     "subtitle": "com.vendor6.app41",
+     "pkg": "com.vendor6.app41",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app42",
+     "title": "Game Cast Radio",
+     "subtitle": "com.vendor0.app42",
+     "pkg": "com.vendor0.app42",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app43",
+     "title": "Smart 43",
+     "subtitle": "com.vendor1.app43",
+     "pkg": "com.vendor1.app43",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app44",
+     "title": "Weather Video Player 44",
+     "subtitle": "com.vendor2.app44",
+     "pkg": "com.vendor2.app44",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app45",
+     "title": "News",
+     "subtitle": "com.vendor3.app45",
+     "pkg": "com.vendor3.app45",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app46",
+     "title": "System Sports 46",
+     "subtitle": "com.vendor4.app46",
+     "pkg": "com.vendor4.app46",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app47",
+     "title": "News News Photo",
+     "subtitle": "com.vendor5.app47",
+     "pkg": "com.vendor5.app47",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app48",
+     "title": "Video 48",
+     "subtitle": "com.vendor6.app48",
+     "pkg": "com.vendor6.app48",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app49",
+     "title": "Media Cast",
+     "subtitle": "com.vendor0.app49",
+     "pkg": "com.vendor0.app49",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app50",
+     "title": "System 50",
+     "subtitle": "com.vendor1.app50",
+     "pkg": "com.vendor1.app50",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app51",
+     "title": "Remote",
+     "subtitle": "com.vendor2.app51",
+     "pkg": "com.vendor2.app51",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app52",
+     "title": "Live Music System",
+     "subtitle": "com.vendor3.app52",
+     "pkg": "com.vendor3.app52",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app53",
+     "title": "Home Player",
+     "subtitle": "com.vendor4.app53",
+     "pkg": "com.vendor4.app53",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app54",
+     "title": "Smart 54",
+     "subtitle": "com.vendor5.app54",
+     "pkg": "com.vendor5.app54",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app55",
+     "title": "System News System 55",
+     "subtitle": "com.vendor6.app55",
+     "pkg": "com.vendor6.app55",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app56",
+     "title": "Update Cast System 56",
+     "subtitle": "com.vendor0.app56",
+     "pkg": "com.vendor0.app56",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app57",
+     "title": "Photo Cast 57",
+     "subtitle": "com.vendor1.app57",
+     "pkg": "com.vendor1.app57",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app58",
+     "title": "Music 58",
+     "subtitle": "com.vendor2.app58",
+     "pkg": "com.vendor2.app58",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app59",
+     "title": "Game News",
+     "subtitle": "com.vendor3.app59",
+     "pkg": "com.vendor3.app59",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app60",
+     "title": "News Smart Home",
+     "subtitle": "com.vendor4.app60",
+     "pkg": "com.vendor4.app60",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app61",
+     "title": "Photo Live",
+     "subtitle": "com.vendor5.app61",
+     "pkg": "com.vendor5.app61",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app62",
+     "title": "Photo",
+     "subtitle": "com.vendor6.app62",
+     "pkg": "com.vendor6.app62",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app63",
+     "title": "System",
+     "subtitle": "com.vendor0.app63",
+     "pkg": "com.vendor0.app63",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app64",
+     "title": "News",
+     "subtitle": "com.vendor1.app64",
+     "pkg": "com.vendor1.app64",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app65",
+     "title": "Weather 65",
+     "subtitle": "com.vendor2.app65",
+     "pkg": "com.vendor2.app65",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app66",
+     "title": "Cast System Fitness",
+     "subtitle": "com.vendor3.app66",
+     "pkg": "com.vendor3.app66",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app67",
+     "title": "Kids",
+     "subtitle": "com.vendor4.app67",
+     "pkg": "com.vendor4.app67",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app68",
+     "title": "Photo Video Cast",
+     "subtitle": "com.vendor5.app68",
+     "pkg": "com.vendor5.app68",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app69",
+     "title": "Smart 69",
+     "subtitle": "com.vendor6.app69",
+     "pkg": "com.vendor6.app69",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app70",
+     "title": "Update System",
+     "subtitle": "com.vendor0.app70",
+     "pkg": "com.vendor0.app70",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app71",
+     "title": "Sports Kids Remote",
+     "subtitle": "com.vendor1.app71",
+     "pkg": "com.vendor1.app71",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app72",
+     "title": "Game 72",
+     "subtitle": "com.vendor2.app72",
+     "pkg": "com.vendor2.app72",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app73",
+     "title": "System Media",
+     "subtitle": "com.vendor3.app73",
+     "pkg": "com.vendor3.app73",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app74",
+     "title": "Remote Live Music 74",
+     "subtitle": "com.vendor4.app74",
+     "pkg": "com.vendor4.app74",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app75",
+     "title": "System Update Home",
+     "subtitle": "com.vendor5.app75",
+     "pkg": "com.vendor5.app75",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app76",
+     "title": "Live Kids",
+     "subtitle": "com.vendor6.app76",
+     "pkg": "com.vendor6.app76",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app77",
+     "title": "Service Music Cast",
+     "subtitle": "com.vendor0.app77",
+     "pkg": "com.vendor0.app77",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app78",
+     "title": "Smart Game",
+     "subtitle": "com.vendor1.app78",
+     "pkg": "com.vendor1.app78",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app79",
+     "title": "Photo",
+     "subtitle": "com.vendor2.app79",
+     "pkg": "com.vendor2.app79",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app80",
+     "title": "Cast Photo Video 80",
+     "subtitle": "com.vendor3.app80",
+     "pkg": "com.vendor3.app80",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app81",
+     "title": "Player Cast",
+     "subtitle": "com.vendor4.app81",
+     "pkg": "com.vendor4.app81",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app82",
+     "title": "Home Game",
+     "subtitle": "com.vendor5.app82",
+     "pkg": "com.vendor5.app82",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app83",
+     "title": "Cast Live",
+     "subtitle": "com.vendor6.app83",
+     "pkg": "com.vendor6.app83",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app84",
+     "title": "Service Player Video 84",
+     "subtitle": "com.vendor0.app84",
+     "pkg": "com.vendor0.app84",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app85",
+     "title": "Sports Player Home",
+     "subtitle": "com.vendor1.app85",
+     "pkg": "com.vendor1.app85",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app86",
+     "title": "Cast Photo 86",
+     "subtitle": "com.vendor2.app86",
+     "pkg": "com.vendor2.app86",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app87",
+     "title": "Smart Cast 87",
+     "subtitle": "com.vendor3.app87",
+     "pkg": "com.vendor3.app87",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app88",
+     "title": "Smart Service 88",
+     "subtitle": "com.vendor4.app88",
+     "pkg": "com.vendor4.app88",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app89",
+     "title": "Sports Weather",
+     "subtitle": "com.vendor5.app89",
+     "pkg": "com.vendor5.app89",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app90",
+     "title": "Fitness Home",
+     "subtitle": "com.vendor6.app90",
+     "pkg": "com.vendor6.app90",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app91",
+     "title": "Radio",
+     "subtitle": "com.vendor0.app91",
+     "pkg": "com.vendor0.app91",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app92",
+     "title": "Sports 92",
+     "subtitle": "com.vendor1.app92",
+     "pkg": "com.vendor1.app92",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app93",
+     "title": "Home Kids 93",
+     "subtitle": "com.vendor2.app93",
+     "pkg": "com.vendor2.app93",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app94",
+     "title": "Smart 94",
+     "subtitle": "com.vendor3.app94",
+     "pkg": "com.vendor3.app94",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app95",
+     "title": "Smart 95",
+     "subtitle": "com.vendor4.app95",
+     "pkg": "com.vendor4.app95",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app96",
+     "title": "Photo Game Home",
+     "subtitle": "com.vendor5.app96",
+     "pkg": "com.vendor5.app96",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app97",
+     "title": "Update Game Kids 97",
+     "subtitle": "com.vendor6.app97",
+     "pkg": "com.vendor6.app97",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app98",
+     "title": "Player",
+     "subtitle": "com.vendor0.app98",
+     "pkg": "com.vendor0.app98",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app99",
+     "title": "Service Music Radio",
+     "subtitle": "com.vendor1.app99",
+     "pkg": "com.vendor1.app99",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app100",
+     "title": "Update Smart 100",
+     "subtitle": "com.vendor2.app100",
+     "pkg": "com.vendor2.app100",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app101",
+     "title": "Cast 101",
+     "subtitle": "com.vendor3.app101",
+     "pkg": "com.vendor3.app101",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app102",
+     "title": "Sports Home 102",
+     "subtitle": "com.vendor4.app102",
+     "pkg": "com.vendor4.app102",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app103",
+     "title": "Kids 103",
+     "subtitle": "com.vendor5.app103",
+     "pkg": "com.vendor5.app103",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app104",
+     "title": "Remote",
+     "subtitle": "com.vendor6.app104",
+     "pkg": "com.vendor6.app104",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app105",
+     "title": "Cast",
+     "subtitle": "com.vendor0.app105",
+     "pkg": "com.vendor0.app105",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app106",
+     "title": "System News Media",
+     "subtitle": "com.vendor1.app106",
+     "pkg": "com.vendor1.app106",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app107",
+     "title": "Service Sports News",
+     "subtitle": "com.vendor2.app107",
+     "pkg": "com.vendor2.app107",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app108",
+     "title": "Remote Player",
+     "subtitle": "com.vendor3.app108",
+     "pkg": "com.vendor3.app108",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app109",
+     "title": "Video",
+     "subtitle": "com.vendor4.app109",
+     "pkg": "com.vendor4.app109",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app110",
+     "title": "Game",
+     "subtitle": "com.vendor5.app110",
+     "pkg": "com.vendor5.app110",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app111",
+     "title": "Sports Photo System",
+     "subtitle": "com.vendor6.app111",
+     "pkg": "com.vendor6.app111",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app112",
+     "title": "Live Smart Photo",
+     "subtitle": "com.vendor0.app112",
+     "pkg": "com.vendor0.app112",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app113",
+     "title": "Player Cast Smart",
+     "subtitle": "com.vendor1.app113",
+     "pkg": "com.vendor1.app113",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app114",
+     "title": "Game Music 114",
+     "subtitle": "com.vendor2.app114",
+     "pkg": "com.vendor2.app114",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app115",
+     "title": "Player Music Cast",
+     "subtitle": "com.vendor3.app115",
+     "pkg": "com.vendor3.app115",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app116",
+     "title": "Service Sports Sports 116",
+     "subtitle": "com.vendor4.app116",
+     "pkg": "com.vendor4.app116",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app117",
+     "title": "Service",
+     "subtitle": "com.vendor5.app117",
+     "pkg": "com.vendor5.app117",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app118",
+     "title": "News Kids",
+     "subtitle": "com.vendor6.app118",
+     "pkg": "com.vendor6.app118",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app119",
+     "title": "Media",
+     "subtitle": "com.vendor0.app119",
+     "pkg": "com.vendor0.app119",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app120",
+     "title": "Music Remote",
+     "subtitle": "com.vendor1.app120",
+     "pkg": "com.vendor1.app120",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app121",
+     "title": "Fitness Live Radio",
+     "subtitle": "com.vendor2.app121",
+     "pkg": "com.vendor2.app121",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app122",
+     "title": "Video Cast",
+     "subtitle": "com.vendor3.app122",
+     "pkg": "com.vendor3.app122",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app123",
+     "title": "Home Kids Game 123",
+     "subtitle": "com.vendor4.app123",
+     "pkg": "com.vendor4.app123",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app124",
+     "title": "Media News 124",
+     "subtitle": "com.vendor5.app124",
+     "pkg": "com.vendor5.app124",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app125",
+     "title": "Game Photo Media",
+     "subtitle": "com.vendor6.app125",
+     "pkg": "com.vendor6.app125",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app126",
+     "title": "Sports Radio Radio",
+     "subtitle": "com.vendor0.app126",
+     "pkg": "com.vendor0.app126",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app127",
+     "title": "Video Home",
+     "subtitle": "com.vendor1.app127",
+     "pkg": "com.vendor1.app127",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app128",
+     "title": "Player Kids",
+     "subtitle": "com.vendor2.app128",
+     "pkg": "com.vendor2.app128",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app129",
+     "title": "Game",
+     "subtitle": "com.vendor3.app129",
+     "pkg": "com.vendor3.app129",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app130",
+     "title": "System Home",
+     "subtitle": "com.vendor4.app130",
+     "pkg": "com.vendor4.app130",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app131",
+     "title": "Player",
+     "subtitle": "com.vendor5.app131",
+     "pkg": "com.vendor5.app131",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app132",
+     "title": "Video",
+     "subtitle": "com.vendor6.app132",
+     "pkg": "com.vendor6.app132",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app133",
+     "title": "Home System Game",
+     "subtitle": "com.vendor0.app133",
+     "pkg": "com.vendor0.app133",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app134",
+     "title": "System News Radio",
+     "subtitle": "com.vendor1.app134",
+     "pkg": "com.vendor1.app134",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app135",
+     "title": "Update Video",
+     "subtitle": "com.vendor2.app135",
+     "pkg": "com.vendor2.app135",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app136",
+     "title": "News 136",
+     "subtitle": "com.vendor3.app136",
+     "pkg": "com.vendor3.app136",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app137",
+     "title": "Media 137",
+     "subtitle": "com.vendor4.app137",
+     "pkg": "com.vendor4.app137",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app138",
+     "title": "Fitness Cast",
+     "subtitle": "com.vendor5.app138",
+     "pkg": "com.vendor5.app138",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app139",
+     "title": "Cast Kids Kids",
+     "subtitle": "com.vendor6.app139",
+     "pkg": "com.vendor6.app139",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app140",
+     "title": "Sports Fitness",
+     "subtitle": "com.vendor0.app140",
+     "pkg": "com.vendor0.app140",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app141",
+     "title": "Weather News System",
+     "subtitle": "com.vendor1.app141",
+     "pkg": "com.vendor1.app141",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app142",
+     "title": "Music Fitness System",
+     "subtitle": "com.vendor2.app142",
+     "pkg": "com.vendor2.app142",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app143",
+     "title": "Live Smart",
+     "subtitle": "com.vendor3.app143",
+     "pkg": "com.vendor3.app143",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app144",
+     "title": "Home Media 144",
+     "subtitle": "com.vendor4.app144",
+     "pkg": "com.vendor4.app144",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app145",
+     "title": "Game Update 145",
+     "subtitle": "com.vendor5.app145",
+     "pkg": "com.vendor5.app145",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app146",
+     "title": "System Weather Kids",
+     "subtitle": "com.vendor6.app146",
+     "pkg": "com.vendor6.app146",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app147",
+     "title": "News",
+     "subtitle": "com.vendor0.app147",
+     "pkg": "com.vendor0.app147",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app148",
+     "title": "Player",
+     "subtitle": "com.vendor1.app148",
+     "pkg": "com.vendor1.app148",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app149",
+     "title": "Photo Kids",
+     "subtitle": "com.vendor2.app149",
+     "pkg": "com.vendor2.app149",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app150",
+     "title": "Update Music Live",
+     "subtitle": "com.vendor3.app150",
+     "pkg": "com.vendor3.app150",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app151",
+     "title": "Video Photo Kids",
+     "subtitle": "com.vendor4.app151",
+     "pkg": "com.vendor4.app151",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app152",
+     "title": "Photo Kids",
+     "subtitle": "com.vendor5.app152",
+     "pkg": "com.vendor5.app152",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor6.app153",
+     "title": "Kids Update Remote",
+     "subtitle": "com.vendor6.app153",
+     "pkg": "com.vendor6.app153",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor0.app154",
+     "title": "Fitness",
+     "subtitle": "com.vendor0.app154",
+     "pkg": "com.vendor0.app154",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor1.app155",
+     "title": "Kids",
+     "subtitle": "com.vendor1.app155",
+     "pkg": "com.vendor1.app155",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor2.app156",
+     "title": "Radio Sports 156",
+     "subtitle": "com.vendor2.app156",
+     "pkg": "com.vendor2.app156",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor3.app157",
+     "title": "News News Video",
+     "subtitle": "com.vendor3.app157",
+     "pkg": "com.vendor3.app157",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor4.app158",
+     "title": "Smart Video Radio",
+     "subtitle": "com.vendor4.app158",
+     "pkg": "com.vendor4.app158",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.vendor5.app159",
+     "title": "Fitness Sports System",
+     "subtitle": "com.vendor5.app159",
+     "pkg": "com.vendor5.app159",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:display",
+     "title": "Display",
+     "subtitle": "Display settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "screen",
+      "resolution",
+      "hdmi",
+      "picture"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:sound",
+     "title": "Sound",
+     "subtitle": "Sound settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "audio",
+      "speaker",
+      "surround"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:apps",
+     "title": "Apps",
+     "subtitle": "Manage installed applications",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "application management",
+      "uninstall",
+      "manage apps",
+      "permissions"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:storage",
+     "title": "Storage",
+     "subtitle": "Storage settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "space",
+      "memory",
+      "disk"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:datetime",
+     "title": "Date & time",
+     "subtitle": "Date and time settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "clock",
+      "timezone",
+      "time zone"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:keyboard",
+     "title": "Keyboard",
+     "subtitle": "Keyboard and input settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "input",
+      "typing",
+      "language"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:accessibility",
+     "title": "Accessibility",
+     "subtitle": "Accessibility settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "captions",
+      "talkback",
+      "high contrast"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:device",
+     "title": "About this box",
+     "subtitle": "Model, Android version, status",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "device info",
+      "device information",
+      "about",
+      "version",
+      "model",
+      "system info"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:cc",
+     "title": "Control Centre",
+     "subtitle": "Wi-Fi, Bluetooth, volume and appearance",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "controls",
+      "quick settings",
+      "panel"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:volume",
+     "title": "Volume",
+     "subtitle": "Open the Glass volume controls",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "sound level",
+      "mute",
+      "louder",
+      "quieter"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:theme",
+     "title": "Appearance",
+     "subtitle": "Switch between light and dark",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "dark mode",
+      "light mode",
+      "theme",
+      "night",
+      "day"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "every optional settings page missing",
+   "entries": [
+    {
+     "kind": "app",
+     "id": "app:com.google.android.youtube.tv",
+     "title": "YouTube",
+     "subtitle": "com.google.android.youtube.tv",
+     "pkg": "com.google.android.youtube.tv",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.netflix.ninja",
+     "title": "Netflix",
+     "subtitle": "com.netflix.ninja",
+     "pkg": "com.netflix.ninja",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.amazon.amazonvideo.livingroom",
+     "title": "Prime Video",
+     "subtitle": "com.amazon.amazonvideo.livingroom",
+     "pkg": "com.amazon.amazonvideo.livingroom",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.disney.disneyplus",
+     "title": "Disney+",
+     "subtitle": "com.disney.disneyplus",
+     "pkg": "com.disney.disneyplus",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.spotify.tv.android",
+     "title": "Spotify",
+     "subtitle": "com.spotify.tv.android",
+     "pkg": "com.spotify.tv.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.stremio.one",
+     "title": "Stremio",
+     "subtitle": "com.stremio.one",
+     "pkg": "com.stremio.one",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.limelight",
+     "title": "Moonlight",
+     "subtitle": "com.limelight",
+     "pkg": "com.limelight",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.retroarch",
+     "title": "RetroArch",
+     "subtitle": "com.retroarch",
+     "pkg": "com.retroarch",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.vending",
+     "title": "Google Play Store",
+     "subtitle": "com.android.vending",
+     "pkg": "com.android.vending",
+     "tag": "App",
+     "keywords": [
+      "play store",
+      "google play",
+      "store",
+      "app store",
+      "download apps"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.tv.settings",
+     "title": "Settings",
+     "subtitle": "com.android.tv.settings",
+     "pkg": "com.android.tv.settings",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.settings",
+     "title": "Settings",
+     "subtitle": "com.android.settings",
+     "pkg": "com.android.settings",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.tvlauncher",
+     "title": "Android TV Home",
+     "subtitle": "com.google.android.tvlauncher",
+     "pkg": "com.google.android.tvlauncher",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.apps.tv.launcherx",
+     "title": "Google TV Home",
+     "subtitle": "com.google.android.apps.tv.launcherx",
+     "pkg": "com.google.android.apps.tv.launcherx",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.music",
+     "title": "YouTube Music",
+     "subtitle": "com.google.android.music",
+     "pkg": "com.google.android.music",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.videos",
+     "title": "Google TV",
+     "subtitle": "com.google.android.videos",
+     "pkg": "com.google.android.videos",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.plexapp.android",
+     "title": "Plex: Stream Movies & TV",
+     "subtitle": "com.plexapp.android",
+     "pkg": "com.plexapp.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:org.xbmc.kodi",
+     "title": "Kodi",
+     "subtitle": "org.xbmc.kodi",
+     "pkg": "org.xbmc.kodi",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:tv.twitch.android.app",
+     "title": "Twitch",
+     "subtitle": "tv.twitch.android.app",
+     "pkg": "tv.twitch.android.app",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.hbo.hbonow",
+     "title": "Max",
+     "subtitle": "com.hbo.hbonow",
+     "pkg": "com.hbo.hbonow",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.apple.atve.androidtv.appletv",
+     "title": "Apple TV",
+     "subtitle": "com.apple.atve.androidtv.appletv",
+     "pkg": "com.apple.atve.androidtv.appletv",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:cc",
+     "title": "Control Centre",
+     "subtitle": "Wi-Fi, Bluetooth, volume and appearance",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "controls",
+      "quick settings",
+      "panel"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:volume",
+     "title": "Volume",
+     "subtitle": "Open the Glass volume controls",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "sound level",
+      "mute",
+      "louder",
+      "quieter"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:theme",
+     "title": "Appearance",
+     "subtitle": "Switch between light and dark",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "dark mode",
+      "light mode",
+      "theme",
+      "night",
+      "day"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "empty app list",
+   "entries": [
+    {
+     "kind": "shortcut",
+     "id": "set:wifi",
+     "title": "Wi-Fi",
+     "subtitle": "Network settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "wifi",
+      "wireless",
+      "network",
+      "internet",
+      "connection"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:bluetooth",
+     "title": "Bluetooth",
+     "subtitle": "Bluetooth settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "pairing",
+      "remote",
+      "headphones",
+      "devices"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:display",
+     "title": "Display",
+     "subtitle": "Display settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "screen",
+      "resolution",
+      "hdmi",
+      "picture"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:sound",
+     "title": "Sound",
+     "subtitle": "Sound settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "audio",
+      "speaker",
+      "surround"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:apps",
+     "title": "Apps",
+     "subtitle": "Manage installed applications",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "application management",
+      "uninstall",
+      "manage apps",
+      "permissions"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:storage",
+     "title": "Storage",
+     "subtitle": "Storage settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "space",
+      "memory",
+      "disk"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:datetime",
+     "title": "Date & time",
+     "subtitle": "Date and time settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "clock",
+      "timezone",
+      "time zone"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:keyboard",
+     "title": "Keyboard",
+     "subtitle": "Keyboard and input settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "input",
+      "typing",
+      "language"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:accessibility",
+     "title": "Accessibility",
+     "subtitle": "Accessibility settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "captions",
+      "talkback",
+      "high contrast"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:device",
+     "title": "About this box",
+     "subtitle": "Model, Android version, status",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "device info",
+      "device information",
+      "about",
+      "version",
+      "model",
+      "system info"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:main",
+     "title": "Settings",
+     "subtitle": "Android TV Settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "android settings",
+      "system",
+      "preferences",
+      "tv settings"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:cc",
+     "title": "Control Centre",
+     "subtitle": "Wi-Fi, Bluetooth, volume and appearance",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "controls",
+      "quick settings",
+      "panel"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:volume",
+     "title": "Volume",
+     "subtitle": "Open the Glass volume controls",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "sound level",
+      "mute",
+      "louder",
+      "quieter"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:theme",
+     "title": "Appearance",
+     "subtitle": "Switch between light and dark",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "dark mode",
+      "light mode",
+      "theme",
+      "night",
+      "day"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "visibility rules: show:false, hidden prefixes in any case, self package",
+   "entries": [
+    {
+     "kind": "app",
+     "id": "app:com.example.visible",
+     "title": "Visible",
+     "subtitle": "com.example.visible",
+     "pkg": "com.example.visible",
+     "tag": "App",
+     "keywords": [
+      "seen",
+      "",
+      "Sep\u001eara\u001ftor\u001d\u001c"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.noshow",
+     "title": "No Show Field",
+     "subtitle": "com.example.noshow",
+     "pkg": "com.example.noshow",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:xcom.samsung",
+     "title": "Not a prefix",
+     "subtitle": "xcom.samsung",
+     "pkg": "xcom.samsung",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.glasslauncher.utilityhub",
+     "title": "Glass Utility Hub",
+     "subtitle": "com.glasslauncher.utilityhub",
+     "pkg": "com.glasslauncher.utilityhub",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup",
+     "title": "Dup",
+     "subtitle": "com.example.dup",
+     "pkg": "com.example.dup",
+     "tag": "App",
+     "keywords": [
+      "twice"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.dup",
+     "title": "Dup",
+     "subtitle": "com.example.dup",
+     "pkg": "com.example.dup",
+     "tag": "App",
+     "keywords": [
+      "twice"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:wifi",
+     "title": "Wi-Fi",
+     "subtitle": "Network settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "wifi",
+      "wireless",
+      "network",
+      "internet",
+      "connection"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:bluetooth",
+     "title": "Bluetooth",
+     "subtitle": "Bluetooth settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "pairing",
+      "remote",
+      "headphones",
+      "devices"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:display",
+     "title": "Display",
+     "subtitle": "Display settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "screen",
+      "resolution",
+      "hdmi",
+      "picture"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:sound",
+     "title": "Sound",
+     "subtitle": "Sound settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "audio",
+      "speaker",
+      "surround"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:apps",
+     "title": "Apps",
+     "subtitle": "Manage installed applications",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "application management",
+      "uninstall",
+      "manage apps",
+      "permissions"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:storage",
+     "title": "Storage",
+     "subtitle": "Storage settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "space",
+      "memory",
+      "disk"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:datetime",
+     "title": "Date & time",
+     "subtitle": "Date and time settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "clock",
+      "timezone",
+      "time zone"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:keyboard",
+     "title": "Keyboard",
+     "subtitle": "Keyboard and input settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "input",
+      "typing",
+      "language"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:accessibility",
+     "title": "Accessibility",
+     "subtitle": "Accessibility settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "captions",
+      "talkback",
+      "high contrast"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:device",
+     "title": "About this box",
+     "subtitle": "Model, Android version, status",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "device info",
+      "device information",
+      "about",
+      "version",
+      "model",
+      "system info"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:cc",
+     "title": "Control Centre",
+     "subtitle": "Wi-Fi, Bluetooth, volume and appearance",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "controls",
+      "quick settings",
+      "panel"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:volume",
+     "title": "Volume",
+     "subtitle": "Open the Glass volume controls",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "sound level",
+      "mute",
+      "louder",
+      "quieter"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:theme",
+     "title": "Appearance",
+     "subtitle": "Switch between light and dark",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "dark mode",
+      "light mode",
+      "theme",
+      "night",
+      "day"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "odd titles and aliases",
+   "entries": [
+    {
+     "kind": "app",
+     "id": "app:com.example.a",
+     "title": "",
+     "subtitle": "com.example.a",
+     "pkg": "com.example.a",
+     "tag": "App",
+     "keywords": [
+      "alias only"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.b",
+     "title": "   ",
+     "subtitle": "com.example.b",
+     "pkg": "com.example.b",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.c",
+     "title": "Ctl\u001c\u001d\u001e\u001fChars",
+     "subtitle": "com.example.c",
+     "pkg": "com.example.c",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.d",
+     "title": "𝔉𝔯 Astral",
+     "subtitle": "com.example.d",
+     "pkg": "com.example.d",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.example.e",
+     "title": "Tab\tName",
+     "subtitle": "com.example.e",
+     "pkg": "com.example.e",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:wifi",
+     "title": "Wi-Fi",
+     "subtitle": "Network settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "wifi",
+      "wireless",
+      "network",
+      "internet",
+      "connection"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:bluetooth",
+     "title": "Bluetooth",
+     "subtitle": "Bluetooth settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "pairing",
+      "remote",
+      "headphones",
+      "devices"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:display",
+     "title": "Display",
+     "subtitle": "Display settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "screen",
+      "resolution",
+      "hdmi",
+      "picture"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:sound",
+     "title": "Sound",
+     "subtitle": "Sound settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "audio",
+      "speaker",
+      "surround"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:apps",
+     "title": "Apps",
+     "subtitle": "Manage installed applications",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "application management",
+      "uninstall",
+      "manage apps",
+      "permissions"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:storage",
+     "title": "Storage",
+     "subtitle": "Storage settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "space",
+      "memory",
+      "disk"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:datetime",
+     "title": "Date & time",
+     "subtitle": "Date and time settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "clock",
+      "timezone",
+      "time zone"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:keyboard",
+     "title": "Keyboard",
+     "subtitle": "Keyboard and input settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "input",
+      "typing",
+      "language"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:accessibility",
+     "title": "Accessibility",
+     "subtitle": "Accessibility settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "captions",
+      "talkback",
+      "high contrast"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:device",
+     "title": "About this box",
+     "subtitle": "Model, Android version, status",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "device info",
+      "device information",
+      "about",
+      "version",
+      "model",
+      "system info"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:main",
+     "title": "Settings",
+     "subtitle": "Android TV Settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "android settings",
+      "system",
+      "preferences",
+      "tv settings"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:cc",
+     "title": "Control Centre",
+     "subtitle": "Wi-Fi, Bluetooth, volume and appearance",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "controls",
+      "quick settings",
+      "panel"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:volume",
+     "title": "Volume",
+     "subtitle": "Open the Glass volume controls",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "sound level",
+      "mute",
+      "louder",
+      "quieter"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:theme",
+     "title": "Appearance",
+     "subtitle": "Switch between light and dark",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "dark mode",
+      "light mode",
+      "theme",
+      "night",
+      "day"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "extra provider with available/supersededBy",
+   "entries": [
+    {
+     "kind": "app",
+     "id": "app:com.google.android.youtube.tv",
+     "title": "YouTube",
+     "subtitle": "com.google.android.youtube.tv",
+     "pkg": "com.google.android.youtube.tv",
+     "tag": "App",
+     "keywords": [
+      "yt",
+      "videos"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.netflix.ninja",
+     "title": "Netflix",
+     "subtitle": "com.netflix.ninja",
+     "pkg": "com.netflix.ninja",
+     "tag": "App",
+     "keywords": [
+      "films",
+      "movies"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.amazon.amazonvideo.livingroom",
+     "title": "Prime Video",
+     "subtitle": "com.amazon.amazonvideo.livingroom",
+     "pkg": "com.amazon.amazonvideo.livingroom",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.disney.disneyplus",
+     "title": "Disney+",
+     "subtitle": "com.disney.disneyplus",
+     "pkg": "com.disney.disneyplus",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.spotify.tv.android",
+     "title": "Spotify",
+     "subtitle": "com.spotify.tv.android",
+     "pkg": "com.spotify.tv.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.stremio.one",
+     "title": "Stremio",
+     "subtitle": "com.stremio.one",
+     "pkg": "com.stremio.one",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.limelight",
+     "title": "Moonlight",
+     "subtitle": "com.limelight",
+     "pkg": "com.limelight",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.retroarch",
+     "title": "RetroArch",
+     "subtitle": "com.retroarch",
+     "pkg": "com.retroarch",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.vending",
+     "title": "Google Play Store",
+     "subtitle": "com.android.vending",
+     "pkg": "com.android.vending",
+     "tag": "App",
+     "keywords": [
+      "play store",
+      "google play",
+      "store",
+      "app store",
+      "download apps"
+     ]
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.tv.settings",
+     "title": "Settings",
+     "subtitle": "com.android.tv.settings",
+     "pkg": "com.android.tv.settings",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.settings",
+     "title": "Settings",
+     "subtitle": "com.android.settings",
+     "pkg": "com.android.settings",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.tvlauncher",
+     "title": "Android TV Home",
+     "subtitle": "com.google.android.tvlauncher",
+     "pkg": "com.google.android.tvlauncher",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.apps.tv.launcherx",
+     "title": "Google TV Home",
+     "subtitle": "com.google.android.apps.tv.launcherx",
+     "pkg": "com.google.android.apps.tv.launcherx",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.music",
+     "title": "YouTube Music",
+     "subtitle": "com.google.android.music",
+     "pkg": "com.google.android.music",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.videos",
+     "title": "Google TV",
+     "subtitle": "com.google.android.videos",
+     "pkg": "com.google.android.videos",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.plexapp.android",
+     "title": "Plex: Stream Movies & TV",
+     "subtitle": "com.plexapp.android",
+     "pkg": "com.plexapp.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:org.xbmc.kodi",
+     "title": "Kodi",
+     "subtitle": "org.xbmc.kodi",
+     "pkg": "org.xbmc.kodi",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:tv.twitch.android.app",
+     "title": "Twitch",
+     "subtitle": "tv.twitch.android.app",
+     "pkg": "tv.twitch.android.app",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.hbo.hbonow",
+     "title": "Max",
+     "subtitle": "com.hbo.hbonow",
+     "pkg": "com.hbo.hbonow",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.apple.atve.androidtv.appletv",
+     "title": "Apple TV",
+     "subtitle": "com.apple.atve.androidtv.appletv",
+     "pkg": "com.apple.atve.androidtv.appletv",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:bbc.iplayer.android",
+     "title": "BBC iPlayer",
+     "subtitle": "bbc.iplayer.android",
+     "pkg": "bbc.iplayer.android",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:air.ITVMobilePlayer",
+     "title": "ITVX",
+     "subtitle": "air.ITVMobilePlayer",
+     "pkg": "air.ITVMobilePlayer",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.channel4.ondemand",
+     "title": "Channel 4",
+     "subtitle": "com.channel4.ondemand",
+     "pkg": "com.channel4.ondemand",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:uk.co.uktv.dave",
+     "title": "U",
+     "subtitle": "uk.co.uktv.dave",
+     "pkg": "uk.co.uktv.dave",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.mxtech.videoplayer.ad",
+     "title": "MX Player",
+     "subtitle": "com.mxtech.videoplayer.ad",
+     "pkg": "com.mxtech.videoplayer.ad",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:org.videolan.vlc",
+     "title": "VLC",
+     "subtitle": "org.videolan.vlc",
+     "pkg": "org.videolan.vlc",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.chrome",
+     "title": "Chrome",
+     "subtitle": "com.android.chrome",
+     "pkg": "com.android.chrome",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.opera.browser",
+     "title": "Opera",
+     "subtitle": "com.opera.browser",
+     "pkg": "com.opera.browser",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.tv.dvr",
+     "title": "Live Channels",
+     "subtitle": "com.android.tv.dvr",
+     "pkg": "com.android.tv.dvr",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.gallery3d",
+     "title": "Gallery",
+     "subtitle": "com.android.gallery3d",
+     "pkg": "com.android.gallery3d",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.google.android.katniss",
+     "title": "Google",
+     "subtitle": "com.google.android.katniss",
+     "pkg": "com.google.android.katniss",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.android.documentsui",
+     "title": "Files",
+     "subtitle": "com.android.documentsui",
+     "pkg": "com.android.documentsui",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.estrongs.android.pop",
+     "title": "ES File Explorer",
+     "subtitle": "com.estrongs.android.pop",
+     "pkg": "com.estrongs.android.pop",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.teamviewer.quicksupport.market",
+     "title": "TeamViewer QuickSupport",
+     "subtitle": "com.teamviewer.quicksupport.market",
+     "pkg": "com.teamviewer.quicksupport.market",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.arris.vip.setup",
+     "title": "ARRIS Setup",
+     "subtitle": "com.arris.vip.setup",
+     "pkg": "com.arris.vip.setup",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.spocky.projengmenu",
+     "title": "Projectivy Launcher",
+     "subtitle": "com.spocky.projengmenu",
+     "pkg": "com.spocky.projengmenu",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "app:com.glasslauncher.utilityhub",
+     "title": "Glass Utility Hub",
+     "subtitle": "com.glasslauncher.utilityhub",
+     "pkg": "com.glasslauncher.utilityhub",
+     "tag": "App",
+     "keywords": []
+    },
+    {
+     "kind": "app",
+     "id": "x:1",
+     "title": "Extra App",
+     "subtitle": null,
+     "pkg": null,
+     "tag": null,
+     "keywords": [
+      "bonus"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "x:4",
+     "title": "Not Superseded",
+     "subtitle": null,
+     "pkg": null,
+     "tag": null,
+     "keywords": [
+      "ok"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "x:5",
+     "title": "Available",
+     "subtitle": null,
+     "pkg": null,
+     "tag": null,
+     "keywords": []
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:wifi",
+     "title": "Wi-Fi",
+     "subtitle": "Network settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "wifi",
+      "wireless",
+      "network",
+      "internet",
+      "connection"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:bluetooth",
+     "title": "Bluetooth",
+     "subtitle": "Bluetooth settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "pairing",
+      "remote",
+      "headphones",
+      "devices"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:display",
+     "title": "Display",
+     "subtitle": "Display settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "screen",
+      "resolution",
+      "hdmi",
+      "picture"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:apps",
+     "title": "Apps",
+     "subtitle": "Manage installed applications",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "application management",
+      "uninstall",
+      "manage apps",
+      "permissions"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:storage",
+     "title": "Storage",
+     "subtitle": "Storage settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "space",
+      "memory",
+      "disk"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:datetime",
+     "title": "Date & time",
+     "subtitle": "Date and time settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "clock",
+      "timezone",
+      "time zone"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:keyboard",
+     "title": "Keyboard",
+     "subtitle": "Keyboard and input settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "input",
+      "typing",
+      "language"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:accessibility",
+     "title": "Accessibility",
+     "subtitle": "Accessibility settings",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "captions",
+      "talkback",
+      "high contrast"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "set:device",
+     "title": "About this box",
+     "subtitle": "Model, Android version, status",
+     "pkg": null,
+     "tag": "Settings",
+     "keywords": [
+      "device info",
+      "device information",
+      "about",
+      "version",
+      "model",
+      "system info"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:cc",
+     "title": "Control Centre",
+     "subtitle": "Wi-Fi, Bluetooth, volume and appearance",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "controls",
+      "quick settings",
+      "panel"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:volume",
+     "title": "Volume",
+     "subtitle": "Open the Glass volume controls",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "sound level",
+      "mute",
+      "louder",
+      "quieter"
+     ]
+    },
+    {
+     "kind": "shortcut",
+     "id": "glass:theme",
+     "title": "Appearance",
+     "subtitle": "Switch between light and dark",
+     "pkg": null,
+     "tag": "Glass",
+     "keywords": [
+      "dark mode",
+      "light mode",
+      "theme",
+      "night",
+      "day"
+     ]
+    }
+   ]
+  }
+ ]
+}
