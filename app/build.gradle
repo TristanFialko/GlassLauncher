@@ -1,4 +1,7 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
 
 android {
     namespace 'com.glasslauncher'
@@ -8,14 +11,22 @@ android {
         applicationId 'com.glasslauncher'
         minSdk 23
         targetSdk 30
-        versionCode 6
-        versionName '1.5'
+        versionCode 7
+        versionName '2.0.0-dev'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     // android.util.Log / android.os.Trace are stubs on the host JVM; RustCore and GlassBridge only log/trace.
     testOptions { unitTests.returnDefaultValues = true }
     // Sideloaded onto Android 11 boxes, not published on Google Play; targetSdk 30 is deliberate (see MIGRATION_STATUS.md).
     lint { disable 'ExpiredTargetSdkVersion' }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+kotlin {
+    compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 }
 }
 
 dependencies {
