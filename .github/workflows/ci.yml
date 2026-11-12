@@ -145,4 +145,15 @@ jobs:
           target: default
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          script: ./gradlew --no-configuration-cache connectedDebugAndroidTest -Pglass.rustAbis=x86_64
+          script: |
+            adb logcat -c
+            ./gradlew --no-configuration-cache connectedDebugAndroidTest -Pglass.rustAbis=x86_64 || (adb logcat -d -s GlassBench:I GlassRust:I TestRunner:* AndroidRuntime:E; exit 1)
+            adb logcat -d -s GlassBench:I GlassRust:I | tee emulator-bench.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-test-results
+          path: |
+            emulator-bench.txt
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/

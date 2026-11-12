@@ -81,8 +81,12 @@ G.registry={
     return out;
   },
   query:function(text,max){
+    if(!norm(text)) return [];
+    return coreQuery(text,max)||G.registry.queryJs(text,max);
+  },
+  /* the original JavaScript ranking: fallback for query() and the reference for parity checks */
+  queryJs:function(text,max){
     var q=norm(text), qc=compact(q); if(!q) return [];
-    var fast=coreQuery(text,max); if(fast) return fast;
     var res=[];
     G.registry.entries().forEach(function(e){ var s=score(e,q,qc); if(s>0) res.push({e:e,s:s}); });
     res.sort(function(a,b){
@@ -91,7 +95,9 @@ G.registry={
       return norm(a.e.title)<norm(b.e.title)?-1:1;
     });
     return res.slice(0,max||24).map(function(r){return r.e;});
-  }
+  },
+  /* true while the current Search session is being ranked by the Rust core */
+  coreActive:function(){ return core.on===true&&!!core.ents; }
 };
 
 /* provider 1: installed applications (live from Android) */
