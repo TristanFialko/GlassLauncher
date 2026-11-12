@@ -58,7 +58,7 @@ _Last updated: 2026-11-12 · branch `glasslauncher-2.0-migration` · baseline ta
 - Gradle 9.6 reports deprecations that will break with Gradle 10 (AGP 8.7.3 is older than this Gradle); no AGP/Gradle upgrade done (out of scope, risky).
 - Static findings not acted on because they need device numbers or touch visuals (see TARGET_ARCHITECTURE "Next candidates"): forced layout per D-pad key, 800×480 card art drawn at 280×168, `noblur` fallback likely not applying to `#cc` (CSS specificity — visual, needs review).
 - Documented-but-absent features found by the audit (All Apps row, Utilities row, brightness tile, moon/sun header button, …) are listed in `FEATURE_INVENTORY.md`; nothing was removed by the migration.
-- GitHub language bar shows "100% Batchfile": the languages API reports only 978 bytes = the three `.bat` files, i.e. the statistics predate the source upload in PR #1. There is no `.gitattributes`, and no Linguist override hides the Java/JS/CSS. No change made; it should refresh after the next push to `main`.
+- GitHub language bar: it showed "100% Batchfile" because the statistics were computed when only the three `.bat` files (978 bytes) were in the repository. They refreshed without any change: the languages API now reports JavaScript 109,555 B, HTML 63,595 B, CSS 32,607 B, Java 21,866 B, Batchfile 978 B (resolved; no `.gitattributes` needed).
 
 ## Rollback
 - Source: `git checkout glasslauncher-1.5-phase7-baseline` (`main` is still at the baseline until this branch is merged).
