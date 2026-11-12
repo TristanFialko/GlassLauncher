@@ -15,6 +15,7 @@ import android.webkit.WebViewClient;
 public class MainActivity extends Activity {
     private WebView web;
     private AppDiscovery apps;
+    private FrameLatencyProbe probe;   // null unless started with --ez glass.latency true (benchmark only)
     private static final String BACK_JS = "(function(){var e=new KeyboardEvent('keydown',{bubbles:true});Object.defineProperty(e,'keyCode',{get:function(){return 10009;}});document.dispatchEvent(e);})();";
 
     WebView webView() { return web; }
@@ -64,6 +65,7 @@ public class MainActivity extends Activity {
         });
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");
+        probe = FrameLatencyProbe.attachIfRequested(this, "webview");
     }
 
     @Override protected void onPause() {
@@ -90,7 +92,9 @@ public class MainActivity extends Activity {
             return r;
         }
         if (kc == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) { if (web != null) web.evaluateJavascript(BACK_JS, null); return true; }
-        return super.dispatchKeyEvent(event);
+        boolean handled = super.dispatchKeyEvent(event);
+        if (probe != null) probe.onKeyDispatched(event);
+        return handled;
     }
 
     @Override public void onBackPressed() {

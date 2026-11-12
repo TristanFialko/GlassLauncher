@@ -44,6 +44,8 @@ jobs:
           node tools/parity/search-parity.js --bench | tee parity.txt
       - name: Registry snapshot parity (production JavaScript fixtures vs Rust snapshot preparation)
         run: node tools/parity/snapshot-parity.js | tee -a parity.txt
+      - name: Native UI config matches apps.js
+        run: node tools/parity/nativeui-config-check.js
       - uses: actions/upload-artifact@v4
         with:
           name: parity-report
@@ -169,7 +171,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: |
             adb logcat -c
-            ./gradlew --no-configuration-cache connectedDebugAndroidTest -Pglass.rustAbis=x86_64 || (adb logcat -d -s GlassBench:I GlassRust:I TestRunner:* AndroidRuntime:E; exit 1)
+            ./gradlew --no-configuration-cache connectedDebugAndroidTest -Pglass.rustAbis=x86_64 -Pandroid.testInstrumentationRunnerArguments.notClass=com.glasslauncher.NativeUiPrototypeTest || (adb logcat -d -s GlassBench:I GlassRust:I TestRunner:* AndroidRuntime:E; exit 1)
             adb logcat -d -s GlassBench:I GlassRust:I | tee emulator-bench.txt
       - uses: actions/upload-artifact@v4
         if: always()
@@ -179,3 +181,53 @@ jobs:
             emulator-bench.txt
             app/build/reports/androidTests/
             app/build/outputs/androidTest-results/
+
+  native-ui:
+    # Native UI prototype vs WebView on an Android TV 1080p emulator profile (1920x1080 @ 320 dpi, like the VIP7802).
+    # Screenshots + latency/gfxinfo logs are uploaded for review; emulator timings are not device performance.
+    name: Native UI prototype (emulator, TV 1080p, API 30)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-35 build-tools;34.0.0 ndk;${{ env.NDK_VERSION }}"
+      - name: Install pinned Rust toolchain + emulator target
+        working-directory: rust
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          rustup target add x86_64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Native UI prototype test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: default
+          profile: tv_1080p
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: |
+            adb logcat -c
+            ./gradlew --no-configuration-cache connectedDebugAndroidTest -Pglass.rustAbis=x86_64 -Pandroid.testInstrumentationRunnerArguments.class=com.glasslauncher.NativeUiPrototypeTest || (adb logcat -d -s GlassNative:* GlassNativeTest:* GlassLatency:* TestRunner:* AndroidRuntime:E; adb pull /data/local/tmp/glass-nativeui nativeui-out || true; exit 1)
+            adb pull /data/local/tmp/glass-nativeui nativeui-out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-ui-prototype
+          path: |
+            nativeui-out/
+            app/build/reports/androidTests/

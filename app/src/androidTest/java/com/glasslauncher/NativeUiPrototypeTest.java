@@ -1,0 +1,135 @@
+package com.glasslauncher;
+
+import static org.junit.Assert.assertTrue;
+
+import android.app.UiAutomation;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.ParcelFileDescriptor;
+import android.os.SystemClock;
+import android.util.Log;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
+/**
+ * Native UI prototype vs the WebView UI on the emulator, driven like the device benchmark: shell `am start` and
+ * `input keyevent` (the prototype runs in another process, so ActivityScenario cannot host it). Produces screenshots and
+ * logs in <app external files>/nativeui for the CI artifact; asserts the prototype renders, moves focus, opens the
+ * Control Centre and that every D-pad key produced a measured frame. Emulator numbers are NOT device performance.
+ */
+@RunWith(AndroidJUnit4.class)
+public class NativeUiPrototypeTest {
+    private static final String TAG = "GlassNativeTest";
+    private UiAutomation ua;
+    private File out;
+
+    private String sh(String cmd) throws Exception {
+        ParcelFileDescriptor pfd = ua.executeShellCommand(cmd);
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(new ParcelFileDescriptor.AutoCloseInputStream(pfd), StandardCharsets.UTF_8))) {
+            String l; while ((l = r.readLine()) != null) sb.append(l).append('\n');
+        }
+        return sb.toString();
+    }
+
+    private void save(String name, String text) throws Exception {
+        try (FileOutputStream f = new FileOutputStream(new File(out, name))) { f.write(text.getBytes(StandardCharsets.UTF_8)); }
+    }
+
+    private Bitmap shot(String name) throws Exception {
+        SystemClock.sleep(900);                                  // let 220-450 ms transitions settle
+        Bitmap b = ua.takeScreenshot();
+        try (FileOutputStream f = new FileOutputStream(new File(out, name))) { b.compress(Bitmap.CompressFormat.PNG, 100, f); }
+        return b;
+    }
+
+    private static boolean differs(Bitmap a, Bitmap b) {
+        if (a == null || b == null || a.getWidth() != b.getWidth()) return true;
+        int diff = 0;
+        for (int y = 0; y < a.getHeight(); y += 8) for (int x = 0; x < a.getWidth(); x += 8) if (a.getPixel(x, y) != b.getPixel(x, y)) diff++;
+        return diff > 50;
+    }
+
+    private void key(int code) throws Exception { sh("input keyevent " + code); SystemClock.sleep(350); }
+
+    private String waitFor(String tagFilter, String needle, long ms) throws Exception {
+        long end = SystemClock.uptimeMillis() + ms;
+        String log = "";
+        while (SystemClock.uptimeMillis() < end) {
+            log = sh("logcat -d -s " + tagFilter);
+            if (log.contains(needle)) return log;
+            SystemClock.sleep(250);
+        }
+        return log;
+    }
+
+    @Test public void nativePrototypeVersusWebView() throws Exception {
+        ua = InstrumentationRegistry.getInstrumentation().getUiAutomation();
+        Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        out = new File(ctx.getExternalFilesDir(null), "nativeui");
+        out.mkdirs();
+        int[] path = {22, 22, 20, 21, 19, 19};   // right, right, down (row 2), left, up, up (header)
+        StringBuilder report = new StringBuilder();
+        report.append(sh("wm size")).append(sh("wm density"));
+
+        // ---- native prototype ----
+        sh("logcat -c");
+        report.append("--- native start\n").append(sh("am start -W -n com.glasslauncher/.NativeHomeActivity --ez glass.latency true"));
+        String ready = waitFor("GlassNative:I", "assets ready", 30_000);
+        assertTrue("native prototype never finished loading assets:\n" + ready, ready.contains("assets ready"));
+        Bitmap nHome = shot("native-1-home.png");
+        sh("dumpsys gfxinfo com.glasslauncher:native reset");
+        key(22);
+        Bitmap nFocus = shot("native-2-focus-second-card.png");
+        key(22); key(20);
+        Bitmap nRow2 = shot("native-3-entertainment-row.png");
+        key(21); key(19); key(19);
+        shot("native-4-header-search.png");
+        key(22); key(23);
+        Bitmap nCc = shot("native-5-control-centre.png");
+        key(20); key(20);
+        shot("native-6-control-centre-volume.png");
+        key(4);
+        Bitmap nBack = shot("native-7-after-back.png");
+        String nGfx = sh("dumpsys gfxinfo com.glasslauncher:native");
+        String nLat = sh("logcat -d -s GlassLatency:I");
+        save("native-gfxinfo.txt", nGfx);
+        save("native-latency.txt", nLat);
+        report.append(sh("dumpsys meminfo com.glasslauncher:native")).append('\n');
+        assertTrue("focus move did not change the screen", differs(nHome, nFocus));
+        assertTrue("moving to the Entertainment row did not change the screen", differs(nFocus, nRow2));
+        assertTrue("Control Centre did not open", differs(nRow2, nCc));
+        assertTrue("Back did not close the Control Centre", differs(nCc, nBack));
+        int nLines = nLat.split("ui=native key=", -1).length - 1;
+        assertTrue("latency probe logged " + nLines + " native key frames:\n" + nLat, nLines >= 8);
+        sh("am force-stop com.glasslauncher");
+
+        // ---- WebView UI, same path ----
+        sh("logcat -c");
+        report.append("--- webview start\n").append(sh("am start -W -n com.glasslauncher/.MainActivity --ez glass.latency true"));
+        SystemClock.sleep(8000);                                  // WebView + page load + first layout
+        shot("webview-1-home.png");
+        sh("dumpsys gfxinfo com.glasslauncher reset");
+        for (int k : path) key(k);
+        shot("webview-2-after-path.png");
+        String wGfx = sh("dumpsys gfxinfo com.glasslauncher");
+        String wLat = sh("logcat -d -s GlassLatency:I");
+        save("webview-gfxinfo.txt", wGfx);
+        save("webview-latency.txt", wLat);
+        report.append(sh("dumpsys meminfo com.glasslauncher")).append('\n');
+        save("report.txt", report.toString());
+        // AGP uninstalls the app after the run (deleting its files); the CI job pulls this shell-owned copy instead
+        sh("rm -rf /data/local/tmp/glass-nativeui"); sh("cp -r " + out.getAbsolutePath() + " /data/local/tmp/glass-nativeui");
+        Log.i(TAG, "native latency lines=" + nLines + ", webview latency lines=" + (wLat.split("ui=webview key=", -1).length - 1));
+    }
+}

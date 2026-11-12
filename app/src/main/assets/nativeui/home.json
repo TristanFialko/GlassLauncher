@@ -1,0 +1,22 @@
+{
+  "_comment": "Native UI prototype config. Mirrors window.APPS / ENTERTAINMENT / THEME / SOUND in apps.js; tools/parity/nativeui-config-check.js fails CI if they drift.",
+  "rows": [
+    { "kind": "top", "title": "", "apps": [
+      { "name": "YouTube", "id": "com.google.android.youtube.tv", "ids": [], "match": "", "icon": "icons/Youtube.png", "dark": "darkicons/darkyoutube.png" },
+      { "name": "Netflix", "id": "com.netflix.ninja", "ids": [], "match": "", "icon": "icons/Netflix.png", "dark": "darkicons/darknetflix.png" },
+      { "name": "Prime Video", "id": "com.amazon.amazonvideo.livingroom", "ids": [], "match": "", "icon": "icons/Prime.png", "dark": "darkicons/darkprime.png" },
+      { "name": "Disney+", "id": "com.disney.disneyplus", "ids": [], "match": "", "icon": "icons/Disney+.png", "dark": "darkicons/darkdisney.png" },
+      { "name": "Spotify", "id": "com.spotify.tv.android", "ids": [], "match": "", "icon": "icons/Spotify.png", "dark": "darkicons/Spotify.png" }
+    ] },
+    { "kind": "ent", "title": "Entertainment", "apps": [
+      { "name": "Stremio", "id": "", "ids": ["com.stremio.one"], "match": "stremio", "icon": "icons/stremio.png", "dark": "darkicons/stremio.png" },
+      { "name": "Rhenium", "id": "", "ids": [], "match": "rhenium", "icon": "icons/rhenium.png", "dark": "darkicons/rhenium.png" },
+      { "name": "Moonlight", "id": "", "ids": ["com.limelight", "com.limelight.noroot", "com.limelight.root"], "match": "moonlight", "icon": "icons/moonlight.png", "dark": "darkicons/moonlight.png" },
+      { "name": "RetroArch", "id": "", "ids": ["com.retroarch", "com.retroarch.aarch64", "com.retroarch.ra32"], "match": "retroarch", "icon": "icons/retroarch.png", "dark": "darkicons/retroarch.png" }
+    ] }
+  ],
+  "wallpaperLight": "wallpaper.jpg",
+  "wallpaperDark": "wallpaper2.jpg",
+  "soundEnabled": true,
+  "soundVolume": 0.2
+}
