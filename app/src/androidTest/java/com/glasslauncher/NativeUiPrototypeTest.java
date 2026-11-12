@@ -197,7 +197,8 @@ public class NativeUiPrototypeTest {
         String r1 = resumed();
         save("routing.txt", "native: " + r1);
         assertTrue("glass.ui=native did not show the native UI: " + r1, r1.contains("NativeHomeActivity"));
-        sh("am start -W -n com.glasslauncher/.MainActivity --es glass.ui webview");
+        // clear-task also finishes the native HOME instance, so later tests start a fresh native activity
+        sh("am start -W --activity-clear-task -n com.glasslauncher/.MainActivity --es glass.ui webview");
         SystemClock.sleep(2500);
         String r2 = resumed();
         save("routing.txt", "webview: " + r2);
