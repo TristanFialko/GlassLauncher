@@ -137,4 +137,70 @@ public class NativeUiPrototypeTest {
         save("report.txt", report.toString());
         Log.i(TAG, "native latency lines=" + nLines + ", webview latency lines=" + (wLat.split("ui=webview key=", -1).length - 1));
     }
+
+    private String resumed() throws Exception {
+        for (String l : sh("dumpsys activity activities").split("\n")) if (l.contains("mResumedActivity") || l.contains("ResumedActivity:")) return l.trim();
+        return "";
+    }
+
+    /**
+     * Native Search, the full Control Centre, the theme toggle, toasts and opt-in HOME routing, on the emulator. Correctness
+     * only: screenshots go to the CI artifact for visual review. Recently Used needs a configured app installed, which this
+     * emulator image lacks, so it is covered by JVM tests and the owner's device checklist.
+     */
+    @Test public void nativeSurfacesAndRouting() throws Exception {
+        ua = InstrumentationRegistry.getInstrumentation().getUiAutomation();
+        sh("mkdir -p /data/local/tmp/glass-nativeui");
+        sh("logcat -c");
+        sh("am start -W -n com.glasslauncher/.NativeHomeActivity");
+        String ready = waitFor("GlassNative:I", "assets ready", 30_000);
+        assertTrue("native UI never finished loading assets:\n" + ready, ready.contains("assets ready"));
+        Bitmap home = shot("surf-01-home.png");
+
+        // OK on a card whose app is missing on this image -> toast
+        key(23);
+        Bitmap toast = shot("surf-02-toast-not-installed.png");
+        assertTrue("launching a missing app showed no toast", differs(home, toast));
+        SystemClock.sleep(3800);
+
+        // Search: Up to the header (Search), OK; type with the hardware keyboard path, then the on-screen keyboard
+        key(19); key(23);
+        Bitmap search = shot("surf-03-search-open.png");
+        assertTrue("Search did not open", differs(home, search));
+        sh("input text sett");
+        Bitmap typed = shot("surf-04-search-typed-sett.png");
+        assertTrue("typing did not change Search", differs(search, typed));
+        key(20); key(23);
+        shot("surf-05-search-onscreen-key.png");
+        key(4);
+        Bitmap closed = shot("surf-06-search-closed.png");
+        assertTrue("Back did not close Search", differs(typed, closed));
+
+        // Control Centre: header Right, OK; walk the tiles; Appearance toggles the theme
+        key(19); key(22); key(23);
+        Bitmap cc = shot("surf-07-control-centre.png");
+        assertTrue("Control Centre did not open", differs(closed, cc));
+        key(20); shot("surf-08-cc-down-1.png");
+        key(20); shot("surf-09-cc-down-2.png");
+        key(20); shot("surf-10-cc-down-3.png");
+        key(4); key(23); key(23);   // close, reopen (focus starts on Appearance), toggle
+        SystemClock.sleep(800);   // 700 ms theme crossfade
+        Bitmap themed = shot("surf-11-cc-theme-toggled.png");
+        assertTrue("Appearance did not change the theme", differs(cc, themed));
+        key(23); SystemClock.sleep(800);   // toggle back
+        key(4);
+        shot("surf-12-cc-closed.png");
+
+        // Opt-in HOME routing: MainActivity hands over to the native UI, and back
+        sh("am start -W -n com.glasslauncher/.MainActivity --es glass.ui native");
+        SystemClock.sleep(2500);
+        String r1 = resumed();
+        save("routing.txt", "native: " + r1);
+        assertTrue("glass.ui=native did not show the native UI: " + r1, r1.contains("NativeHomeActivity"));
+        sh("am start -W -n com.glasslauncher/.MainActivity --es glass.ui webview");
+        SystemClock.sleep(2500);
+        String r2 = resumed();
+        save("routing.txt", "webview: " + r2);
+        assertTrue("glass.ui=webview did not show the WebView UI: " + r2, r2.contains("MainActivity"));
+    }
 }

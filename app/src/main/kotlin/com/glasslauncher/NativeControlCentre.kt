@@ -129,8 +129,8 @@ class NativeControlCentre(private val home: NativeHomeView) {
     }
 
     // ---------------- input ----------------
-    fun open() {
-        isOpen = true; sel = 0; selAmt = 1f
+    fun open(focus: Int = 0) {
+        isOpen = true; sel = focus; selAmt = 1f
         home.host.controlCentreAction("open", 0)
     }
 

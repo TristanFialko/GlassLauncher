@@ -405,14 +405,29 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
         invalidate()
     }
 
-    fun openControlCentre() { cc.open(); aCc = anim(aCc, ccMix, 1f, 420, EASE) { ccMix = it } }
+    fun openControlCentre(focusVolume: Boolean = false) { cc.open(if (focusVolume) CcLogic.T_VOL else 0); aCc = anim(aCc, ccMix, 1f, 420, EASE) { ccMix = it } }
     fun closeControlCentre() { cc.isOpen = false; aCc = anim(aCc, ccMix, 0f, 420, EASE) { ccMix = it }; host.playNav() }
+
+    // Search overlay (NativeSearchView sits above this view): body.searchopen dims the home like body.ccopen.
+    private var searchMix = 0f
+    private var aSearch: ValueAnimator? = null
+    /** Draws the toast above Search; null means this view draws it itself. */
+    var toastLayer: View? = null
+
+    fun setSearchOpen(open: Boolean) { aSearch = anim(aSearch, searchMix, if (open) 1f else 0f, 300, EASE) { searchMix = it } }
+    private fun dimMix() = if (ccMix > searchMix) ccMix else searchMix
+
+    /** Called by the toast layer's onDraw. */
+    fun drawToastLayer(c: Canvas) {
+        val k = width / W
+        c.save(); c.scale(k, k); drawToast(c); c.restore()
+    }
 
     fun showToast(text: String) {
         toast = text; toastUntil = System.currentTimeMillis() + 3200
-        aToast = anim(aToast, toastMix, 1f, 300, null) { toastMix = it }
+        aToast = anim(aToast, toastMix, 1f, 300, null) { toastMix = it; toastLayer?.invalidate() }
         postDelayed({
-            if (System.currentTimeMillis() >= toastUntil) aToast = anim(aToast, toastMix, 0f, 300, null) { toastMix = it }
+            if (System.currentTimeMillis() >= toastUntil) aToast = anim(aToast, toastMix, 0f, 300, null) { toastMix = it; toastLayer?.invalidate() }
         }, 3200)
     }
 
@@ -437,9 +452,9 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
             drawHead(c)
             drawRecent(c)
             drawButtons(c)
-            drawRows(c)
+            if (searchMix > 0f) { c.saveLayerAlpha(0f, 0f, W, H, (255 * (1f - .5f * searchMix)).toInt()); drawRows(c); c.restore() } else drawRows(c)   // searchopen #stage .5
             if (ccMix > 0f) cc.draw(c, ccMix)
-            drawToast(c)
+            if (toastLayer == null) drawToast(c)
             c.restore()
         } finally { Trace.endSection() }
     }
@@ -457,7 +472,7 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
 
     private fun drawHead(c: Canvas) {
         val s = 1f + (HEAD_SCALE - 1f) * scroll
-        val alpha = (1f - 0.45f * scroll) * (1f - 0.7f * ccMix)           // .scrolled .55, ccopen .3
+        val alpha = (1f - 0.45f * scroll) * (1f - 0.7f * dimMix())         // .scrolled .55, ccopen/searchopen .3
         c.save()
         c.translate(0f, -HEAD_LIFT * scroll)
         c.scale(s, s, W / 2f, 0f)
@@ -486,7 +501,7 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
     }
 
     private fun drawButtons(c: Canvas) {
-        val vis = 1f - ccMix
+        val vis = 1f - dimMix()
         if (vis <= 0f) return
         for (i in 0 until 2) {
             val f = zone == 1 && hdrIdx == i
@@ -644,7 +659,7 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
 
     /** #recent (recent.css): empty hint, or the last launched app's art and name; focusable only in the second state. */
     private fun drawRecent(c: Canvas) {
-        val a = (1f - scroll) * (1f - .7f * ccMix)           // .scrolled: fades out; ccopen: .3
+        val a = (1f - scroll) * (1f - .7f * dimMix())        // .scrolled: fades out; ccopen/searchopen: .3
         if (a <= 0.01f) return
         val has = recentOn
         val f = if (has && zone == 1 && hdrIdx == HomeNav.RECENT) btnAmt else 0f

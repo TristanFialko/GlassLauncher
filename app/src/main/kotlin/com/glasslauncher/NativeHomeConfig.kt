@@ -35,6 +35,8 @@ class NativeHomeConfig {
     @JvmField var wallpaperDark = "wallpaper2.jpg"
     @JvmField var soundEnabled = true
     @JvmField var soundVolume = 0.2f
+    /** apps.js SOUND.keyVolume: on-screen keyboard typing sounds. */
+    @JvmField var keyVolume = 0.3f
 
     companion object {
         /** appdata.js G.apps.HIDDEN */
@@ -82,6 +84,7 @@ class NativeHomeConfig {
             c.wallpaperDark = o.optString("wallpaperDark", "wallpaper2.jpg")
             c.soundEnabled = o.optBoolean("soundEnabled", true)
             c.soundVolume = o.optDouble("soundVolume", 0.2).toFloat()
+            c.keyVolume = o.optDouble("keyVolume", 0.3).toFloat()
             return c
         }
 

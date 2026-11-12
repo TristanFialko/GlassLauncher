@@ -72,9 +72,19 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
             val v = NativeHomeView(this, c, this)
             view = v
             cc = ControlCentreController(this, v, sys!!, settings!!, worker, ui) { playNav() }
+            cc?.openSearch = { openSearch() }
             @Suppress("DEPRECATION")
             v.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            setContentView(v)
+            // Home, then Search above it, then a toast layer so toasts stay visible over Search (glass.js toast z-order).
+            val engine = SearchEngine(searchExec, MainLooperScheduler(), searchFacts)
+            val s = NativeSearchView(this, searchHost, engine, IconSource { pkg, size -> searchIcon(pkg, size) }, pm)
+            search = s
+            val toastLayer = object : View(this) { override fun onDraw(c: android.graphics.Canvas) { v.drawToastLayer(c) } }
+            v.toastLayer = toastLayer
+            val root = android.widget.FrameLayout(this)
+            val full = android.widget.FrameLayout.LayoutParams(android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT)
+            root.addView(v, full); root.addView(s, full); root.addView(toastLayer, full)
+            setContentView(root)
             v.requestFocus()
             probe = FrameLatencyProbe.attachIfRequested(this, "native")
             initSounds(c)
@@ -254,6 +264,17 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
                 sNav = sp.load(n, 1); sClick = sp.load(c, 1)
             } }
         } catch (e: Exception) { Log.w(TAG, "sounds", e) }
+        worker.execute { loadKeySounds(sp) }
+    }
+
+    /** glass.js KEY_SOUNDS: sounds/keys/<kind>/d*.mp3, a random variant per key press. Worker thread (asset I/O). */
+    private fun loadKeySounds(sp: SoundPool) {
+        sKeys = KeyKind.values().map { k ->
+            val dir = "sounds/keys/" + k.name.lowercase(java.util.Locale.ROOT)
+            (assets.list(dir) ?: emptyArray()).sorted().mapNotNull { f ->
+                try { assets.openFd("$dir/$f").use { sp.load(it, 1) } } catch (e: Exception) { Log.w(TAG, "key sound $f", e); null }
+            }.toIntArray()
+        }.toTypedArray()
     }
 
     override fun playNav() { play(sNav) }
@@ -279,8 +300,61 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         }
     }
 
-    /** Header Search button. Search is a separate native surface; until it is wired in, this stays a toast. */
-    override fun openSearch() { view?.showToast("Search is not part of the native prototype yet") }
+    /** Header Search button, the Control Centre's Search tile: the native Search overlay (docs/nativeui/SEARCH.md). */
+    override fun openSearch() {
+        val v = view ?: return
+        val s = search ?: return
+        if (s.isOpen) return
+        if (v.cc.isOpen) v.closeControlCentre()
+        s.setBackdrops(v.blurLight, v.blurDark)
+        s.setDark(v.dark)
+        v.setSearchOpen(true)
+        s.open()
+    }
+
+    // ---- Search (NativeSearchView) ----
+    private var search: NativeSearchView? = null
+    private val searchExec: ExecutorService = Executors.newSingleThreadExecutor()
+    @Volatile private var sKeys: Array<IntArray> = emptyArray()   // KeyKind.ordinal -> SoundPool ids (a few variants each, glass.js mkKeyPool)
+    private val keyRandom = java.util.Random()
+
+    /** Runs on [searchExec]. */
+    private val searchFacts = object : SearchFactsSource {
+        override fun installedApps(): List<InstalledApp> = try {
+            val a = JSONArray(apps!!.installedAppsJson())
+            List(a.length()) { i -> a.getJSONObject(i).let { InstalledApp(it.getString("id"), it.optString("name"), it.optBoolean("show", true)) } }
+        } catch (t: Throwable) { Log.e(TAG, "search apps", t); emptyList() }
+        override fun aliases(): Map<String, List<String>> = emptyMap()   // window.SEARCH_ALIASES is not configured in apps.js
+        override fun hasSettings(kind: String): Boolean = settings?.has(kind) == true
+    }
+
+    /** Runs on [pm]. */
+    private fun searchIcon(pkg: String, size: Int): Bitmap? {
+        val png = apps?.iconPng(pkg) ?: return null
+        return NativeArt.decodeBytes(png, size, size)
+    }
+
+    private val searchHost = object : SearchHost {
+        override fun launchApp(id: String, name: String) = this@NativeHomeActivity.launchApp(id, name)
+        override fun openSettings(kind: String) = this@NativeHomeActivity.openSettings(kind)
+        override fun toggleTheme(): Boolean {
+            val v = view ?: return false
+            v.setDark(!v.dark); search?.setDark(v.dark)
+            return v.dark
+        }
+        override fun openControlCentre(focusVolume: Boolean) { view?.openControlCentre(focusVolume) }
+        override fun toast(text: String) { view?.showToast(text) }
+        override fun playNav() = this@NativeHomeActivity.playNav()
+        override fun playClick() = this@NativeHomeActivity.playClick()
+        override fun playKey(kind: KeyKind) {
+            val ids = sKeys.getOrNull(kind.ordinal) ?: return
+            if (ids.isEmpty()) return
+            val sp = sounds ?: return
+            val vol = cfg?.keyVolume ?: return
+            sp.play(ids[keyRandom.nextInt(ids.size)], vol, vol, 1, 0, 1f)
+        }
+        override fun onSearchClosed(restoreFocus: Boolean) { view?.setSearchOpen(false); view?.requestFocus() }
+    }
 
     /**
      * glass.js G.launch(): click sound is the caller's; a successful launch is recorded in Recently Used, a failed one
@@ -308,7 +382,15 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     override fun exitPrototype() { if (!asHome) finish() }
 
     override fun dispatchKeyEvent(e: KeyEvent): Boolean {
-        if (e.action == KeyEvent.ACTION_DOWN && (e.keyCode == KeyEvent.KEYCODE_VOLUME_UP || e.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || e.keyCode == KeyEvent.KEYCODE_VOLUME_MUTE)) cc?.onVolumeKey()
+        val volumeKey = e.keyCode == KeyEvent.KEYCODE_VOLUME_UP || e.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || e.keyCode == KeyEvent.KEYCODE_VOLUME_MUTE
+        if (e.action == KeyEvent.ACTION_DOWN && volumeKey) cc?.onVolumeKey()
+        val s = search
+        if (s != null && s.isOpen && !volumeKey) {
+            // Search owns every key while open; key-ups are swallowed so Back's up never reaches the home view.
+            if (e.action == KeyEvent.ACTION_DOWN) s.onKeyDown(e.keyCode, e)
+            probe?.onKeyDispatched(e)
+            return true
+        }
         val r = super.dispatchKeyEvent(e)
         probe?.onKeyDispatched(e)
         return r
@@ -328,6 +410,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         cc?.onDestroy()
         ui.removeCallbacks(packageRefresh)
         if (receiverOn) { receiverOn = false; try { unregisterReceiver(packageReceiver) } catch (e: IllegalArgumentException) { Log.w(TAG, "receiver", e) } }
+        searchExec.shutdownNow()
         worker.shutdownNow()
         pm.shutdownNow()
         sounds?.release()

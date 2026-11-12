@@ -19,5 +19,6 @@
   "wallpaperLight": "wallpaper.jpg",
   "wallpaperDark": "wallpaper2.jpg",
   "soundEnabled": true,
-  "soundVolume": 0.2
+  "soundVolume": 0.2,
+  "keyVolume": 0.3
 }
