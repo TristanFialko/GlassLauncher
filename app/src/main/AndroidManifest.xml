@@ -1,0 +1,49 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <queries>
+        <intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LEANBACK_LAUNCHER"/></intent>
+        <intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent>
+        <!-- Settings screens Search and the Control Centre can open (Search hides any the box lacks) -->
+        <intent><action android:name="android.settings.WIFI_SETTINGS"/></intent>
+        <intent><action android:name="android.settings.BLUETOOTH_SETTINGS"/></intent>
+        <intent><action android:name="android.settings.DEVICE_INFO_SETTINGS"/></intent>
+        <intent><action android:name="android.settings.DISPLAY_SETTINGS"/></intent>
+        <intent><action android:name="android.settings.SOUND_SETTINGS"/></intent>
+        <intent><action android:name="android.settings.APPLICATION_SETTINGS"/></intent>
+        <intent><action android:name="android.settings.INTERNAL_STORAGE_SETTINGS"/></intent>
+        <intent><action android:name="android.settings.DATE_SETTINGS"/></intent>
+        <intent><action android:name="android.settings.INPUT_METHOD_SETTINGS"/></intent>
+        <intent><action android:name="android.settings.ACCESSIBILITY_SETTINGS"/></intent>
+        <package android:name="com.google.android.youtube.tv"/>
+        <package android:name="com.netflix.ninja"/>
+        <package android:name="com.amazon.amazonvideo.livingroom"/>
+        <package android:name="com.disney.disneyplus"/>
+        <package android:name="com.spotify.tv.android"/>
+        <package android:name="com.stremio.one"/>
+        <package android:name="com.limelight"/>
+        <package android:name="com.limelight.noroot"/>
+        <package android:name="com.limelight.root"/>
+        <package android:name="com.retroarch"/>
+        <package android:name="com.retroarch.aarch64"/>
+        <package android:name="com.retroarch.ra32"/>
+        <package android:name="com.android.vending"/>
+        <package android:name="com.android.tv.settings"/>
+        <package android:name="com.android.settings"/>
+        <package android:name="com.glasslauncher.utilityhub"/>
+    </queries>
+    <application android:theme="@style/AppTheme" android:label="Glass Launcher" android:usesCleartextTraffic="true" android:allowBackup="false">
+        <activity android:name=".MainActivity" android:screenOrientation="landscape" android:exported="true" android:windowSoftInputMode="adjustNothing|stateHidden" android:configChanges="keyboard|keyboardHidden|orientation|screenSize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
