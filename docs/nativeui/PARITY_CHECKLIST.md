@@ -1,6 +1,6 @@
 # Glass Launcher — native UI parity checklist
 
-Static audit of the WebView UI on branch `glasslauncher-2.0-migration` (source read, **nothing run on a device**). Purpose: freeze current behaviour so a native (custom Views, Java) port can be tested screen by screen. This is not a redesign; where the source is unclear it says so.
+Static audit of the WebView UI on branch `glasslauncher-2.0-migration` (source read, **nothing run on a device**). Purpose: freeze current behaviour so a native (custom Views, now Kotlin) port can be tested screen by screen. This is not a redesign; where the source is unclear it says so. Sections 0–4 describe the WebView-era code: `SystemControls`, `SettingsLauncher` and `FrameLatencyProbe` have since moved to `kotlin/` (`bc948bb`), so their `java/…` line references point at the pre-migration files.
 
 **Citation paths** are relative to `app/src/main/assets/` (`css/…`, `js/…`, `apps.js`, `index.html`) unless prefixed `java/` (= `app/src/main/java/com/glasslauncher/`) or `AndroidManifest.xml`.
 
@@ -458,11 +458,11 @@ Legend: **P1** (●) = must be covered by the first native prototype slice (Home
 | C9, C12 | native implemented; device check pending | `volumeTexts`, `volumeStepAndClamp`, `percentRoundsHalfUp`; fixed volume dims and toasts |
 | C10 | native implemented; device check pending | `wifi*`, `bluetooth*`, `deviceLine`, `pollRunsOnlyWhileOpenAndResumed` |
 | C11 | native implemented; device check pending | worker-thread `SettingsLauncher.open`, toast on failure |
-| C13 | partly: tile closes the panel and calls `ControlCentreController.openSearch` (toast until native Search is wired) | pending native Search |
+| C13 | Implemented: the tile closes the panel and calls `ControlCentreController.openSearch`, which `NativeHomeActivity` wires to native Search; closing Search goes through `onSearchClosed` (focus should return to the header Search stop) | device check; no test yet for the focus return |
 | C14 | native implemented (Back closes, 420 ms); header focus return is `NativeHomeView`'s; device check pending | |
 | C15, C16 | native implemented (400 ms after resume, 250 ms after a volume key); device check pending | `pollTimings` |
 | C17 | native implemented (once, flag in `glass_native_cc` prefs, result refreshes Wi-Fi); device check pending | |
-| C18 | not applicable: the native UI has no pointer | |
+| C18 | Not implemented: pointer events are ignored while the Control Centre is open (Home handles hover/click/wheel, N20); the remote is D-pad only | |
 | C19 | native implemented (Tab / Shift+Tab with wrap); device check pending | `tabWraps` |
 
 ### Search
@@ -492,7 +492,7 @@ Legend: **P1** (●) = must be covered by the first native prototype slice (Home
 |---|---|---|---|
 | X1 | App is the HOME launcher; landscape; immersive (no system bars) | ● | Implemented (UiRouter opt-in); device check pending |
 | X2 | Back key never leaves Glass | ● | Implemented; device check pending |
-| X3 | Pausing the app (launching another) stops clock/CC polling timers; resuming restarts them | — | Partly: the clock ticker stops in `onPause`; Control Centre polling belongs to the Control Centre work |
+| X3 | Pausing the app (launching another) stops clock/CC polling timers; resuming restarts them | — | Implemented: the clock ticker stops in `onPause`; Control Centre polling runs only while the panel is open and the activity is resumed (`CcPollGate`, `fc9e953`) |
 | X4 | Recent app survives process restart; theme override does not | — | Implemented: Recently Used in `SharedPreferences`, theme override not persisted; device check pending |
 | X5 | Two slow overlay openings switch `.glass` blur to the dense fallback permanently | — | Not applicable (no live blur natively) |
 | X6 | At 1920×1080 / density 320 measurements match the table values (rem = 20 px) | ● | Pending device measurement |

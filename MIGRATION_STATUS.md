@@ -31,7 +31,31 @@ _Last updated: 2026-11-12 · branch `glasslauncher-2.0-migration` (PR #2, open, 
 
 Verification for the head of this session: 114 JVM tests (incl. real-JNI Rust tests and Kotlin-vs-Rust ranking parity),
 Rust fmt/clippy/tests, search/snapshot/config parity, harness tests (132 parser + 46 simulated-device checks, PowerShell
-7 locally; 5.1 in CI), and the two TV-emulator UI tests. See the PR's checks for the CI run of the latest commit.
+7 locally; 5.1 in CI), and the TV-emulator instrumented tests. The native-UI emulator test (`NativeUiPrototypeTest`, CI job `native-ui`) did **not** pass at `2f056ef`: it hit the job's 45-minute limit (see the follow-up session below). See the PR's checks for the CI run of the latest commit.
+
+## Follow-up session (2026-11-13)
+
+The previous agent's local workspace could not be reached, and GitHub had nothing newer than `2f056ef`, so any unpushed work from that session is lost. This session continued from the remote branch.
+
+| Commit | What |
+|---|---|
+| `1bc1bc1` | Docs update for the session above |
+| `e72e5e6`, `4f46a53`, `2f71ff9`, `2f056ef` | `NativeUiPrototypeTest` fixes for the emulator; `2f056ef` starts native Home with `am start -W --activity-clear-task` and logs more diagnostics. Its `native-ui` run was cancelled at the 45-minute job limit: the test's shell reads had no timeout, so one stuck `am start -W` hung the job |
+| `7f0acd9` | Bounded shell reads in `NativeUiPrototypeTest`: 60 s per command, 20 s per `am start -W` (non-fatal), 8 min per test. A stuck command now ends the test with a `[sh timed out …]` log line instead of hanging CI |
+| `26f8055` | Search `onDraw` no longer allocates (font metrics were re-read per bar, row and key: about 50 objects per frame). Search's settings shortcuts call `startActivity` on the `pm` executor instead of the UI thread. Navigate/click sound `openFd` moved from `onCreate` to the worker |
+
+Not verified yet: CI for `7f0acd9`/`26f8055` was still running when this was written; check the PR. Nothing in this session ran on the VIP7802.
+
+### Rendering and threading review (code reading only; change after a device trace)
+
+Candidates for the owner's `-Trace` run, in rough order of expected cost on the box:
+
+1. **Search dimming layer.** While Search is open, `NativeHomeView.onDraw` wraps the whole stage in a full-screen `saveLayerAlpha`, so every frame Search redraws (caret, typing, focus animation) also pays a 1920×1080 offscreen pass for Home. Option: bound the layer to the rows and their shadows, or draw the stage with per-paint alpha.
+2. **Backdrop overdraw.** Every frame draws the full-screen wallpaper and then a full-screen shade (three passes during the theme crossfade). Option: bake the shade into the wallpaper bitmaps at load, keeping the blur source unshaded.
+3. **Memory (PSS gate).** Both themes' wallpapers stay decoded at 1920×1080 ARGB (about 16 MB), plus card art for both themes. Option: after a crossfade, keep only the current theme's full-size wallpaper.
+4. **Per key press.** `moved()` allocates a `ValueAnimator` and a listener (input path, not `onDraw`). Option: reuse one animator.
+
+Checked and fine: Home, Control Centre and icon drawing preallocate paints, paths, shaders and rects; the docks' fade layer exists only while rows scroll; art is decoded off the UI thread at display size; Control Centre system calls and polling run on its worker. UI-thread file reads left on purpose: `NativeHomeConfig.load` (`home.json`) in `onCreate` and `UiRouter.mode` in `MainActivity`. Both are small and needed before the first frame or the routing decision.
 
 ## Language and process layout
 
