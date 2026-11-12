@@ -1,0 +1,46 @@
+<!-- GLASS PHASE 3: modular launcher. Styles in css/, logic in js/ (glass, icons, appdata, theme, home, controlcentre, registry, shortcuts, search, main). Phase 2 copy: assets_phase2/ -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=1920,initial-scale=1">
+<title>Glass Launcher</title>
+<link rel="stylesheet" href="css/glass.css">
+<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/controlcentre.css">
+<link rel="stylesheet" href="css/search.css">
+</head>
+<body>
+<div id="wp"></div><div id="wpd"></div><div id="shade"></div>
+<div id="head"><div id="date"></div><div id="clock"></div></div>
+<div id="stage"><div id="rowsWrap"></div></div>
+
+<div id="hdrBtns">
+  <div id="searchbtn" class="hbtn glass" title="Search"><div id="searchico" class="hi"></div></div>
+  <div id="ccbtn" class="hbtn glass" title="Control Centre"><div id="ccico" class="hi"></div></div>
+</div>
+
+<div id="ccScrim"></div>
+<div id="cc" class="glass"><h2>CONTROL CENTRE</h2><div id="ccbody"><div id="ccinner"></div></div></div>
+
+<div id="search">
+  <div id="sbox">
+    <div id="sbar" class="glass"><div id="ssico" class="si"></div><input id="sinput" type="text" placeholder="Search apps and settings" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><div id="sclr"></div></div>
+    <div id="sres" class="glass empty"><div id="slist"></div></div>
+    <div id="shint"><b>Try:</b> Netflix &nbsp;&middot;&nbsp; Wi-Fi &nbsp;&middot;&nbsp; Bluetooth &nbsp;&middot;&nbsp; Volume &nbsp;&middot;&nbsp; Play Store<br>Back hides the keyboard, then Down moves to the results. Back again closes Search.</div>
+  </div>
+</div>
+
+<div id="ids" class="glass"></div>
+<div id="toast" class="glass"></div>
+
+<script src="apps.js"></script>
+<script src="js/glass.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/appdata.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/home.js"></script>
+<script src="js/controlcentre.js"></script>
+<script src="js/registry.js"></script>
+<script src="js/shortcuts.js"></script>
+<script src="js/search.js"></script>
+<script src="js/main.js"></script>
+</body></html>

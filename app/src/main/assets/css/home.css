@@ -1,0 +1,39 @@
+/* GLASS - home screen: clock + two app rows */
+:root{--dockw:calc(5*14rem + 4*1.6rem + 2*3.6rem + 2px)}   /* width of a full five-card panel; every panel uses it, so the four-card row sits centred in an equally wide panel */
+#head{pointer-events:none;position:fixed;top:0;left:0;width:100%;text-align:center;transform-origin:50% 0;will-change:transform;transition:transform .45s var(--ease),opacity .45s var(--ease)}
+#date{font-size:1.5rem;font-weight:600;letter-spacing:.02em;opacity:.9;text-shadow:0 .1rem .6rem rgba(0,0,0,.35);margin-top:5vh}
+#clock{font-size:12rem;font-weight:700;line-height:1.1;letter-spacing:-.02em;background:linear-gradient(180deg,rgba(255,255,255,.96) 10%,rgba(255,255,255,.18) 95%);-webkit-background-clip:text;background-clip:text;color:transparent}
+body.scrolled #head{opacity:.55}
+body.ccopen #head,body.searchopen #head{opacity:.3}
+
+#stage{position:fixed;top:0;left:0;right:0;bottom:0;overflow:hidden;transition:opacity .3s}
+body.searchopen #stage{opacity:.5}
+#rowsWrap{position:absolute;left:0;width:100%;top:0;display:flex;flex-direction:column;align-items:center;row-gap:var(--rowgap,2.4rem);will-change:transform;transition:transform .45s var(--ease)}
+.row{width:-webkit-fit-content;width:fit-content}
+.rowLabel{display:none;padding-left:1.6rem;margin-bottom:.7rem;font-size:1.15rem;font-weight:700;letter-spacing:.02em;opacity:.65;text-shadow:0 .1rem .5rem rgba(0,0,0,.4)}
+body.labels .rowLabel,.row.titled .rowLabel{display:block}
+.row.active .rowLabel{opacity:1}
+.dock{display:flex;gap:1.6rem;padding:1.6rem 3.6rem;border-radius:2.4rem;overflow:hidden;white-space:nowrap;width:-webkit-fit-content;width:fit-content;min-width:var(--dockw)}
+.dock.center{justify-content:center}
+
+/* App card. Cards are fixed-size: focus never changes layout, only the focused card is touched. */
+.tile{position:relative;width:14rem;height:8.4rem;border-radius:1.1rem;display:grid;place-items:center;font-weight:800;text-align:center;line-height:1;overflow:hidden;background:#222;font-size:1.6rem}
+.tile.icon{background:transparent}  /* icon PNGs already carry their own rounded corners + fill colour; a solid tile colour behind them shows through as a ring wherever the two roundings don't line up exactly */
+.tile img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.tile.sq img{width:auto;height:74%;object-fit:contain}
+.tile::after{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);transform:translateX(-120%)}
+.slot{position:relative;flex:0 0 auto;transform-origin:50% 50%;transition:transform .22s var(--ease);will-change:transform;cursor:pointer}
+.slot::before{content:"";position:absolute;top:-.35rem;left:-.35rem;right:-.35rem;bottom:-.35rem;border-radius:1.45rem;border:.12rem solid rgba(255,255,255,.85);background:rgba(255,255,255,.2);box-shadow:inset 0 .08rem 0 rgba(255,255,255,.55),0 .6rem 1.2rem rgba(0,0,0,.3);-webkit-backdrop-filter:blur(.8rem) saturate(1.6);backdrop-filter:blur(.8rem) saturate(1.6);opacity:0;transition:opacity .22s var(--ease);pointer-events:none}
+.slot.f{transform:scale(1.06);z-index:3}
+.slot.f::before{opacity:1}
+.tile{transition:box-shadow .22s var(--ease);box-shadow:0 .8rem 1.4rem rgba(0,0,0,0)}
+.slot.f .tile{box-shadow:0 .8rem 1.4rem rgba(0,0,0,.45)}
+.slot.f .tile::after{transform:translateX(120%);transition:transform .7s ease}
+
+/* placeholder card (empty Utilities slot) */
+.tile.ph{background:rgba(255,255,255,.07);border:.1rem dashed rgba(255,255,255,.35);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:.5rem;font-weight:600;font-size:1rem;color:rgba(255,255,255,.7)}
+.tile.ph .plus{font-size:2.4rem;font-weight:300;line-height:1}
+.tile.ph::after{display:none}
+
+/* while an overlay is open the home screen cannot be hovered or clicked through it */
+body.ccopen #stage,body.searchopen #stage,body.ccopen #hdrBtns,body.searchopen #hdrBtns{pointer-events:none}

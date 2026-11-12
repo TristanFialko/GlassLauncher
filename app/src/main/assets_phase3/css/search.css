@@ -1,0 +1,31 @@
+/* GLASS - Search */
+#search{position:fixed;top:0;left:0;right:0;bottom:0;z-index:18;opacity:0;pointer-events:none;background:rgba(5,9,22,.72);transition:opacity .28s}
+#search.on{opacity:1;pointer-events:auto}
+#sbox{position:absolute;left:50%;top:6rem;width:78rem;transform:translate(-50%,-1.6rem);transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+#search.on #sbox{transform:translate(-50%,0)}
+#sbar{display:flex;align-items:center;gap:1.2rem;height:5.8rem;padding:0 1.8rem;border-radius:1.9rem;transition:box-shadow .2s,background .2s}
+#sbar.f{background:rgba(255,255,255,.24);box-shadow:0 0 0 .16rem rgba(255,255,255,.95),0 1rem 2.4rem rgba(0,0,0,.3)}
+#sbar .si{width:2.2rem;height:2.2rem;flex:0 0 auto;opacity:.85}
+#sinput{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#fff;font:inherit;font-size:1.9rem;font-weight:600;caret-color:#7db0ff}
+#sinput::placeholder{color:rgba(255,255,255,.5);font-weight:500}
+#sclr{font-size:1rem;opacity:.55;white-space:nowrap}
+#sres{margin-top:1.2rem;border-radius:2rem;padding:.8rem;max-height:30.5rem;overflow:hidden;position:relative}
+#sres.empty{display:none}
+#slist{position:relative;transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.sr{display:flex;align-items:center;gap:1.3rem;height:4.9rem;padding:0 1.1rem;border-radius:1.3rem;transition:background .15s,box-shadow .15s}
+.sr.f{background:rgba(255,255,255,.26);box-shadow:0 0 0 .15rem rgba(255,255,255,.95)}
+.sr .ri{width:3.5rem;height:3.5rem;flex:0 0 auto;border-radius:.9rem;display:grid;place-items:center;overflow:hidden;background:rgba(255,255,255,.12);font-weight:800;font-size:1.2rem}
+.sr .ri img{width:100%;height:100%;object-fit:contain}
+.sr .ri .gsvg{width:62%;height:62%}
+.sr .rt{min-width:0;flex:1}
+.sr .rt1{font-size:1.3rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr .rt2{font-size:.88rem;opacity:.6;margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr .tag{font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.5;flex:0 0 auto}
+#shint{margin:1rem 0 0 1rem;font-size:1rem;opacity:.6;line-height:1.7}
+#shint b{font-weight:700;opacity:1}
+#snone{padding:1.4rem 1.2rem;font-size:1.2rem;opacity:.7}
+body.searchopen #ccScrim{opacity:0}
+#sres,body.lite #sres{background:rgba(14,20,40,.9)}
+#sbar,body.lite #sbar{background:rgba(24,32,58,.85)}
+#sbar.f,body.lite #sbar.f{background:rgba(52,64,104,.92)}
+#sclr{display:none}   /* mouse-only affordance removed: nothing on screen that a D-pad cannot reach */
