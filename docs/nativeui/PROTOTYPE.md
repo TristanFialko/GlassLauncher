@@ -1,7 +1,7 @@
-# Native UI prototype (home screen slice)
+# Native Home (formerly "native UI prototype")
 
-Status: **prototype, measured only on an emulator**. It does not replace the WebView UI. Glass still starts the
-WebView UI as HOME; the prototype is a separate activity you start explicitly.
+Status: **Home implemented in native code, measured only on an emulator; device check pending**. It does not replace the WebView UI
+yet: Glass still starts the WebView UI as HOME unless the owner opts in to native; `NativeHomeActivity` can also be started explicitly.
 
 ## What it is
 
@@ -34,12 +34,23 @@ will call the same `RustCore.prepareSearch`/`search` as the WebView, off the UI 
 - **Launching:** a card uses its configured id if installed, then the first installed id in its list, then the first visible, non-hidden app whose name matches. Otherwise it shows the toast "<name> is not installed on this box." Navigation and click sounds play at volume 0.2.
 - **Theme:** dark from 19:00 to 06:59, rechecked every 10 s; Appearance in the Control Centre toggles it. The clock is 12-hour without AM/PM, and the date uses the en-GB long format.
 
-## Not in the prototype (and why)
-Search and the on-screen keyboard; recording launches into Recently Used (the panel shows its empty state only); the Control Centre's
-remaining tiles (audio output, storage, network details, sound/display shortcuts, the 2 s live poll); mouse/pointer
-input; Tab navigation; the placeholder card; icon overrides and Android app icons for cards without artwork; the
-header's Recently Used stop. The goal was a representative slice to measure rendering, focus, artwork, launching and
-one overlay. These remain in the WebView UI, and the parity checklist tracks each one.
+## Home parity (Stage 1) — what the native Home now does beyond the first slice
+Implemented in code (JVM unit tests: `HomeLogicTest`, `NativeHomeConfigTest`); **not yet checked on the device**:
+
+- **Recently Used** (S2): `HomeRecents`/`NativeHomeActivity.recordLaunch`. Same rules as `recent.js`/`glass.js`: one entry (the last app), recorded only after a *successful* launch from a Home card or the panel itself, never `com.glasslauncher`, name falls back to the id, panel shown only if the app list is empty or still contains the id, displayed name = the configured card's name when one resolves to that package. Persisted in `SharedPreferences("glass_native_home")` of the `:native` process, so it survives process death. **The WebView keeps its own list in its localStorage (another process); the two lists are separate** — an app opened in one UI does not appear in the other's panel. Search results must call `NativeHomeActivity.launchApp()` to be recorded once native Search is wired in.
+- **Header**: stops Recently Used (only while it has an app), Search, Control Centre; Left/Right clamp; Up from row 0 returns to the last header stop; OK on Recently Used relaunches. Search calls `Host.openSearch()` (currently a toast, the single hook for native Search).
+- **Card art** (`HomeArt`, `NativeArt.fit`): configured art by theme → `icons/overrides` image (`overrides` in `home.json`, mirrors `ICON_OVERRIDES`) → Android app icon when `useAppIcon` (via `AppDiscovery.iconPng`, decoded and composited on the worker) → text/initials on the card's `bg`/`fg`/`size`; `placeholder` cards draw the dashed "+" tile. Images narrower than 1.3:1, overrides and app icons are drawn contained at 74% height (`.sq`).
+- **Input**: Tab/Shift+Tab walk header stops then every card, wrapping; Escape/Backspace = Back; held OK launches once; mouse hover focuses on real movement (≥ 4 px), click/tap activates, wheel moves one row per 350 ms. Number/letter keys are not handled on Home in the WebView either.
+- **Lifecycle**: the installed-app list reloads (debounced 800 ms) on package added/removed/replaced/changed via a receiver registered in `onCreate` and unregistered in `onDestroy` (the WebView only reads the list at boot); launches, app list, icons and recents run on a dedicated `pm` worker, artwork on the existing worker; focus survives a launched app (the activity is not recreated) and `onSaveInstanceState` restores it if the process was killed; resume settles animations and ticks clock/theme.
+- **Toasts** use the exact texts of `PARITY_CHECKLIST.md` §3.4 (`<name> is not installed on this box.`, `That settings page is not available on this box.`). If the app list could not be read the list is treated as empty and the configured id/first candidate is still tried, as in the WebView.
+
+Known differences: the Recently Used thumbnail has no drop shadow (software blur is baked only for docks/cards); the header "OK" on Recently Used plays one click sound (the WebView plays two); `could not be opened` (bridge missing) cannot occur natively; Search is still a toast.
+
+## Still not native (and why)
+Search and the on-screen keyboard (a separate surface) and the Control Centre's remaining tiles (audio output, storage, network
+details, sound/display shortcuts, the 2 s live poll) are tracked in `PARITY_CHECKLIST.md`; until they land the WebView UI remains the
+complete one. The original prototype goal was a representative slice to measure rendering, focus, artwork, launching and one overlay.
+
 
 Known visual differences, to be judged on the device:
 - The glass blur is a pre-blurred wallpaper, not a live backdrop: identical while the wallpaper is static, but cards behind the Control Centre are covered rather than blurred.

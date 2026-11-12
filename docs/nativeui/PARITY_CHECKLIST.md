@@ -353,72 +353,74 @@ Only **successful** launches (bridge returned `true`) from Home cards, the Recen
 
 ## 5. Parity checklist
 
+Native status column (Home, Theme, Persistence rows): added with the Stage 1 Home work; "Implemented" means present in the native code (with the named unit test where there is one), never yet confirmed on the device.
+
 Legend: **P1** (●) = must be covered by the first native prototype slice (Home tiles/artwork, D-pad focus + animation, app launching, one overlay). Suggested overlay for P1: the Control Centre (static layout with exact spec above, spatial focus, all live state comes from existing Java classes; no on-screen keyboard or Rust search needed). Items marked `—` can follow later.
 
 ### Home — layout and artwork
-| # | Check (remote on device) | P1 |
-|---|---|---|
-| H1 | Wallpaper fills the screen (cover) with a darkening shade: top slightly dark, middle clear, bottom clearly darker | ● |
-| H2 | Row 0 shows 5 cards 280×168 px, 32 px apart, in one 1674×234 glass dock centred horizontally; order YouTube, Netflix, Prime Video, Disney+, Spotify | ● |
-| H3 | Row 1 shows 4 cards (Stremio, Rhenium, Moonlight, RetroArch) in a dock the same width as row 0, cards centred (row 1 left edge 156 px right of row 0's) | ● |
-| H4 | Rows are 48 px apart; both rows are fully visible with the clock expanded | ● |
-| H5 | Card art fills the card edge to edge with rounded corners (22 px); no labels or text are visible on cards | ● |
-| H6 | Light theme uses `icons/*` art; dark theme uses `darkicons/*` art (Spotify dark file is `darkicons/Spotify.png`) | ● |
-| H7 | A card whose artwork fails shows initials (32 px bold) on `#222` | — |
-| H8 | Docks show a blurred translucent glass look with hairline edge and soft drop shadow (blur 30 px, saturate 1.55) | ● |
-| H9 | Clock reads `h:mm` 12-hour, no leading zero, no AM/PM, 240 px bold with a white-to-transparent vertical fade | ● |
-| H10 | Date above the clock: weekday, day, full month (en-GB), 30 px semi-bold, 54 px from top | ● |
-| H11 | Clock and date are centred horizontally | ● |
-| H12 | Clock/date update within 10 s of a minute change | — |
-| H13 | Recently Used panel is at top-left (72, 60), 328 px wide, caption "RECENTLY USED" | ● |
-| H14 | With no recorded app, panel text reads "Apps you open will appear here" and it cannot be focused | — |
-| H15 | After launching an app and returning, panel shows that app's art and name (2 lines max) | — |
-| H16 | Search and Control Centre buttons (68 px circles) at top-right: Search at x≈1692, CC at x≈1780, y 60 | ● |
+| # | Check (remote on device) | P1 | Native status |
+|---|---|---|---|
+| H1 | Wallpaper fills the screen (cover) with a darkening shade: top slightly dark, middle clear, bottom clearly darker | ● | Implemented (home slice); device check pending |
+| H2 | Row 0 shows 5 cards 280×168 px, 32 px apart, in one 1674×234 glass dock centred horizontally; order YouTube, Netflix, Prime Video, Disney+, Spotify | ● | Implemented (home slice); device check pending |
+| H3 | Row 1 shows 4 cards (Stremio, Rhenium, Moonlight, RetroArch) in a dock the same width as row 0, cards centred (row 1 left edge 156 px right of row 0's) | ● | Implemented (home slice); device check pending |
+| H4 | Rows are 48 px apart; both rows are fully visible with the clock expanded | ● | Implemented (home slice); device check pending |
+| H5 | Card art fills the card edge to edge with rounded corners (22 px); no labels or text are visible on cards | ● | Implemented (home slice); device check pending |
+| H6 | Light theme uses `icons/*` art; dark theme uses `darkicons/*` art (Spotify dark file is `darkicons/Spotify.png`) | ● | Implemented (home slice); device check pending |
+| H7 | A card whose artwork fails shows initials (32 px bold) on `#222` | — | Implemented: `HomeArt.label`, `NativeHomeView.drawCard`; test `HomeLogicTest.labelIsTextElseInitials`; device check pending |
+| H8 | Docks show a blurred translucent glass look with hairline edge and soft drop shadow (blur 30 px, saturate 1.55) | ● | Implemented (home slice); device check pending |
+| H9 | Clock reads `h:mm` 12-hour, no leading zero, no AM/PM, 240 px bold with a white-to-transparent vertical fade | ● | Implemented (home slice); device check pending |
+| H10 | Date above the clock: weekday, day, full month (en-GB), 30 px semi-bold, 54 px from top | ● | Implemented (home slice); device check pending |
+| H11 | Clock and date are centred horizontally | ● | Implemented (home slice); device check pending |
+| H12 | Clock/date update within 10 s of a minute change | — | Implemented (home slice); device check pending |
+| H13 | Recently Used panel is at top-left (72, 60), 328 px wide, caption "RECENTLY USED" | ● | Implemented: `HomeRecents`, `NativeHomeView.drawRecent`; tests `HomeLogicTest` (recents rules); device check pending |
+| H14 | With no recorded app, panel text reads "Apps you open will appear here" and it cannot be focused | — | Implemented: `HomeRecents`, `NativeHomeView.drawRecent`; tests `HomeLogicTest` (recents rules); device check pending |
+| H15 | After launching an app and returning, panel shows that app's art and name (2 lines max) | — | Implemented: `HomeRecents`, `NativeHomeView.drawRecent`; tests `HomeLogicTest` (recents rules); device check pending |
+| H16 | Search and Control Centre buttons (68 px circles) at top-right: Search at x≈1692, CC at x≈1780, y 60 | ● | Implemented (home slice); device check pending |
 
 ### Home — focus and navigation
-| # | Check | P1 |
-|---|---|---|
-| N1 | On boot, the first card (YouTube) is focused | ● |
-| N2 | Focused card scales to 1.06 and gains a bright translucent halo ring extending 7 px beyond the card, plus a darker drop shadow | ● |
-| N3 | Focus scale/halo/shadow animate in 220 ms with `cubic-bezier(.2,.8,.2,1)`; losing focus reverses it | ● |
-| N4 | A diagonal white shine sweeps left→right across a card for 700 ms when it gains focus; does not replay on blur | ● |
-| N5 | Right/Left move one card at a time and stop at the row ends (no wrap) | ● |
-| N6 | Down from row 0 col 4 goes to row 1 col 3 (column clamped); Up returns to the carried column | ● |
-| N7 | Down on the last row does nothing | ● |
-| N8 | Up from row 0 focuses the header button (Search first; Recently Used only reachable by Left when it has an app) | ● |
-| N9 | Header Left/Right traverse [Recently Used (only if it has an app), Search, Control Centre], clamped | ● |
-| N10 | Header Down returns to row 0 | ● |
-| N11 | Focused header button scales to 1.1 and turns bright white with dark icon; Recently Used panel scales 1.04 and turns bright white | ● |
-| N12 | Moving focus to row 1 collapses the clock to 0.6 scale and lifts it ≈85 px (opacity .55), shifts both rows up ≈303 px in 450 ms; Recently Used fades out and rises 28 px | ● |
-| N13 | Returning to row 0 or the header restores clock, rows and Recently Used in 450 ms | ● |
-| N14 | Rows fade out under a mask near the top (below the collapsed clock) and bottom edge of the screen | — |
-| N15 | Holding Right moves focus repeatedly without throttling; holding OK launches only once | ● |
-| N16 | Tab / Shift+Tab (hardware keyboard) walk header stops then cards, wrapping | — |
-| N17 | Esc / Backspace act as Back | — |
-| N18 | Back on Home keeps Home shown and shows no toast (bridge present) | ● |
-| N19 | Menu key does nothing | — |
-| N20 | Mouse hover (real movement) focuses a card/button; click launches; wheel moves between rows (350 ms throttle) | — |
+| # | Check | P1 | Native status |
+|---|---|---|---|
+| N1 | On boot, the first card (YouTube) is focused | ● | Implemented (home slice); device check pending |
+| N2 | Focused card scales to 1.06 and gains a bright translucent halo ring extending 7 px beyond the card, plus a darker drop shadow | ● | Implemented (home slice); device check pending |
+| N3 | Focus scale/halo/shadow animate in 220 ms with `cubic-bezier(.2,.8,.2,1)`; losing focus reverses it | ● | Implemented (home slice); device check pending |
+| N4 | A diagonal white shine sweeps left→right across a card for 700 ms when it gains focus; does not replay on blur | ● | Implemented (home slice); device check pending |
+| N5 | Right/Left move one card at a time and stop at the row ends (no wrap) | ● | Implemented (home slice); device check pending |
+| N6 | Down from row 0 col 4 goes to row 1 col 3 (column clamped); Up returns to the carried column | ● | Implemented (home slice); device check pending |
+| N7 | Down on the last row does nothing | ● | Implemented (home slice); device check pending |
+| N8 | Up from row 0 focuses the header button (Search first; Recently Used only reachable by Left when it has an app) | ● | Implemented: `HomeNav` header order/clamp; tests `HomeLogicTest.headerOrder*`, `headerStepClampsAndRecovers`; device check pending |
+| N9 | Header Left/Right traverse [Recently Used (only if it has an app), Search, Control Centre], clamped | ● | Implemented: `HomeNav` header order/clamp; tests `HomeLogicTest.headerOrder*`, `headerStepClampsAndRecovers`; device check pending |
+| N10 | Header Down returns to row 0 | ● | Implemented (home slice); device check pending |
+| N11 | Focused header button scales to 1.1 and turns bright white with dark icon; Recently Used panel scales 1.04 and turns bright white | ● | Implemented: `HomeNav` header order/clamp; tests `HomeLogicTest.headerOrder*`, `headerStepClampsAndRecovers`; device check pending |
+| N12 | Moving focus to row 1 collapses the clock to 0.6 scale and lifts it ≈85 px (opacity .55), shifts both rows up ≈303 px in 450 ms; Recently Used fades out and rises 28 px | ● | Implemented (home slice); device check pending |
+| N13 | Returning to row 0 or the header restores clock, rows and Recently Used in 450 ms | ● | Implemented (home slice); device check pending |
+| N14 | Rows fade out under a mask near the top (below the collapsed clock) and bottom edge of the screen | — | **Not implemented** (no edge mask in the native view) |
+| N15 | Holding Right moves focus repeatedly without throttling; holding OK launches only once | ● | Implemented (home slice); device check pending |
+| N16 | Tab / Shift+Tab (hardware keyboard) walk header stops then cards, wrapping | — | Implemented: `HomeNav.tab`; test `HomeLogicTest.tabWalksHeaderThenCardsAndWraps`; device check pending |
+| N17 | Esc / Backspace act as Back | — | Implemented (Escape/Backspace mapped to Back in `NativeHomeView.onKeyDown`); device check pending |
+| N18 | Back on Home keeps Home shown and shows no toast (bridge present) | ● | Implemented (root Back is a no-op as HOME); device check pending |
+| N19 | Menu key does nothing | — | Implemented (Menu is not handled); device check pending |
+| N20 | Mouse hover (real movement) focuses a card/button; click launches; wheel moves between rows (350 ms throttle) | — | Implemented: `onGenericMotionEvent` hover/wheel, `onTouchEvent` click; no unit test (needs a pointer on the device) |
 
 ### Home — launch, sounds, recents
-| # | Check | P1 |
-|---|---|---|
-| L1 | OK on an installed card launches its app (Leanback launch intent preferred) | ● |
-| L2 | OK on a card whose app is missing toasts "<name> is not installed on this box." and launches nothing | ● |
-| L3 | Entertainment cards launch the first installed id from their list, else the first name match; never another app | ● |
-| L4 | Moving focus plays `navigate.wav` at volume 0.2; nothing plays on edge presses, at boot, or when an overlay closes | ● |
-| L5 | OK/click plays `click.wav` (0.2) even when the launch fails | ● |
-| L6 | Only successful launches update Recently Used; Settings/CC items do not | — |
-| L7 | Returning from a launched app restores the previous focus position unchanged | ● |
-| L8 | Toast appears centred, stays 3.2 s, fades 300 ms; a second toast replaces the first | ● |
+| # | Check | P1 | Native status |
+|---|---|---|---|
+| L1 | OK on an installed card launches its app (Leanback launch intent preferred) | ● | Implemented: `NativeHomeActivity.launchPackage`; device check pending |
+| L2 | OK on a card whose app is missing toasts "<name> is not installed on this box." and launches nothing | ● | Implemented: exact toast text; device check pending |
+| L3 | Entertainment cards launch the first installed id from their list, else the first name match; never another app | ● | Implemented; tests `NativeHomeConfigTest`, `HomeLogicTest.launch*`; device check pending |
+| L4 | Moving focus plays `navigate.wav` at volume 0.2; nothing plays on edge presses, at boot, or when an overlay closes | ● | Implemented (home slice); device check pending |
+| L5 | OK/click plays `click.wav` (0.2) even when the launch fails | ● | Implemented; device check pending |
+| L6 | Only successful launches update Recently Used; Settings/CC items do not | — | Implemented: only `launchPackage` successes call `recordLaunch`; tests `HomeLogicTest` recents; device check pending |
+| L7 | Returning from a launched app restores the previous focus position unchanged | ● | Implemented: activity is kept, `settle()` on resume, focus saved in `onSaveInstanceState`; device check pending |
+| L8 | Toast appears centred, stays 3.2 s, fades 300 ms; a second toast replaces the first | ● | Implemented (home slice); device check pending |
 
 ### Theme and wallpaper
-| # | Check | P1 |
-|---|---|---|
-| T1 | 19:00–06:59 local time shows dark theme; 07:00–18:59 light | ● |
-| T2 | Theme flip crossfades wallpaper in 700 ms and swaps card art | ● |
-| T3 | A manual toggle holds until the next 19:00/07:00 boundary and is lost on app restart | — |
-| T4 | Dark theme uses the darker glass tint (alpha .44 vs .30) | ● |
-| T5 | If `wallpaper2.jpg` fails to load, the light wallpaper is shown at brightness .4 / saturation .8 | — |
+| # | Check | P1 | Native status |
+|---|---|---|---|
+| T1 | 19:00–06:59 local time shows dark theme; 07:00–18:59 light | ● | Implemented (home slice); device check pending |
+| T2 | Theme flip crossfades wallpaper in 700 ms and swaps card art | ● | Implemented (home slice); device check pending |
+| T3 | A manual toggle holds until the next 19:00/07:00 boundary and is lost on app restart | — | Implemented (home slice); device check pending |
+| T4 | Dark theme uses the darker glass tint (alpha .44 vs .30) | ● | Implemented (home slice); device check pending |
+| T5 | If `wallpaper2.jpg` fails to load, the light wallpaper is shown at brightness .4 / saturation .8 | — | **Not implemented** (native view has no wallpaper fallback) |
 
 ### Control Centre
 | # | Check | P1 |
@@ -486,11 +488,11 @@ Legend: **P1** (●) = must be covered by the first native prototype slice (Home
 | Q18 | Mouse: hover, click, wheel, backdrop click | — |
 
 ### Persistence, platform, robustness
-| # | Check | P1 |
-|---|---|---|
-| X1 | App is the HOME launcher; landscape; immersive (no system bars) | ● |
-| X2 | Back key never leaves Glass | ● |
-| X3 | Pausing the app (launching another) stops clock/CC polling timers; resuming restarts them | — |
-| X4 | Recent app survives process restart; theme override does not | — |
-| X5 | Two slow overlay openings switch `.glass` blur to the dense fallback permanently | — |
-| X6 | At 1920×1080 / density 320 measurements match the table values (rem = 20 px) | ● |
+| # | Check | P1 | Native status |
+|---|---|---|---|
+| X1 | App is the HOME launcher; landscape; immersive (no system bars) | ● | Implemented (UiRouter opt-in); device check pending |
+| X2 | Back key never leaves Glass | ● | Implemented; device check pending |
+| X3 | Pausing the app (launching another) stops clock/CC polling timers; resuming restarts them | — | Partly: the clock ticker stops in `onPause`; Control Centre polling belongs to the Control Centre work |
+| X4 | Recent app survives process restart; theme override does not | — | Implemented: Recently Used in `SharedPreferences`, theme override not persisted; device check pending |
+| X5 | Two slow overlay openings switch `.glass` blur to the dense fallback permanently | — | Not applicable (no live blur natively) |
+| X6 | At 1920×1080 / density 320 measurements match the table values (rem = 20 px) | ● | Pending device measurement |
