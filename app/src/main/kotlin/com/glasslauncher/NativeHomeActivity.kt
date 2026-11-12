@@ -1,7 +1,12 @@
 package com.glasslauncher
 
 import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.SharedPreferences
+import android.graphics.Paint
 import android.graphics.Bitmap
 import android.media.AudioAttributes
 import android.media.SoundPool
@@ -35,7 +40,13 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     private var apps: AppDiscovery? = null
     private var sys: SystemControls? = null
     private var settings: SettingsLauncher? = null
-    private val installed = LinkedHashMap<String, String>()   // id -> label, Android's order
+    /** Launching, the app list, icons and Recently Used run here, never behind the (slow) artwork loads on [worker]. */
+    private val pm: ExecutorService = Executors.newSingleThreadExecutor()
+    /** Immutable snapshot, id -> label in Android's order; replaced wholesale on every refresh. */
+    @Volatile private var installed: Map<String, String> = emptyMap()
+    @Volatile private var recent: RecentApp? = null
+    private var prefs: SharedPreferences? = null
+    private var receiverOn = false
     @Volatile private var loaded = false
     private var sounds: SoundPool? = null
     private var sNav = 0
@@ -68,7 +79,10 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
             probe = FrameLatencyProbe.attachIfRequested(this, "native")
             initSounds(c)
             worker.execute { loadAssets(c, v) }
-            worker.execute { loadInstalled() }
+            prefs = getSharedPreferences("glass_native_home", MODE_PRIVATE)
+            v.restoreFocus(b?.getIntArray(STATE_FOCUS))
+            pm.execute { loadRecent(); loadInstalled() }
+            registerPackageReceiver()
         } finally { Trace.endSection() }
     }
 
@@ -107,12 +121,39 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         for (ri in cfg.rows.indices) {
             for (ci in cfg.rows[ri].cards.indices) {
                 val k = cfg.rows[ri].cards[ci]
-                val path = if (dark) (if (k.dark.isEmpty()) k.icon else k.dark) else (if (k.icon.isEmpty()) k.dark else k.icon)
+                val path = if (k.placeholder) "" else HomeArt.artPath(k, dark)
                 if (path.isEmpty()) continue
-                val bm: Bitmap? = NativeArt.card(assets, path, NativeHomeView.TILE_W.toInt(), NativeHomeView.TILE_H.toInt(), NativeHomeView.TILE_R)
+                val bm: Bitmap? = NativeArt.card(assets, path, NativeHomeView.TILE_W.toInt(), NativeHomeView.TILE_H.toInt(), NativeHomeView.TILE_R, k.bg)
                 ui.post { (if (dark) view.artDark else view.artLight)[ri][ci] = bm; view.invalidate() }
             }
         }
+    }
+
+    /**
+     * Cards without configured art: the override image, else the installed app's own icon (home.js setTileIcon). Runs on [pm]
+     * once the app list is known and again whenever it changes. AppDiscovery.iconPng caches the PNG per package (bounded LRU).
+     */
+    private fun loadCardIcons(cfg: NativeHomeConfig, view: NativeHomeView) {
+        val snap = installed
+        val w = NativeHomeView.TILE_W.toInt()
+        val h = NativeHomeView.TILE_H.toInt()
+        for (ri in cfg.rows.indices) for (ci in cfg.rows[ri].cards.indices) {
+            val k = cfg.rows[ri].cards[ci]
+            val pkg = NativeHomeConfig.resolveForLaunch(k, snap)
+            val bm: Bitmap? = when (HomeArt.source(k, cfg.overrides, pkg)) {
+                HomeArt.Source.OVERRIDE -> NativeArt.card(assets, HomeArt.override(cfg.overrides, pkg ?: k.id)!!, w, h, NativeHomeView.TILE_R, k.bg, true)
+                HomeArt.Source.PACKAGE_ICON -> packageIcon(pkg!!, w, h, NativeHomeView.TILE_R, k.bg)
+                else -> null
+            }
+            ui.post { view.cardIcon[ri][ci] = bm; view.invalidate() }
+        }
+    }
+
+    /** The installed app's own icon at w x h on [bg], contained like a `.sq` image; null if Android has none. */
+    private fun packageIcon(pkg: String, w: Int, h: Int, radius: Float, bg: Int): Bitmap? {
+        val png = apps?.iconPng(pkg) ?: return null
+        val src = NativeArt.decodeBytes(png, w, h) ?: return null
+        return NativeArt.fit(src, w, h, radius, bg, true)
     }
 
     private fun loadInstalled() {
@@ -124,10 +165,83 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
                 val o = a.getJSONObject(i)
                 if (o.optBoolean("show", true)) m[o.getString("id")] = o.optString("name")
             }
-            ui.post { installed.clear(); installed.putAll(m); loaded = true }
+            installed = m
         } catch (t: Throwable) {
+            // like the WebView when the bridge fails: an empty list, so launches still try the configured id
             Log.e(TAG, "installed apps", t)
         } finally { Trace.endSection() }
+        loaded = true
+        val c = cfg
+        val v = view
+        if (c != null && v != null) {
+            try { loadCardIcons(c, v) } catch (t: Throwable) { Log.w(TAG, "card icons", t) }
+            refreshRecent()
+        }
+    }
+
+    // ---------------- Recently Used (recent.js) ----------------
+    private fun loadRecent() {
+        recent = HomeRecents.decode(prefs?.getString(PREF_RECENT, null))
+    }
+
+    /** Re-evaluates the panel against the current app list: visibility, name, icon. Worker thread only. */
+    private fun refreshRecent() {
+        val v = view ?: return
+        val c = cfg ?: return
+        val rec = recent
+        val snap = installed
+        if (!HomeRecents.isValid(rec, snap.keys)) { ui.post { if (recent == rec) v.clearRecent() }; return }
+        rec!!
+        val cards = c.rows.flatMap { it.cards }
+        val def = HomeRecents.find(rec, cards, snap)
+        val name = def?.name?.takeIf { it.isNotEmpty() } ?: rec.name
+        val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = NativeHomeView.BOLD; textSize = 21.6f }
+        val lines = HomeText.wrap(name, NativeHomeView.REC_W - 44f - NativeHomeView.RTHUMB_W - 17f, 2) { p.measureText(it) }
+        val w = NativeHomeView.RTHUMB_W.toInt()
+        val h = NativeHomeView.RTHUMB_H.toInt()
+        var light: Bitmap? = null
+        var dark: Bitmap? = null
+        try {
+            val ov = HomeArt.override(c.overrides, rec.id)
+            if (def != null && HomeArt.source(def, c.overrides, rec.id) == HomeArt.Source.ART) {
+                val lp = HomeArt.artPath(def, false)
+                val dp = HomeArt.artPath(def, true)
+                light = NativeArt.card(assets, lp, w, h, 16f, 0)
+                dark = if (dp == lp) light else NativeArt.card(assets, dp, w, h, 16f, 0)
+            } else if (ov != null) {
+                light = NativeArt.card(assets, ov, w, h, 16f, 0, true); dark = light
+            } else {
+                light = packageIcon(rec.id, w, h, 16f, 0); dark = light
+            }
+        } catch (t: Throwable) { Log.w(TAG, "recent icon", t) }
+        val initials = NativeHomeConfig.initials(rec.name)
+        ui.post { if (recent == rec) v.setRecent(lines, initials, light, dark) }
+    }
+
+    private fun recordLaunch(pkg: String, name: String) {
+        val rec = HomeRecents.toRecord(pkg, name) ?: return
+        if (rec == recent) return refreshRecent()
+        recent = rec
+        prefs?.edit()?.putString(PREF_RECENT, HomeRecents.encode(rec))?.apply()
+        refreshRecent()
+    }
+
+    // ---------------- package changes ----------------
+    private val packageRefresh = Runnable { if (!pm.isShutdown) pm.execute { loadInstalled() } }
+    private val packageReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            ui.removeCallbacks(packageRefresh)
+            ui.postDelayed(packageRefresh, 800)           // installs/updates send bursts; one refresh per burst
+        }
+    }
+
+    private fun registerPackageReceiver() {
+        val f = IntentFilter()
+        f.addAction(Intent.ACTION_PACKAGE_ADDED); f.addAction(Intent.ACTION_PACKAGE_REMOVED)
+        f.addAction(Intent.ACTION_PACKAGE_REPLACED); f.addAction(Intent.ACTION_PACKAGE_CHANGED)
+        f.addDataScheme("package")
+        registerReceiver(packageReceiver, f)
+        receiverOn = true
     }
 
     private fun initSounds(cfg: NativeHomeConfig) {
@@ -152,14 +266,35 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     }
 
     override fun launch(card: NativeHomeConfig.Card) {
-        val v = view ?: return
-        if (!loaded) { v.showToast("Still reading the app list…"); return }
-        val pkg = NativeHomeConfig.resolve(card, installed)
-        if (pkg == null || !apps!!.launch(pkg)) v.showToast(card.name + " is not installed on this box.")
+        // resolved on [pm], i.e. after the app list has loaded (the WebView resolves synchronously at boot)
+        pm.execute { launchPackage(NativeHomeConfig.resolveForLaunch(card, installed), card.name) }
+    }
+
+    override fun launchRecent() {
+        val rec = recent ?: return
+        pm.execute {
+            val c = cfg
+            val name = if (c != null) HomeRecents.displayName(rec, c.rows.flatMap { it.cards }, installed) else rec.name
+            launchPackage(rec.id, name)
+        }
+    }
+
+    /** Header Search button. Search is a separate native surface; until it is wired in, this stays a toast. */
+    override fun openSearch() { view?.showToast("Search is not part of the native prototype yet") }
+
+    /**
+     * glass.js G.launch(): click sound is the caller's; a successful launch is recorded in Recently Used, a failed one
+     * toasts "<name> is not installed on this box." Search results should come through here too so they are recorded.
+     */
+    fun launchApp(pkg: String, name: String) { pm.execute { launchPackage(pkg, name) } }
+
+    private fun launchPackage(pkg: String?, name: String) {
+        if (pkg.isNullOrEmpty() || apps?.launch(pkg) != true) { ui.post { view?.showToast("$name is not installed on this box.") }; return }
+        recordLaunch(pkg, name)
     }
 
     override fun openSettings(kind: String) {
-        if (!settings!!.open(kind)) view?.showToast("This box has no such settings screen")
+        if (!settings!!.open(kind)) view?.showToast("That settings page is not available on this box.")
     }
 
     override fun controlCentreAction(id: String, delta: Int) { cc?.handle(id, delta) }
@@ -179,13 +314,22 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         return r
     }
 
-    override fun onResume() { super.onResume(); ui.post(ticker); checkStillHome(); cc?.onResume() }
+    /** Back from a launched app (or any pause): the clock/theme catch up, in-flight focus animations settle, focus stays where it was. */
+    override fun onResume() { super.onResume(); view?.settle(); ui.post(ticker); checkStillHome(); cc?.onResume() }
     override fun onPause() { ui.removeCallbacks(ticker); cc?.onPause(); super.onPause() }
+
+    override fun onSaveInstanceState(out: Bundle) {
+        super.onSaveInstanceState(out)
+        view?.let { out.putIntArray(STATE_FOCUS, it.focusState()) }
+    }
 
     override fun onDestroy() {
         probe?.detach()
         cc?.onDestroy()
+        ui.removeCallbacks(packageRefresh)
+        if (receiverOn) { receiverOn = false; try { unregisterReceiver(packageReceiver) } catch (e: IllegalArgumentException) { Log.w(TAG, "receiver", e) } }
         worker.shutdownNow()
+        pm.shutdownNow()
         sounds?.release()
         super.onDestroy()
     }
@@ -213,6 +357,8 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
 
     companion object {
         private const val TAG = "GlassNative"
+        private const val STATE_FOCUS = "glass.focus"
+        private const val PREF_RECENT = "recent"
         /** Set by MainActivity when the native UI is the HOME screen: Back at the root then does nothing, like a launcher. */
         const val EXTRA_AS_HOME = "glass.asHome"
         @Volatile private var crashHandlerInstalled = false
