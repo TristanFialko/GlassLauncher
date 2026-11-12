@@ -161,9 +161,11 @@ public class NativeUiPrototypeTest {
         sh("pm grant com.glasslauncher android.permission.ACCESS_FINE_LOCATION");
         sh("mkdir -p /data/local/tmp/glass-nativeui");
         sh("logcat -c");
-        sh("am start -W -n com.glasslauncher/.NativeHomeActivity");
+        // a_ leaves a task rooted at NativeHomeActivity with MainActivity on top; without a fresh task `am start` only brings
+        // that task forward (the WebView UI) and the native activity is never recreated
+        String start = sh("am start -W --activity-clear-task -n com.glasslauncher/.NativeHomeActivity");
         String ready = waitFor("GlassNative:I", "assets ready", 30_000);
-        assertTrue("native UI never finished loading assets:\n" + ready, ready.contains("assets ready"));
+        assertTrue("native UI never finished loading assets:\n" + ready + "\nam start:\n" + start + "\nresumed: " + resumed() + "\n" + sh("logcat -d -t 60 *:W"), ready.contains("assets ready"));
         Bitmap home = shot("surf-01-home.png");
 
         // OK on a card whose app is missing on this image -> toast
