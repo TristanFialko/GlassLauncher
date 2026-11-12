@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -12,13 +14,20 @@ import android.webkit.WebViewClient;
 /** Hosts the Glass web UI (assets/index.html). All logic lives in GlassBridge + assets/js. */
 public class MainActivity extends Activity {
     private WebView web;
+    private AppDiscovery apps;
+    private FrameLatencyProbe probe;   // null unless started with --ez glass.latency true (benchmark only)
     private static final String BACK_JS = "(function(){var e=new KeyboardEvent('keydown',{bubbles:true});Object.defineProperty(e,'keyCode',{get:function(){return 10009;}});document.dispatchEvent(e);})();";
 
     WebView webView() { return web; }
+    AppDiscovery appDiscovery() { return apps; }
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        // Glass 2.0: opt-in native UI (UiRouter). Default stays the WebView UI; the native UI falls back on repeated crashes.
+        UiRouter.applyExtra(this, getIntent().getStringExtra(UiRouter.EXTRA));
+        if (UiRouter.NATIVE.equals(UiRouter.mode(this))) { openNativeHome(); finish(); return; }
         getWindow().getDecorView().setSystemUiVisibility(5894 | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        apps = new AppDiscovery(this);
         web = new WebView(this);
         web.setBackgroundColor(0xff0b0b14);
         // Phase 5: without this, Chromium builds a full accessibility node tree for every DOM
@@ -50,13 +59,28 @@ public class MainActivity extends Activity {
         // is exactly why this project previously needed Android forced to 160dpi to look right.
         web.addJavascriptInterface(new GlassBridge(this), "AndroidBridge");
         web.setWebChromeClient(new WebChromeClient());
-        web.setWebViewClient(new WebViewClient());
+        web.setWebViewClient(new WebViewClient() {
+            // Glass 2.0: app icons are served from here (WebView loader threads) instead of a blocking bridge call.
+            @Override public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest req) {
+                WebResourceResponse r = apps.iconResponse(req.getUrl().toString());
+                return r != null ? r : super.shouldInterceptRequest(v, req);
+            }
+        });
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");
+        probe = FrameLatencyProbe.attachIfRequested(this, "webview");
+    }
+
+    @Override protected void onPause() {
+        // Glass 2.0: while another app is in front, stop the hidden launcher's JS timers (clock tick, and the
+        // Control Centre's 2 s Wi-Fi/Bluetooth/volume poll if it was left open) so it costs no CPU in the background.
+        if (web != null) { web.onPause(); web.pauseTimers(); }
+        super.onPause();
     }
 
     @Override protected void onResume() {
         super.onResume();
+        if (web != null) { web.resumeTimers(); web.onResume(); }
         // Lets the Control Centre refresh after returning from a system settings screen.
         if (web != null) web.postDelayed(() -> web.evaluateJavascript("window.glassResume&&glassResume()", null), 400);
     }
@@ -71,7 +95,27 @@ public class MainActivity extends Activity {
             return r;
         }
         if (kc == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) { if (web != null) web.evaluateJavascript(BACK_JS, null); return true; }
-        return super.dispatchKeyEvent(event);
+        boolean handled = super.dispatchKeyEvent(event);
+        if (probe != null) probe.onKeyDispatched(event);
+        return handled;
+    }
+
+    /** HOME is usually already running, so a benchmark's `am start ... --ez glass.latency true` arrives here. */
+    @Override protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (UiRouter.applyExtra(this, intent.getStringExtra(UiRouter.EXTRA)) && UiRouter.NATIVE.equals(UiRouter.mode(this))) {
+            openNativeHome(); finish(); return;
+        }
+        if (probe == null) probe = FrameLatencyProbe.attachIfRequested(this, "webview");
+    }
+
+    private void openNativeHome() {
+        android.content.Intent i = new android.content.Intent(this, NativeHomeActivity.class)
+                .putExtra(NativeHomeActivity.EXTRA_AS_HOME, true)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(i);
+        overridePendingTransition(0, 0);
     }
 
     @Override public void onBackPressed() {

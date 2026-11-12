@@ -1,0 +1,117 @@
+// Rust core (rust/) → libglass.so, packaged per ABI. Applied from app/build.gradle.
+//
+// Properties (gradle.properties, -P, or ~/.gradle/gradle.properties):
+//   glass.rust=false              build without the native core (the app then runs its original JavaScript paths)
+//   glass.rustAbis=a,b            ABIs to build (default armeabi-v7a,arm64-v8a; add x86_64 for emulators)
+//   glass.cargo=/path/to/cargo    cargo executable if it is not on PATH
+//   glass.rustProfile=release     cargo profile (release|dev)
+
+import org.gradle.process.ExecOperations
+import javax.inject.Inject
+
+abstract class CargoBuildTask extends DefaultTask {
+    @Inject abstract ExecOperations getExecOps()
+    @Inject abstract FileSystemOperations getFsOps()
+
+    @InputFiles @PathSensitive(PathSensitivity.RELATIVE) abstract ConfigurableFileCollection getSources()
+    @Internal abstract DirectoryProperty getRustDir()
+    @Input abstract Property<String> getCargo()
+    @Input abstract Property<String> getProfile()
+    /** abi -> rust target triple; empty map = build for the host (JVM unit tests) */
+    @Input abstract MapProperty<String, String> getTargets()
+    /** abi -> absolute path of the NDK clang used as linker */
+    @Input abstract MapProperty<String, String> getLinkers()
+    @OutputDirectory abstract DirectoryProperty getOutputDir()
+
+    @TaskAction void build() {
+        def rust = rustDir.get().asFile
+        def prof = profile.get()
+        def outRoot = outputDir.get().asFile
+        fsOps.delete { delete outRoot }
+        outRoot.mkdirs()
+        def targetMap = targets.get()
+        if (targetMap.isEmpty()) {
+            runCargo(rust, [cargo.get(), 'build', '--locked', '-p', 'glass-jni', '--profile', prof], [:])
+            def dir = new File(rust, "target/${prof == 'dev' ? 'debug' : prof}")
+            fsOps.copy { from(dir) { include 'libglass.so', 'libglass.dylib', 'glass.dll' }; into outRoot }
+            return
+        }
+        targetMap.each { abi, triple ->
+            def key = ("CARGO_TARGET_" + triple.toUpperCase().replace("-", "_") + "_LINKER").toString()
+            runCargo(rust, [cargo.get(), 'build', '--locked', '-p', 'glass-jni', '--profile', prof, '--target', triple], [(key): linkers.get()[abi]])
+            def so = new File(rust, "target/${triple}/${prof == 'dev' ? 'debug' : prof}/libglass.so")
+            if (!so.isFile()) throw new GradleException("Rust build for $abi did not produce $so")
+            fsOps.copy { from so; into new File(outRoot, abi) }
+        }
+    }
+
+    void runCargo(File dir, List<String> cmd, Map<String, String> env) {
+        try {
+            execOps.exec { workingDir dir; commandLine cmd; environment env }
+        } catch (Exception e) {
+            throw new GradleException("Rust build failed (${cmd.join(' ')}: ${e.message}). Install Rust (https://rustup.rs) and the Android targets " +
+                "(rustup target add armv7-linux-androideabi aarch64-linux-android), or build without the native core using -Pglass.rust=false.", e)
+        }
+    }
+}
+
+def rustEnabled = (findProperty('glass.rust') ?: 'true').toString() == 'true'
+def rustAbis = (findProperty('glass.rustAbis') ?: 'armeabi-v7a,arm64-v8a').toString().split(',')*.trim().findAll { it }
+def cargoExe = (findProperty('glass.cargo') ?: 'cargo').toString()
+def rustProfile = (findProperty('glass.rustProfile') ?: 'release').toString()
+def rustRoot = rootProject.layout.projectDirectory.dir('rust')
+def rustSources = rootProject.fileTree('rust') { include '**/*.rs', '**/Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml'; exclude 'target/**' }
+
+def triples = ['armeabi-v7a': 'armv7-linux-androideabi', 'arm64-v8a': 'aarch64-linux-android', 'x86_64': 'x86_64-linux-android', 'x86': 'i686-linux-android']
+def clangPrefixes = ['armeabi-v7a': 'armv7a-linux-androideabi', 'arm64-v8a': 'aarch64-linux-android', 'x86_64': 'x86_64-linux-android', 'x86': 'i686-linux-android']
+rustAbis.each { if (!triples.containsKey(it)) throw new GradleException("Unsupported glass.rustAbis entry '$it'") }
+
+def os = System.getProperty('os.name').toLowerCase()
+def isWindows = os.contains('windows')
+def ndkHost = isWindows ? 'windows-x86_64' : (os.contains('mac') ? 'darwin-x86_64' : 'linux-x86_64')
+
+def cargoAndroid = tasks.register('cargoBuildAndroid', CargoBuildTask) {
+    group = 'build'
+    description = 'Builds libglass.so for the configured Android ABIs.'
+    enabled = rustEnabled
+    sources.from(rustSources)
+    rustDir.set(rustRoot)
+    cargo.set(cargoExe)
+    profile.set(rustProfile)
+    targets.set(provider { rustAbis.collectEntries { [(it): triples[it]] } })
+    linkers.set(provider {
+        def minSdk = android.defaultConfig.minSdk
+        def bin = new File(android.ndkDirectory, "toolchains/llvm/prebuilt/${ndkHost}/bin")
+        rustAbis.collectEntries { [(it): new File(bin, "${clangPrefixes[it]}${minSdk}-clang${isWindows ? '.cmd' : ''}").absolutePath] }
+    })
+    outputDir.set(layout.buildDirectory.dir('rust/jniLibs'))
+}
+
+def cargoHost = tasks.register('cargoBuildHost', CargoBuildTask) {
+    group = 'verification'
+    description = 'Builds libglass for this computer so JVM unit tests can exercise the real JNI layer.'
+    enabled = rustEnabled
+    sources.from(rustSources)
+    rustDir.set(rustRoot)
+    cargo.set(cargoExe)
+    profile.set(rustProfile)
+    targets.set([:])
+    linkers.set([:])
+    outputDir.set(layout.buildDirectory.dir('rust/host'))
+}
+
+if (rustEnabled) {
+    androidComponents {
+        onVariants(selector().all()) { variant ->
+            variant.sources.jniLibs?.addGeneratedSourceDirectory(cargoAndroid) { it.outputDir }
+        }
+    }
+}
+
+tasks.withType(Test).configureEach {
+    systemProperty 'glass.expectNative', rustEnabled.toString()
+    if (rustEnabled) {
+        dependsOn cargoHost
+        systemProperty 'java.library.path', cargoHost.flatMap { it.outputDir }.get().asFile.absolutePath
+    }
+}

@@ -1,13 +1,43 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
 
 android {
     namespace 'com.glasslauncher'
     compileSdk 35
+    ndkVersion '27.2.12479018'
     defaultConfig {
         applicationId 'com.glasslauncher'
         minSdk 23
         targetSdk 30
-        versionCode 6
-        versionName '1.5'
+        versionCode 7
+        versionName '2.0.0-dev'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        // NativeHomeActivity is adb-launchable only in debug builds (owner testing / benchmarks); release reaches it via MainActivity.
+        manifestPlaceholders = [nativeUiExported: "false"]
+    }
+    // android.util.Log / android.os.Trace are stubs on the host JVM; RustCore and GlassBridge only log/trace.
+    testOptions { unitTests.returnDefaultValues = true }
+    // Sideloaded onto Android 11 boxes, not published on Google Play; targetSdk 30 is deliberate (see MIGRATION_STATUS.md).
+    lint { disable 'ExpiredTargetSdkVersion' }
+    buildTypes { debug { manifestPlaceholders = [nativeUiExported: "true"] } }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
+
+kotlin {
+    compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'  // android.jar's org.json is a stub on the JVM
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:core:1.6.1'
+}
+
+apply from: 'rust.gradle'

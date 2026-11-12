@@ -45,5 +45,9 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Glass 2.0 native UI prototype (docs/nativeui/PROTOTYPE.md). Not a HOME/launcher entry: start it explicitly with
+             adb shell am start -n com.glasslauncher/.NativeHomeActivity . Own process, so the WebView home never shares its memory. -->
+        <activity android:name=".NativeHomeActivity" android:process=":native" android:exported="${nativeUiExported}" android:screenOrientation="landscape"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize" android:theme="@style/AppTheme" />
     </application>
 </manifest>

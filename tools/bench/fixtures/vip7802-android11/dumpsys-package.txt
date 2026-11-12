@@ -1,0 +1,140 @@
+Activity Resolver Table:
+  Non-Data Actions:
+      android.intent.action.MAIN:
+        d2f94dd com.glasslauncher/.MainActivity filter c8be852
+          Action: "android.intent.action.MAIN"
+          Category: "android.intent.category.HOME"
+          Category: "android.intent.category.DEFAULT"
+          Category: "android.intent.category.LEANBACK_LAUNCHER"
+
+Preferred Activities User 0:
+  Non-Data Actions:
+      android.intent.action.MAIN:
+        f3c1c33 com.glasslauncher/.MainActivity
+         mMatch=0x100000 mAlways=true
+          Selected from:
+            com.glasslauncher/.MainActivity
+            com.android.tv.settings/.system.FallbackHome
+          Action: "android.intent.action.MAIN"
+          Category: "android.intent.category.HOME"
+          Category: "android.intent.category.DEFAULT"
+
+Key Set Manager:
+  [com.glasslauncher]
+      Signing KeySets: 57
+
+Packages:
+  Package [com.glasslauncher] (e07e36e):
+    userId=10096
+    pkg=Package{5bb8a0f com.glasslauncher}
+    codePath=/data/app/~~wiBJUmIKYQksIFMRoOFpmw==/com.glasslauncher-P5hbIPsTMuKUsnG6g91hjg==
+    resourcePath=/data/app/~~wiBJUmIKYQksIFMRoOFpmw==/com.glasslauncher-P5hbIPsTMuKUsnG6g91hjg==
+    legacyNativeLibraryDir=/data/app/~~wiBJUmIKYQksIFMRoOFpmw==/com.glasslauncher-P5hbIPsTMuKUsnG6g91hjg==/lib
+    primaryCpuAbi=null
+    secondaryCpuAbi=null
+    versionCode=6 minSdk=23 targetSdk=30
+    versionName=1.5
+    splits=[base]
+    apkSigningVersion=2
+    applicationInfo=ApplicationInfo{5bb8a0f com.glasslauncher}
+    flags=[ DEBUGGABLE HAS_CODE ALLOW_CLEAR_USER_DATA ]
+    privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    forceQueryable=false
+    queriesIntents=[Intent { act=android.intent.action.MAIN cat=[android.intent.category.LEANBACK_LAUNCHER] }, Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] }, Intent { act=android.settings.WIFI_SETTINGS }, Intent { act=android.settings.BLUETOOTH_SETTINGS }, Intent { act=android.settings.DEVICE_INFO_SETTINGS }, Intent { act=android.settings.DISPLAY_SETTINGS }, Intent { act=android.settings.SOUND_SETTINGS }, Intent { act=android.settings.APPLICATION_SETTINGS }, Intent { act=android.settings.INTERNAL_STORAGE_SETTINGS }, Intent { act=android.settings.DATE_SETTINGS }, Intent { act=android.settings.INPUT_METHOD_SETTINGS }, Intent { act=android.settings.ACCESSIBILITY_SETTINGS }]
+    dataDir=/data/user/0/com.glasslauncher
+    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]
+    timeStamp=2026-11-12 17:54:28
+    firstInstallTime=2026-11-12 17:54:05
+    lastUpdateTime=2026-11-12 17:54:29
+    signatures=PackageSignatures{b848a9c version:2, signatures:[f30c21bb], past signatures:[]}
+    installPermissionsFixed=true
+    pkgFlags=[ DEBUGGABLE HAS_CODE ALLOW_CLEAR_USER_DATA ]
+    requested permissions:
+      android.permission.ACCESS_NETWORK_STATE
+      android.permission.ACCESS_WIFI_STATE
+      android.permission.BLUETOOTH
+      android.permission.ACCESS_FINE_LOCATION
+      android.permission.ACCESS_COARSE_LOCATION
+    install permissions:
+      android.permission.BLUETOOTH: granted=true
+      android.permission.ACCESS_NETWORK_STATE: granted=true
+      android.permission.ACCESS_WIFI_STATE: granted=true
+    User 0: ceDataInode=141846 installed=true hidden=false suspended=false distractionFlags=0 stopped=false notLaunched=false enabled=0 instant=false virtual=false
+      gids=[3002]
+      runtime permissions:
+        android.permission.ACCESS_FINE_LOCATION: granted=true, flags=[ USER_SET|USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|524288]
+        android.permission.ACCESS_COARSE_LOCATION: granted=true, flags=[ USER_SET|REVOKE_WHEN_REQUESTED|USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+
+Queries:
+  system apps queryable: false
+  queries via package name:
+    com.glasslauncher:
+      com.amazon.amazonvideo.livingroom
+      com.google.android.youtube.tv
+      com.disney.disneyplus
+      com.glasslauncher.utilityhub
+      com.spotify.tv.android
+      com.retroarch
+      com.limelight
+      com.stremio.one
+      com.netflix.ninja
+  queries via intent:
+    DU.TV.PRODA:
+      com.glasslauncher
+    com.glasslauncher:
+      DU.TV.PRODA
+      com.amazon.amazonvideo.livingroom
+      [unknown app id 10050]
+      com.google.android.youtube.tv
+      [unknown app id 10056]
+      com.esaba.downloader
+      com.disney.disneyplus
+      moe.haruue.wadb
+      com.cybercat.adbappcontrol.tv
+      com.glasslauncher.utilityhub
+      com.spotify.tv.android
+      org.liskovsoft.androidtv.rukeyboard
+      com.retroarch
+      com.limelight
+      com.nitesh.rhenium
+      com.stremio.one
+      com.netflix.ninja
+      dev.imirror.receiver
+      com.nuvio.app
+  queryable via interaction:
+    User 0:
+      [com.android.localtransport,com.arris.globalkeyactions,android,com.arris.quickactions,com.android.providers.settings,com.arris.mediasessionmonitor,com.arris.remoteservice,com.android.location.fused,com.android.networkstack.tethering.inprocess,com.arris.arus.usbinstaller,com.android.networkstack.inprocess,com.arris.gtvs,com.android.keychain,com.broadcom.nrdphelper,com.android.dynsystem,com.android.tv.settings,com.android.inputdevices,com.arris.chmframework,com.commscope.android.fti.du]:
+        com.glasslauncher
+      [com.google.android.gsf,com.google.android.sss.authbridge,com.google.android.gms]:
+        com.glasslauncher
+      com.google.android.webview:
+        com.glasslauncher
+      com.google.android.permissioncontroller:
+        com.glasslauncher
+      org.liskovsoft.androidtv.rukeyboard:
+        com.glasslauncher
+      com.glasslauncher:
+        com.google.android.webview
+
+Package Changes:
+  Sequence number=27
+  User 0:
+    seq=4, package=com.netflix.ninja
+    seq=5, package=dev.imirror.receiver
+    seq=7, package=com.android.vending
+    seq=10, package=com.google.android.gms
+    seq=11, package=com.google.android.tts
+    seq=18, package=com.nuvio.app
+    seq=19, package=com.google.android.webview
+    seq=26, package=com.glasslauncher
+
+
+Dexopt state:
+  [com.glasslauncher]
+    path: /data/app/~~wiBJUmIKYQksIFMRoOFpmw==/com.glasslauncher-P5hbIPsTMuKUsnG6g91hjg==/base.apk
+      arm: [status=quicken] [reason=unknown]
+
+
+Compiler stats:
+  [com.glasslauncher]
+     base.apk - 567
