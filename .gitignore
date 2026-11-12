@@ -1,7 +1,6 @@
 .gradle/
 .idea/
 build/
-!app/build/placeholder
 local.properties
 *.iml
 .hoplite/
