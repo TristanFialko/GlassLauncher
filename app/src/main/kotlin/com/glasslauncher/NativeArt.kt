@@ -34,20 +34,49 @@ object NativeArt {
      * The 800x480 sources are decoded at 400x240 and scaled once, instead of drawing a 2.9x oversampled image per frame.
      */
     @JvmStatic
-    fun card(am: AssetManager, path: String, w: Int, h: Int, radius: Float): Bitmap? {
+    fun card(am: AssetManager, path: String, w: Int, h: Int, radius: Float, bg: Int = 0xFF222222.toInt(), forceSquare: Boolean = false): Bitmap? {
         val src = decode(am, path, w, h) ?: return null
-        val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val c = Canvas(out)
-        val scale = maxOf(w.toFloat() / src.width, h.toFloat() / src.height)  // cover
-        val p = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-        val sh = BitmapShader(src, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-        val m = Matrix()
-        m.setScale(scale, scale)
-        m.postTranslate((w - src.width * scale) / 2f, (h - src.height * scale) / 2f)
-        sh.setLocalMatrix(m)
-        p.shader = sh
-        c.drawRoundRect(RectF(0f, 0f, w.toFloat(), h.toFloat()), radius, radius, p)
+        return fit(src, w, h, radius, bg, forceSquare)
+    }
+
+    /** Decodes encoded image bytes (e.g. AppDiscovery.iconPng) at the smallest sample that stays >= the target, or null. */
+    @JvmStatic
+    fun decodeBytes(b: ByteArray, reqW: Int, reqH: Int): Bitmap? = try {
+        val o = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(b, 0, b.size, o)
+        var s = 1
+        while (o.outWidth / (s * 2) >= reqW && o.outHeight / (s * 2) >= reqH) s *= 2
+        BitmapFactory.decodeByteArray(b, 0, b.size, BitmapFactory.Options().apply { inSampleSize = s })
+    } catch (t: Throwable) {
+        null
+    }
+
+    /**
+     * home.js `.tile` / recent.css `#rthumb`: [src] cover-cropped to w x h with rounded corners; when [forceSquare] or the
+     * image is narrower than 1.3:1 (`.sq`) it is instead contained at 74% of the height on [bg]. Recycles [src].
+     */
+    @JvmStatic
+    fun fit(src: Bitmap, w: Int, h: Int, radius: Float, bg: Int, forceSquare: Boolean): Bitmap {
+        val flat = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val fc = Canvas(flat)
+        val sp = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        if (HomeArt.squareFit(src.width, src.height, forceSquare)) {
+            fc.drawColor(bg)
+            val dh = h * 0.74f
+            val dw = dh * src.width / src.height
+            fc.drawBitmap(src, null, RectF((w - dw) / 2f, (h - dh) / 2f, (w + dw) / 2f, (h + dh) / 2f), sp)
+        } else {
+            val scale = maxOf(w.toFloat() / src.width, h.toFloat() / src.height)  // cover
+            val dw = src.width * scale
+            val dh = src.height * scale
+            fc.drawBitmap(src, null, RectF((w - dw) / 2f, (h - dh) / 2f, (w + dw) / 2f, (h + dh) / 2f), sp)
+        }
         src.recycle()
+        val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        p.shader = BitmapShader(flat, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        Canvas(out).drawRoundRect(RectF(0f, 0f, w.toFloat(), h.toFloat()), radius, radius, p)
+        flat.recycle()
         return out
     }
 

@@ -19,6 +19,7 @@ const card = (a) => ({ name: a.name, id: a.id || '', ids: a.ids || [], match: a.
 const want = {
   rows: [{ kind: 'top', title: '', apps: w.APPS.map(card) },
     { kind: 'ent', title: w.ENTERTAINMENT.title, apps: w.ENTERTAINMENT.apps.map(card) }],
+  overrides: w.ICON_OVERRIDES || {},
   wallpaperLight: w.THEME.wallpaperLight, wallpaperDark: w.THEME.wallpaperDark,
   soundEnabled: w.SOUND.enabled !== false, soundVolume: w.SOUND.volume,
 };
@@ -26,6 +27,7 @@ const want = {
 const got = {
   rows: native.rows.map((r) => ({ kind: r.kind, title: r.title, apps: r.apps.map((a) => ({ name: a.name, id: a.id, ids: a.ids, match: a.match,
     matchFlags: a.match ? 'i' : '', icon: a.icon, dark: a.dark })) })),
+  overrides: native.overrides || {},
   wallpaperLight: native.wallpaperLight, wallpaperDark: native.wallpaperDark, soundEnabled: native.soundEnabled, soundVolume: native.soundVolume,
 };
 const bad = [];

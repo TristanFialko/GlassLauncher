@@ -15,6 +15,7 @@
       { "name": "RetroArch", "id": "", "ids": ["com.retroarch", "com.retroarch.aarch64", "com.retroarch.ra32"], "match": "retroarch", "icon": "icons/retroarch.png", "dark": "darkicons/retroarch.png" }
     ] }
   ],
+  "overrides": {},
   "wallpaperLight": "wallpaper.jpg",
   "wallpaperDark": "wallpaper2.jpg",
   "soundEnabled": true,

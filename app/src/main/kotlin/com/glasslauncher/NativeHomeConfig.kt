@@ -14,6 +14,12 @@ class NativeHomeConfig {
         @JvmField var icon = ""
         @JvmField var dark = ""
         @JvmField val ids = ArrayList<String>()
+        @JvmField var placeholder = false
+        @JvmField var useAppIcon = false
+        @JvmField var text = ""
+        @JvmField var bg = 0xFF222222.toInt()      // home.js: a.bg||"#222"
+        @JvmField var fg = 0xFFFFFFFF.toInt()           // a.fg||"#fff"
+        @JvmField var size = 1.6f                  // rem, a.size||1.6
     }
 
     class Row {
@@ -23,6 +29,8 @@ class NativeHomeConfig {
     }
 
     @JvmField val rows = ArrayList<Row>()
+    /** apps.js ICON_OVERRIDES: package id -> image path (visual only). */
+    @JvmField val overrides = LinkedHashMap<String, String>()
     @JvmField var wallpaperLight = "wallpaper.jpg"
     @JvmField var wallpaperDark = "wallpaper2.jpg"
     @JvmField var soundEnabled = true
@@ -56,12 +64,20 @@ class NativeHomeConfig {
                     k.match = a.optString("match")
                     k.icon = a.optString("icon")
                     k.dark = a.optString("dark")
+                    k.placeholder = a.optBoolean("placeholder", false)
+                    k.useAppIcon = a.optBoolean("useAppIcon", false)
+                    k.text = a.optString("text")
+                    k.bg = parseCssColor(a.optString("bg"), k.bg)
+                    k.fg = parseCssColor(a.optString("fg"), k.fg)
+                    if (a.has("size")) k.size = a.optDouble("size", 1.6).toFloat().takeIf { it > 0f } ?: 1.6f
                     val ids = a.optJSONArray("ids")
                     if (ids != null) for (x in 0 until ids.length()) k.ids.add(ids.getString(x))
                     row.cards.add(k)
                 }
                 c.rows.add(row)
             }
+            val ov = o.optJSONObject("overrides")
+            if (ov != null) for (key in ov.keys()) { val p = ov.optString(key); if (p.isNotEmpty()) c.overrides[key] = p }
             c.wallpaperLight = o.optString("wallpaperLight", "wallpaper.jpg")
             c.wallpaperDark = o.optString("wallpaperDark", "wallpaper2.jpg")
             c.soundEnabled = o.optBoolean("soundEnabled", true)
@@ -87,6 +103,41 @@ class NativeHomeConfig {
             return null
         }
 
+        /**
+         * What a card launches: resolve(), else (like home.js, which keeps a.id) the configured id even when it is not in the
+         * list, else - when no app list could be read at all - the first candidate id so a launch is still attempted.
+         */
+        @JvmStatic
+        fun resolveForLaunch(k: Card, installed: Map<String, String>): String? {
+            resolve(k, installed)?.let { return it }
+            if (k.id.isNotEmpty()) return k.id
+            if (installed.isEmpty() && k.ids.isNotEmpty()) return k.ids[0]
+            return null
+        }
+
+        /** CSS colour (#rgb, #rrggbb, #rrggbbaa, rgb()/rgba()) to ARGB; [def] when unparseable or blank. */
+        @JvmStatic
+        fun parseCssColor(s: String?, def: Int): Int {
+            val t = s?.trim()?.lowercase(Locale.ROOT) ?: return def
+            try {
+                if (t.startsWith("#")) {
+                    val h = t.substring(1)
+                    return when (h.length) {
+                        3 -> argb(255, h[0].digitToInt(16) * 17, h[1].digitToInt(16) * 17, h[2].digitToInt(16) * 17)
+                        6 -> argb(255, h.substring(0, 2).toInt(16), h.substring(2, 4).toInt(16), h.substring(4, 6).toInt(16))
+                        8 -> argb(h.substring(6, 8).toInt(16), h.substring(0, 2).toInt(16), h.substring(2, 4).toInt(16), h.substring(4, 6).toInt(16))
+                        else -> def
+                    }
+                }
+                val m = Regex("rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*(?:,\\s*([0-9.]+)\\s*)?\\)").matchEntire(t) ?: return def
+                val a = m.groupValues[4].let { if (it.isEmpty()) 255 else Math.round(it.toFloat() * 255f) }
+                return argb(a, m.groupValues[1].toInt(), m.groupValues[2].toInt(), m.groupValues[3].toInt())
+            } catch (e: Exception) { return def }
+        }
+
+        private fun argb(a: Int, r: Int, g: Int, b: Int): Int =
+            (a.coerceIn(0, 255) shl 24) or (r.coerceIn(0, 255) shl 16) or (g.coerceIn(0, 255) shl 8) or b.coerceIn(0, 255)
+
         @JvmStatic
         fun initials(name: String): String {
             val sb = StringBuilder()
@@ -94,7 +145,7 @@ class NativeHomeConfig {
                 if (sb.length >= 2) break
                 if (w.isNotEmpty()) sb.append(w[0])
             }
-            return sb.toString().uppercase(Locale.ROOT)
+            return if (sb.isEmpty()) "?" else sb.toString().uppercase(Locale.ROOT)
         }
     }
 }
