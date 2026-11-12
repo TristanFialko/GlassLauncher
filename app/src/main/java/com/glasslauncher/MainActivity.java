@@ -23,6 +23,9 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        // Glass 2.0: opt-in native UI (UiRouter). Default stays the WebView UI; the native UI falls back on repeated crashes.
+        UiRouter.applyExtra(this, getIntent().getStringExtra(UiRouter.EXTRA));
+        if (UiRouter.NATIVE.equals(UiRouter.mode(this))) { openNativeHome(); finish(); return; }
         getWindow().getDecorView().setSystemUiVisibility(5894 | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         apps = new AppDiscovery(this);
         web = new WebView(this);
@@ -101,7 +104,18 @@ public class MainActivity extends Activity {
     @Override protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        if (UiRouter.applyExtra(this, intent.getStringExtra(UiRouter.EXTRA)) && UiRouter.NATIVE.equals(UiRouter.mode(this))) {
+            openNativeHome(); finish(); return;
+        }
         if (probe == null) probe = FrameLatencyProbe.attachIfRequested(this, "webview");
+    }
+
+    private void openNativeHome() {
+        android.content.Intent i = new android.content.Intent(this, NativeHomeActivity.class)
+                .putExtra(NativeHomeActivity.EXTRA_AS_HOME, true)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(i);
+        overridePendingTransition(0, 0);
     }
 
     @Override public void onBackPressed() {
