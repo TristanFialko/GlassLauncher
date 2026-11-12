@@ -1,0 +1,16 @@
+[package]
+name = "glass-jni"
+description = "JNI boundary for Glass Launcher (libglass.so)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+name = "glass"
+crate-type = ["cdylib"]
+
+[dependencies]
+glass-core = { path = "../glass-core" }
+jni-sys = "=0.3.0"
