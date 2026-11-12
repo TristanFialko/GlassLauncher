@@ -40,11 +40,17 @@ jobs:
         with:
           node-version: 22
       - name: Search parity (JavaScript registry.js vs Rust) + host benchmark
+        # shell: bash adds -o pipefail, so a parity failure is not hidden by tee (the default shell is plain bash -e)
+        shell: bash
         run: |
           cargo build --locked --release -p glass-cli --manifest-path rust/Cargo.toml
           node tools/parity/search-parity.js --bench | tee parity.txt
       - name: Registry snapshot parity (production JavaScript fixtures vs Rust snapshot preparation)
+        shell: bash
         run: node tools/parity/snapshot-parity.js | tee -a parity.txt
+      - name: Frozen ranking golden file (registry.js still reproduces it; Rust matches it)
+        shell: bash
+        run: node tools/parity/ranking-golden.js --rust | tee -a parity.txt
       - name: Native UI config matches apps.js
         run: node tools/parity/nativeui-config-check.js
       - uses: actions/upload-artifact@v4
