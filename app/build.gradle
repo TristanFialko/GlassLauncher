@@ -14,6 +14,8 @@ android {
     }
     // android.util.Log / android.os.Trace are stubs on the host JVM; RustCore and GlassBridge only log/trace.
     testOptions { unitTests.returnDefaultValues = true }
+    // Sideloaded onto Android 11 boxes, not published on Google Play; targetSdk 30 is deliberate (see MIGRATION_STATUS.md).
+    lint { disable 'ExpiredTargetSdkVersion' }
 }
 
 dependencies {
