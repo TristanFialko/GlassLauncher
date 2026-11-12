@@ -112,7 +112,7 @@ public class NativeUiPrototypeTest {
         assertTrue("Back did not close the Control Centre", differs(nCc, nBack));
         int nLines = nLat.split("ui=native key=", -1).length - 1;
         assertTrue("latency probe logged " + nLines + " native key frames:\n" + nLat, nLines >= 8);
-        sh("am force-stop com.glasslauncher");
+        // no force-stop: it would also kill this instrumentation (it runs in the app's main process); Back above ended the prototype
 
         // ---- WebView UI, same path ----
         sh("logcat -c");

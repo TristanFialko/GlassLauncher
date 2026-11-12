@@ -97,6 +97,13 @@ public class MainActivity extends Activity {
         return handled;
     }
 
+    /** HOME is usually already running, so a benchmark's `am start ... --ez glass.latency true` arrives here. */
+    @Override protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (probe == null) probe = FrameLatencyProbe.attachIfRequested(this, "webview");
+    }
+
     @Override public void onBackPressed() {
         if (web != null) web.evaluateJavascript(BACK_JS, null); else super.onBackPressed();
     }
