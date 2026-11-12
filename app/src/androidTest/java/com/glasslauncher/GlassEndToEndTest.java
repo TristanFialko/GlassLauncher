@@ -94,6 +94,25 @@ public class GlassEndToEndTest {
         assertTrue(new JSONArray(current).length() > 0);
     }
 
+    /** Measurement only: cost of one uncached getAppIcon (128 px bitmap -> PNG -> base64), which blocks the JS thread. */
+    @Test public void iconEncodingCost() throws Exception {
+        Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        JSONArray apps = new JSONArray(new AppDiscovery(ctx).installedAppsJson());
+        AppDiscovery d = new AppDiscovery(ctx);
+        long[] t = new long[apps.length()];
+        long chars = 0;
+        for (int i = 0; i < apps.length(); i++) {
+            long s = SystemClock.elapsedRealtimeNanos();
+            String uri = d.iconDataUri(apps.getJSONObject(i).getString("id"));
+            t[i] = SystemClock.elapsedRealtimeNanos() - s;
+            chars += uri.length();
+        }
+        Arrays.sort(t);
+        Log.i(TAG, "icons " + new JSONObject().put("icons", t.length).put("msMedian", t[t.length / 2] / 1e6).put("msMax", t[t.length - 1] / 1e6)
+                .put("msTotal", Arrays.stream(t).sum() / 1e6).put("avgDataUriChars", chars / Math.max(1, t.length)));
+        assertTrue(chars > 0);
+    }
+
     /** Verbatim 1.5 implementation (baseline AppDiscovery.installedAppsJson). */
     private static String legacyInstalledAppsJson(Context ctx) throws Exception {
         JSONArray a = new JSONArray();
