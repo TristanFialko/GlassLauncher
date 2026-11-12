@@ -3,11 +3,23 @@ plugins { id 'com.android.application' }
 android {
     namespace 'com.glasslauncher'
     compileSdk 35
+    ndkVersion '27.2.12479018'
     defaultConfig {
         applicationId 'com.glasslauncher'
         minSdk 23
         targetSdk 30
         versionCode 6
         versionName '1.5'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
+    // android.util.Log / android.os.Trace are stubs on the host JVM; RustCore and GlassBridge only log/trace.
+    testOptions { unitTests.returnDefaultValues = true }
 }
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}
+
+apply from: 'rust.gradle'
