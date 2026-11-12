@@ -1,0 +1,13 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.glasslauncher'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.glasslauncher'
+        minSdk 23
+        targetSdk 30
+        versionCode 6
+        versionName '1.5'
+    }
+}
