@@ -393,7 +393,7 @@ Legend: **P1** (●) = must be covered by the first native prototype slice (Home
 | N11 | Focused header button scales to 1.1 and turns bright white with dark icon; Recently Used panel scales 1.04 and turns bright white | ● | Implemented: `HomeNav` header order/clamp; tests `HomeLogicTest.headerOrder*`, `headerStepClampsAndRecovers`; device check pending |
 | N12 | Moving focus to row 1 collapses the clock to 0.6 scale and lifts it ≈85 px (opacity .55), shifts both rows up ≈303 px in 450 ms; Recently Used fades out and rises 28 px | ● | Implemented (home slice); device check pending |
 | N13 | Returning to row 0 or the header restores clock, rows and Recently Used in 450 ms | ● | Implemented (home slice); device check pending |
-| N14 | Rows fade out under a mask near the top (below the collapsed clock) and bottom edge of the screen | — | **Not implemented** (no edge mask in the native view) |
+| N14 | Rows fade out under a mask near the top (below the collapsed clock) and bottom edge of the screen | — | **Implemented (native), device check pending** — `NativeHomeView.drawRowsMasked`: DST_IN gradient (0 to 134, 1 at 158, 1 to 992, 0 at 1072) in a saveLayer limited to the rows bounds, used only when rows reach a fade band |
 | N15 | Holding Right moves focus repeatedly without throttling; holding OK launches only once | ● | Implemented (home slice); device check pending |
 | N16 | Tab / Shift+Tab (hardware keyboard) walk header stops then cards, wrapping | — | Implemented: `HomeNav.tab`; test `HomeLogicTest.tabWalksHeaderThenCardsAndWraps`; device check pending |
 | N17 | Esc / Backspace act as Back | — | Implemented (Escape/Backspace mapped to Back in `NativeHomeView.onKeyDown`); device check pending |
@@ -420,7 +420,7 @@ Legend: **P1** (●) = must be covered by the first native prototype slice (Home
 | T2 | Theme flip crossfades wallpaper in 700 ms and swaps card art | ● | Implemented (home slice); device check pending |
 | T3 | A manual toggle holds until the next 19:00/07:00 boundary and is lost on app restart | — | Implemented (home slice); device check pending |
 | T4 | Dark theme uses the darker glass tint (alpha .44 vs .30) | ● | Implemented (home slice); device check pending |
-| T5 | If `wallpaper2.jpg` fails to load, the light wallpaper is shown at brightness .4 / saturation .8 | — | **Not implemented** (native view has no wallpaper fallback) |
+| T5 | If `wallpaper2.jpg` fails to load, the light wallpaper is shown at brightness .4 / saturation .8 | — | **Implemented (native), device check pending** — `NativeHomeActivity.loadAssets` + `NativeArt.dimmedFallback` (ColorMatrix, once at load, blurred backdrop built from the filtered copy) |
 
 ### Control Centre
 | # | Check | P1 |

@@ -102,7 +102,13 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         try {
             val dark = view.dark
             val am = assets
-            val wl = NativeArt.decode(am, if (dark) cfg.wallpaperDark else cfg.wallpaperLight, 1920, 1080)
+            // theme.js:11: a dark wallpaper that fails to decode falls back to the light one at brightness .4 / saturation .8
+            fun wall(isDark: Boolean): Bitmap? {
+                if (!isDark) return NativeArt.decode(am, cfg.wallpaperLight, 1920, 1080)
+                NativeArt.decode(am, cfg.wallpaperDark, 1920, 1080)?.let { return it }
+                return NativeArt.decode(am, cfg.wallpaperLight, 1920, 1080)?.let { NativeArt.dimmedFallback(it) }
+            }
+            val wl = wall(dark)
             val bl = wl?.let { NativeArt.blurred(it, 240, 135, 3) }
             val ds = NativeArt.shadow(NativeHomeView.DOCK_W.toInt(), NativeHomeView.DOCK_H.toInt(), NativeHomeView.DOCK_R, 44f, 0xFF000000.toInt())
             val ts = NativeArt.shadow(NativeHomeView.TILE_W.toInt(), NativeHomeView.TILE_H.toInt(), NativeHomeView.TILE_R, 14f, 0xFF000000.toInt())
@@ -111,7 +117,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
                 view.dockShadow = ds; view.tileShadow = ts; view.invalidate()
             }
             loadArt(cfg, view, dark)
-            val w2 = NativeArt.decode(am, if (dark) cfg.wallpaperLight else cfg.wallpaperDark, 1920, 1080)
+            val w2 = wall(!dark)
             val b2 = w2?.let { NativeArt.blurred(it, 240, 135, 3) }
             ui.post {
                 if (dark) { view.wallLight = w2; view.blurLight = b2 } else { view.wallDark = w2; view.blurDark = b2 }

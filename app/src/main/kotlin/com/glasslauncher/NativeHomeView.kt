@@ -15,6 +15,7 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.graphics.PorterDuffXfermode
 import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
@@ -62,6 +63,11 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
         const val ROW0_TOP = 461f
         const val ROWS_SHIFT = 303f
         const val HEAD_LIFT = 85f
+        const val ROWS_HALO = 60f
+        const val FADE_TOP_START = 134f
+        const val FADE_TOP_END = 158f
+        const val FADE_BOT_START = 992f
+        const val FADE_BOT_END = 1072f
         const val HEAD_SCALE = 0.6f
         const val BTN_R = 34f
         const val BTN_Y = 94f
@@ -148,6 +154,8 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
     private val pGlass = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val pShadow = Paint(Paint.FILTER_BITMAP_FLAG)
     private val pShade = Paint()
+    private val pMask = Paint()
+    private var maskGrad: LinearGradient? = null
     private val pSheen = Paint(Paint.ANTI_ALIAS_FLAG)
     private val pShine = Paint(Paint.ANTI_ALIAS_FLAG)
     private val r = RectF()
@@ -452,7 +460,7 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
             drawHead(c)
             drawRecent(c)
             drawButtons(c)
-            if (searchMix > 0f) { c.saveLayerAlpha(0f, 0f, W, H, (255 * (1f - .5f * searchMix)).toInt()); drawRows(c); c.restore() } else drawRows(c)   // searchopen #stage .5
+            if (searchMix > 0f) { c.saveLayerAlpha(0f, 0f, W, H, (255 * (1f - .5f * searchMix)).toInt()); drawRowsMasked(c); c.restore() } else drawRowsMasked(c)   // searchopen #stage .5
             if (ccMix > 0f) cc.draw(c, ccMix)
             if (toastLayer == null) drawToast(c)
             c.restore()
@@ -518,6 +526,31 @@ class NativeHomeView(ctx: Context, @JvmField val cfg: NativeHomeConfig, @JvmFiel
             if (i == 0) NativeIcons.search(c, cx, BTN_Y, 16 * (1f + .1f * amt), ink, vis)
             else NativeIcons.sliders(c, cx, BTN_Y, 16 * (1f + .1f * amt), ink, vis)
         }
+    }
+
+    /**
+     * #stage mask (home.js:88-90): alpha 0 to viewTop-24, ramp to 1 at viewTop, 1 to viewBottom-24, ramp to 0 at viewBottom+56.
+     * The layer is limited to the rows' bounds and only used while they reach a fade band.
+     */
+    private fun drawRowsMasked(c: Canvas) {
+        val top = ROW0_TOP - ROWS_SHIFT * scroll - ROWS_HALO
+        val bottom = ROW0_TOP - ROWS_SHIFT * scroll + cfg.rows.size * (DOCK_H + ROW_GAP) - ROW_GAP + ROWS_HALO
+        if (top >= FADE_TOP_END && bottom <= FADE_BOT_START) { drawRows(c); return }
+        val t = if (top < 0f) 0f else top
+        val b = if (bottom > H) H else bottom
+        if (b <= t) return
+        var g = maskGrad
+        if (g == null) {
+            g = LinearGradient(0f, 0f, 0f, H, intArrayOf(0, 0, Color.BLACK, Color.BLACK, 0),
+                floatArrayOf(0f, FADE_TOP_START / H, FADE_TOP_END / H, FADE_BOT_START / H, FADE_BOT_END / H), Shader.TileMode.CLAMP)
+            maskGrad = g
+            pMask.shader = g
+            pMask.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+        }
+        val sc = c.saveLayer(0f, t, W, b, null)
+        drawRows(c)
+        c.drawRect(0f, t, W, b, pMask)
+        c.restoreToCount(sc)
     }
 
     private fun drawRows(c: Canvas) {

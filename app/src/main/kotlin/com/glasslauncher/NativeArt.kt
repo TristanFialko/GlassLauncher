@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory
 import android.graphics.BitmapShader
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
@@ -77,6 +79,16 @@ object NativeArt {
         p.shader = BitmapShader(flat, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
         Canvas(out).drawRoundRect(RectF(0f, 0f, w.toFloat(), h.toFloat()), radius, radius, p)
         flat.recycle()
+        return out
+    }
+
+    /** `#wpd.fallback{filter:brightness(.4) saturate(.8)}`: one filtered copy, made at load time (never per frame). */
+    @JvmStatic
+    fun dimmedFallback(src: Bitmap): Bitmap {
+        val m = ColorMatrix().apply { setSaturation(.8f) }
+        m.preConcat(ColorMatrix().apply { setScale(.4f, .4f, .4f, 1f) })   // brightness first, then saturate, as in the CSS
+        val out = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
+        Canvas(out).drawBitmap(src, 0f, 0f, Paint().apply { colorFilter = ColorMatrixColorFilter(m) })
         return out
     }
 
