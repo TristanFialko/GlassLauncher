@@ -275,5 +275,28 @@ $st2 = Get-Stats @(10, 20, 30, 40, 50)
 Check "stats median" $st2.median 30; Check "stats q1" $st2.q1 20; Check "stats iqr" $st2.iqr 20; Check "stats not identical" $st2.all_identical "False"
 Check "stats even median" (Get-Stats @(1, 2, 3, 4)).median 2.5
 
+# ---- harness v4 helpers ----
+Check "meminfo grouped digits" (ConvertFrom-Meminfo "               TOTAL PSS:    63,536            TOTAL RSS:   99,000").pss_kb 63536
+Check "act Android 12+ double-space Hist" (Get-ActivityState "  * Hist  #0: ActivityRecord{2 u0 com.glasslauncher/.MainActivity t5}`n      state=STOPPED stopped=true" "com.glasslauncher/.MainActivity").state "STOPPED"
+Check "warm warning brought to front ok" (Test-WarmRelaunchWarning "Activity not started, its current task has been brought to the front") "True"
+Check "warm warning top-most rejected" (Test-WarmRelaunchWarning "Activity not started, intent has been delivered to currently running top-most instance.") "False"
+Check "warm no warning ok" (Test-WarmRelaunchWarning "") "True"
+$stStopped = @{ found = $true; state = "STOPPED"; visible = $false; header = "h" }
+Check "covered ok" (Test-GlassCovered @{ package = "com.netflix.ninja" } $stStopped "com.glasslauncher").ok "True"
+Check "covered other pkg ok" (Test-GlassCovered @{ package = "com.google.android.gms" } $stStopped "com.glasslauncher").ok "True"
+Check "covered glass front" (Test-GlassCovered @{ package = "com.glasslauncher" } $stStopped "com.glasslauncher").ok "False"
+Check "covered paused" (Test-GlassCovered @{ package = "x.y" } @{ found = $true; state = "PAUSED" } "com.glasslauncher").ok "False"
+Check "covered no fg" (Test-GlassCovered @{ package = $null } $stStopped "com.glasslauncher").ok "False"
+$svc = "  * ServiceRecord{51d0 u0 com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0}`n    app=ProcessRecord{2b7 4958:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0i9}`n    app=ProcessRecord{9a1 3210:com.glasslauncher/u0a98}"
+Check "service pids" ((Get-ServiceProcessPids $svc "3210") -join ",") "4958"
+Check "service pids none" (@(Get-ServiceProcessPids "" "3210").Length) 0
+$cand = @([pscustomobject]@{ pid = "4958"; name = "r0" }, [pscustomobject]@{ pid = "6123"; name = "r1" })
+Check "renderers attributed" ((Select-GlassRenderers $cand @("4958")).renderers | ForEach-Object { $_.pid }) "4958"
+Check "renderers ambiguous" ((Select-GlassRenderers $cand @()).error -like "2 WebView renderer*") "True"
+Check "renderers single" (@((Select-GlassRenderers @($cand[0]) @()).renderers).Length) 1
+Check "renderers single lone object (PS 5.1)" (@((Select-GlassRenderers $cand[0] @()).renderers).Length) 1
+Check "renderers other apps only" (@((Select-GlassRenderers $cand @("7777")).renderers).Length) 0
+Check "renderers none" (Select-GlassRenderers @() @()).attribution "none running"
+
 Write-Host "bench-lib tests: $script:pass passed, $script:fail failed"
 if ($script:fail) { exit 1 }

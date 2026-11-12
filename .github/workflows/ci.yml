@@ -49,6 +49,23 @@ jobs:
       - name: Device benchmark harness - parser unit tests
         shell: pwsh
         run: ./tools/bench/test-bench-lib.ps1
+      - name: Device benchmark harness - simulated Android 11 device (end to end)
+        shell: pwsh
+        run: ./tools/bench/test-bench-device.ps1
+
+  bench-windows:
+    # The owner runs the harness with Windows PowerShell 5.1, whose array/[pscustomobject] semantics differ from pwsh
+    # (v2 lost renderer PSS that way), so the tests also run under 5.1 itself.
+    name: Benchmark harness on Windows PowerShell 5.1
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parser unit tests (powershell.exe 5.1)
+        shell: powershell
+        run: $PSVersionTable.PSVersion; ./tools/bench/test-bench-lib.ps1
+      - name: Simulated Android 11 device (powershell.exe 5.1)
+        shell: powershell
+        run: ./tools/bench/test-bench-device.ps1
 
   android:
     name: Android build + JVM/JNI tests

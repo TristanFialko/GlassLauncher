@@ -56,9 +56,10 @@ function ConvertFrom-Meminfo([string]$o) {
   $r = [ordered]@{ pss_kb = $null; source = $null; error = $null }
   if (-not $o -or -not $o.Trim()) { $r.error = "empty output"; return $r }
   if ($o -match "No process found") { $r.error = "process not running"; return $r }
-  if ($o -match "(?m)^\s*TOTAL PSS:\s*(\d+)") { $r.pss_kb = [int]$Matches[1]; $r.source = "summary TOTAL PSS"; return $r }
-  if ($o -match "(?m)^\s*TOTAL:\s*(\d+)") { $r.pss_kb = [int]$Matches[1]; $r.source = "summary TOTAL"; return $r }
-  if ($o -match "(?m)^\s*TOTAL\s+(\d+)\s") { $r.pss_kb = [int]$Matches[1]; $r.source = "table TOTAL"; return $r }
+  # digit grouping ("63,536") is tolerated in case an OEM build or a copy-paste formats the number
+  if ($o -match "(?m)^\s*TOTAL PSS:\s*(\d[\d,]*)") { $r.pss_kb = [int]($Matches[1] -replace ",", ""); $r.source = "summary TOTAL PSS"; return $r }
+  if ($o -match "(?m)^\s*TOTAL:\s*(\d[\d,]*)") { $r.pss_kb = [int]($Matches[1] -replace ",", ""); $r.source = "summary TOTAL"; return $r }
+  if ($o -match "(?m)^\s*TOTAL\s+(\d[\d,]*)\s") { $r.pss_kb = [int]($Matches[1] -replace ",", ""); $r.source = "table TOTAL"; return $r }
   $first = ($o -split "`n" | Where-Object { $_.Trim() } | Select-Object -First 3) -join " | "
   $r.error = "unrecognised meminfo format: " + $first
   return $r
@@ -163,10 +164,10 @@ function Get-ActivityState([string]$o, [string]$component) {
   $r = [ordered]@{ found = $false; state = $null; visible = $null; header = $null }
   $in = $false
   foreach ($l in ($o -split "\r?\n")) {
-    $isHeader = ($l -match "^\s*\*?\s*(Hist #\d+:|Task\{|TaskRecord\{|Running activities)")
+    $isHeader = ($l -match "^\s*\*?\s*(Hist\s+#\d+:|Task\{|TaskRecord\{|Running activities)")
     if ($in -and $isHeader) { break }
     if (-not $in) {
-      if ($l -match "^\s*\*?\s*Hist #\d+:\s*ActivityRecord\{" -and $l -like ("*" + $component + "*")) { $in = $true; $r.found = $true; $r.header = $l.Trim() }
+      if ($l -match "^\s*\*?\s*Hist\s+#\d+:\s*ActivityRecord\{" -and $l -like ("*" + $component + "*")) { $in = $true; $r.found = $true; $r.header = $l.Trim() }
       continue
     }
     if (-not $r.state -and $l -match "\bstate=([A-Z_]+)") { $r.state = $Matches[1] }
@@ -240,4 +241,63 @@ function Get-ExpectedTheme([int]$hour) { if ($hour -ge 19 -or $hour -lt 7) { ret
 function Get-DexoptStatus([string]$o) {
   if ($o -match "\[status=([\w-]+)\]") { return $Matches[1] }
   return $null
+}
+
+<#
+  Harness v4. `am start -n <glass>` while Glass's task is behind another app always prints
+  "Warning: Activity not started, its current task has been brought to the front" - that IS the warm/hot relaunch, so
+  v3 rejected every warm sample. Any other warning (e.g. "delivered to currently running top-most instance": Glass was
+  already in front) still invalidates the sample.
+#>
+function Test-WarmRelaunchWarning([string]$w) {
+  if (-not $w) { return $true }
+  return ($w -match "current task has been brought to the front")
+}
+
+<#
+  Glass counts as backgrounded when its own ActivityRecord is STOPPED and another package is in front. v3 also required
+  the requested background package itself to be in front, which fails when that app trampolines to another package
+  (account picker, splash) even though Glass is genuinely stopped. Returns @{ ok; reason }.
+#>
+function Test-GlassCovered($fg, $st, [string]$pkg) {
+  if (-not $st.found) { return @{ ok = $false; reason = "Glass activity record not found in dumpsys activity activities" } }
+  if (-not $st.state) { return @{ ok = $false; reason = "Glass activity record has no state= line ($($st.header))" } }
+  if (-not $fg.package) { return @{ ok = $false; reason = "no foreground package found (resumed activity / focused app / focused window all empty)" } }
+  if ($fg.package -eq $pkg) { return @{ ok = $false; reason = "Glass is still in front (Glass state=$($st.state))" } }
+  if ($st.state -ne "STOPPED") { return @{ ok = $false; reason = "$($fg.package) is in front but Glass is $($st.state) (visible=$($st.visible)), not STOPPED" } }
+  return @{ ok = $true; reason = $null }
+}
+
+<#
+  PIDs of processes running services bound for a package, from `dumpsys activity services <pkg>`. WebView's renderer is
+  an external isolated service: its ServiceRecord is filed under the HOST app's package and carries
+  "app=ProcessRecord{<hash> <pid>:com.google.android.webview:sandboxed_process0:.../u0i9}". $exclude is the app's own PID.
+#>
+function Get-ServiceProcessPids([string]$services, [string]$exclude) {
+  $out = @()
+  foreach ($m in [regex]::Matches($services, "(?m)^\s*app=ProcessRecord\{\S+\s+(\d+):")) {
+    $p = $m.Groups[1].Value
+    if ($p -ne $exclude -and $out -notcontains $p) { $out += $p }
+  }
+  return $out
+}
+
+<#
+  Which renderer candidates (Get-RendererPids, device-wide) belong to Glass. Attribution from the services dump wins;
+  with no attribution a single candidate is accepted but flagged; several unattributed candidates are rejected because
+  another app's WebView would be counted (v3 summed them all). Returns @{ renderers; attribution; error }.
+#>
+function Select-GlassRenderers([object[]]$candidates, [object[]]$attributedPids) {
+  $c = @($candidates | Where-Object { $null -ne $_ })
+  $a = @($attributedPids | Where-Object { $_ })
+  if ($c.Length -eq 0) { return @{ renderers = @(); attribution = "none running"; error = $null } }
+  if ($a.Length -gt 0) {
+    $mine = @($c | Where-Object { $a -contains $_.pid })
+    if ($mine.Length -gt 0) { return @{ renderers = $mine; attribution = "dumpsys activity services"; error = $null } }
+    # Glass's own service processes are known and none is a running renderer: the candidates belong to other apps
+    return @{ renderers = @(); attribution = "none of Glass's"; error = $null }
+  }
+  if ($c.Length -eq 1) { return @{ renderers = $c; attribution = "single candidate (not confirmed by dumpsys activity services)"; error = $null } }
+  $names = ($c | ForEach-Object { "$($_.pid) $($_.name)" }) -join ", "
+  return @{ renderers = @(); attribution = "ambiguous"; error = "$($c.Length) WebView renderer processes running and none attributed to Glass by dumpsys activity services: $names" }
 }
