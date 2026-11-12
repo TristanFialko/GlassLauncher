@@ -75,8 +75,23 @@ Also: `meminfo` totals tolerate digit grouping (`63,536`), and the `Hist` header
   the owner uses — 5.1's array semantics are what blanked renderer PSS in v2.
 
 Limits: the simulated dumps follow AOSP Android 11 formats, not captures from this box. The `dumpsys activity services`
-attribution in particular is unverified on the VIP7802; if it finds nothing, the harness falls back to the single/ambiguous
-rules above and says so. **v4 has not yet been run on the VIP7802.**
+attribution has since been confirmed on the VIP7802 (v4 smoke run; see the v5 section above).
+
+## Comparing the WebView UI and the native UI prototype (v5)
+
+`-Activity .NativeHomeActivity` measures the native prototype instead of the WebView UI (default `-Activity .MainActivity`).
+The prototype runs in its own process `com.glasslauncher:native`. PID, PSS, CPU and gfxinfo therefore follow that
+process, and the WebView renderer is reported as "not applicable", so the native totals are app-only. The WebView
+totals are app plus renderer.
+
+`-Latency` starts the UI with `--ez glass.latency true`. In that mode `FrameLatencyProbe` logs, for every D-pad key, the time from
+the input event to the first frame started after dispatch being handed to the GPU. The harness summarises this as
+`frames.key_to_frame_ms`. For the native UI that is the frame showing the new focus. For the WebView it is a lower bound,
+because its renderer handles the key asynchronously; `-Trace` gives the full WebView path.
+
+Cold-start caveat for the native UI: `am start -S` force-stops the whole package. The system then restarts the WebView HOME in
+the main process while the native activity starts, so the native cold start shares the CPU with that restart. The
+native warm start, PSS, CPU and frame numbers are unaffected.
 
 ## Running a valid A/B comparison
 

@@ -23,7 +23,7 @@ once and positioned with local matrices.
 will call the same `RustCore.prepareSearch`/`search` as the WebView, off the UI thread.
 
 ## Behaviour it reproduces (from `PARITY_CHECKLIST.md`)
-- **Geometry** at 1920×1080: tiles 280×168 with radius 22; docks 1674×234 with radius 48; padding 32/72; gap 32. Row 0 has 5 cards; row 1 has 4 cards, centred, under an "Entertainment" label. Header buttons are 68 px.
+- **Geometry** at 1920×1080: tiles 280×168 with radius 22; docks 1674×234 with radius 48; padding 32/72; gap 32. Row 0 has 5 cards; row 1 has 4 cards, centred. Neither row has a label (`home.js` passes an empty one). Header buttons are 68 px.
 - **Focus:** the card scales to 1.06 over 220 ms with `cubic-bezier(.2,.8,.2,1)`. A halo ring sits 7 px out (radius 29, a 2.4 px white .85 stroke over a white .3 fill, as in lite mode). The card shadow fades in, and a 700 ms diagonal shine sweeps the card once per focus gain.
 - **Row 2 focus:** the clock shrinks to 0.6 and lifts about 85 px, the head fades to .55, and the rows move up 303 px, all over 450 ms.
 - **Keys:**
@@ -35,16 +35,18 @@ will call the same `RustCore.prepareSearch`/`search` as the WebView, off the UI 
 - **Theme:** dark from 19:00 to 06:59, rechecked every 10 s; Appearance in the Control Centre toggles it. The clock is 12-hour without AM/PM, and the date uses the en-GB long format.
 
 ## Not in the prototype (and why)
-Search and the on-screen keyboard; the Recently Used panel and recording launches into it; the Control Centre's
+Search and the on-screen keyboard; recording launches into Recently Used (the panel shows its empty state only); the Control Centre's
 remaining tiles (audio output, storage, network details, sound/display shortcuts, the 2 s live poll); mouse/pointer
 input; Tab navigation; the placeholder card; icon overrides and Android app icons for cards without artwork; the
 header's Recently Used stop. The goal was a representative slice to measure rendering, focus, artwork, launching and
 one overlay. These remain in the WebView UI, and the parity checklist tracks each one.
 
 Known visual differences, to be judged on the device:
-- The glass blur is a pre-blurred wallpaper, not a live backdrop. It is identical while the wallpaper is static.
+- The glass blur is a pre-blurred wallpaper, not a live backdrop: identical while the wallpaper is static, but cards behind the Control Centre are covered rather than blurred.
 - Text is drawn in Android's sans-serif (Roboto). The CSS asks for SamsungOne/Helvetica Neue/Arial, which the WebView also resolves to Roboto on this box (unverified).
 - The vertical positions marked ≈ in the checklist are estimates.
+- Date: the prototype prints "Thursday 12 November". The CI emulator's older WebView prints "Thursday, 12 November"; the box's WebView 157 en-GB output must be checked on the device.
+- CI emulator caveat: that emulator image's system WebView does not support flex `gap`, so its WebView screenshots show touching cards and rows. Compare spacing against the box, not against those shots.
 
 ## Build and install
 The prototype is part of the normal APK (`glasslauncher-debug-apk` CI artifact or `./gradlew assembleDebug`).

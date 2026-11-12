@@ -48,7 +48,6 @@ final class NativeHomeView extends View {
     static final float W = 1920f, H = 1080f;
     static final float TILE_W = 280, TILE_H = 168, TILE_R = 22, GAP = 32, PAD_X = 72, PAD_Y = 32;
     static final float DOCK_W = 1674, DOCK_H = 234, DOCK_R = 48, ROW_GAP = 48, ROW0_TOP = 461;
-    static final float LABEL_SIZE = 23, LABEL_BLOCK = 42;          // .rowLabel 1.15rem + .7rem margin
     static final float ROWS_SHIFT = 303, HEAD_LIFT = 85, HEAD_SCALE = 0.6f;
     static final float BTN_R = 34, BTN_Y = 94, BTN_SEARCH_X = 1746, BTN_CC_X = 1814;
     static final PathInterpolator EASE = new PathInterpolator(.2f, .8f, .2f, 1f);   // --ease
@@ -296,18 +295,10 @@ final class NativeHomeView extends View {
 
     private void drawRows(Canvas c) {
         float y = ROW0_TOP - ROWS_SHIFT * scroll;
-        float dim = 1f - 0.0f * ccMix;
         Bitmap blur = darkMix >= .5f ? blurDark : blurLight;
         for (int ri = 0; ri < cfg.rows.size(); ri++) {
             NativeHomeConfig.Row row = cfg.rows.get(ri);
-            if (row.title != null && !row.title.isEmpty() && ri > 0) {
-                pText.setTextAlign(Paint.Align.LEFT); pText.setTextSize(LABEL_SIZE); pText.setFakeBoldText(true);
-                pText.setColor(Color.WHITE); pText.setAlpha((int) (255 * (zone == 0 && vpos == ri ? 1f : .65f) * dim));
-                pText.setShadowLayer(10, 0, 2, 0x66000000);
-                c.drawText(row.title, (W - DOCK_W) / 2f + 32, y + LABEL_SIZE * .95f, pText);
-                pText.clearShadowLayer(); pText.setFakeBoldText(false);
-                y += LABEL_BLOCK;
-            }
+            // no row labels: home.js builds both rows with makeRow('', ...) (LAYOUT.showLabels is false)
             float left = (W - DOCK_W) / 2f;
             drawGlass(c, left, y, DOCK_W, DOCK_H, DOCK_R, blur);
             int n = row.cards.size();
