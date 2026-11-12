@@ -223,7 +223,7 @@ jobs:
           script: |
             adb logcat -c
             ./gradlew --no-configuration-cache connectedDebugAndroidTest -Pglass.rustAbis=x86_64 -Pandroid.testInstrumentationRunnerArguments.class=com.glasslauncher.NativeUiPrototypeTest || (adb logcat -d -s GlassNative:* GlassNativeTest:* GlassLatency:* TestRunner:* AndroidRuntime:E; adb pull /data/local/tmp/glass-nativeui nativeui-out || true; exit 1)
-            adb pull /data/local/tmp/glass-nativeui nativeui-out
+            adb pull /data/local/tmp/glass-nativeui nativeui-out && adb logcat -d -s GlassNativeArtifact:I GlassLatency:I GlassNative:I > nativeui-out/logcat.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:

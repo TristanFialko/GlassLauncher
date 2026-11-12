@@ -3,7 +3,6 @@ package com.glasslauncher;
 import static org.junit.Assert.assertTrue;
 
 import android.app.UiAutomation;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
@@ -16,8 +15,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
@@ -31,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 public class NativeUiPrototypeTest {
     private static final String TAG = "GlassNativeTest";
     private UiAutomation ua;
-    private File out;
 
     private String sh(String cmd) throws Exception {
         ParcelFileDescriptor pfd = ua.executeShellCommand(cmd);
@@ -42,14 +38,18 @@ public class NativeUiPrototypeTest {
         return sb.toString();
     }
 
-    private void save(String name, String text) throws Exception {
-        try (FileOutputStream f = new FileOutputStream(new File(out, name))) { f.write(text.getBytes(StandardCharsets.UTF_8)); }
+    private static final String DIR = "/data/local/tmp/glass-nativeui/";
+
+    /** Text artifacts go to logcat (tag GlassNativeArtifact, one line per line); CI saves that log. The shell cannot read the app's files on API 30. */
+    private void save(String name, String text) {
+        for (String l : text.split("\n")) Log.i("GlassNativeArtifact", "[" + name + "] " + l);
     }
+
 
     private Bitmap shot(String name) throws Exception {
         SystemClock.sleep(900);                                  // let 220-450 ms transitions settle
         Bitmap b = ua.takeScreenshot();
-        try (FileOutputStream f = new FileOutputStream(new File(out, name))) { b.compress(Bitmap.CompressFormat.PNG, 100, f); }
+        sh("screencap -p " + DIR + name);   // shell-owned copy for the CI artifact
         return b;
     }
 
@@ -75,9 +75,7 @@ public class NativeUiPrototypeTest {
 
     @Test public void nativePrototypeVersusWebView() throws Exception {
         ua = InstrumentationRegistry.getInstrumentation().getUiAutomation();
-        Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        out = new File(ctx.getExternalFilesDir(null), "nativeui");
-        out.mkdirs();
+        sh("rm -rf /data/local/tmp/glass-nativeui"); sh("mkdir -p /data/local/tmp/glass-nativeui");
         int[] path = {22, 22, 20, 21, 19, 19};   // right, right, down (row 2), left, up, up (header)
         StringBuilder report = new StringBuilder();
         report.append(sh("wm size")).append(sh("wm density"));
@@ -128,8 +126,6 @@ public class NativeUiPrototypeTest {
         save("webview-latency.txt", wLat);
         report.append(sh("dumpsys meminfo com.glasslauncher")).append('\n');
         save("report.txt", report.toString());
-        // AGP uninstalls the app after the run (deleting its files); the CI job pulls this shell-owned copy instead
-        sh("rm -rf /data/local/tmp/glass-nativeui"); sh("cp -r " + out.getAbsolutePath() + " /data/local/tmp/glass-nativeui");
         Log.i(TAG, "native latency lines=" + nLines + ", webview latency lines=" + (wLat.split("ui=webview key=", -1).length - 1));
     }
 }
