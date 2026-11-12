@@ -45,6 +45,16 @@ G.icons={
   packageIcon:function(pkg,cb){
     var c=G.icons._cache;
     if(c.hasOwnProperty(pkg)){ cb(c[pkg]); return; }
+    /* Glass 2.0: the WebView fetches the icon itself (MainActivity serves it off the JS thread). cb still receives a URL
+       only once the image has really loaded, or null, exactly like the data-URI path below. PERF.icons:'bridge' = old path. */
+    var base=G.icons._base;
+    if(base===undefined) base=G.icons._base=(window.PERF&&window.PERF.icons==='bridge')?null:G.bridge.call('iconBaseUrl');
+    if(typeof base==='string'&&base.indexOf('https://')===0){
+      var im=new Image(), u=base+encodeURIComponent(pkg);
+      im.onload=function(){ c[pkg]=u; cb(u); };
+      im.onerror=function(){ c[pkg]=null; cb(null); };
+      im.src=u; return;
+    }
     setTimeout(function(){
       var u=G.bridge.call('getAppIcon',pkg); if(typeof u!=='string'||u.indexOf('data:')!==0) u=null;
       c[pkg]=u; cb(u);

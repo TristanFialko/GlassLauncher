@@ -114,6 +114,47 @@ public class GlassEndToEndTest {
         assertTrue(chars > 0);
     }
 
+    /**
+     * Icons through the WebView (Glass 2.0) vs the 1.5 synchronous bridge call. Each path runs in a fresh activity
+     * (fresh caches); the new path runs first, so the old path benefits from any warm system caches (conservative).
+     */
+    @Test public void iconsLoadOffTheJsThread() throws Exception {
+        String pkgs = "Glass.apps.installed.map(function(x){return x.id;})";
+        JSONObject fresh;
+        try (ActivityScenario<MainActivity> sc = ActivityScenario.launch(MainActivity.class)) {
+            waitForGlass(sc);
+            eval(sc, "(function(){var ids=" + pkgs + ",n=0,ok=0,sizes=true,t0=performance.now();Glass.icons._cache={};"
+                + "window.__ic=null;ids.forEach(function(id){Glass.icons.packageIcon(id,function(u){n++;if(u){ok++;"
+                + "var im=new Image();im.src=u;}if(n===ids.length)window.__ic={n:n,ok:ok,wallMs:performance.now()-t0,blockMs:blockMs,"
+                + "allUrl:ids.every(function(i){var c=Glass.icons._cache[i];return c===null||c.indexOf('https://')===0;})};});});"
+                + "var blockMs=performance.now()-t0;return 'started';})()");
+            long end = SystemClock.uptimeMillis() + 30000;
+            String r;
+            while ((r = eval(sc, "window.__ic&&JSON.stringify(window.__ic)")) == null || r.equals("false")) {
+                assertTrue("icons did not finish", SystemClock.uptimeMillis() < end);
+                Thread.sleep(50);
+            }
+            fresh = new JSONObject(r);
+            eval(sc, "(function(){window.__sz=null;var u=Glass.icons._cache[Glass.apps.installed.filter(function(x){return Glass.icons._cache[x.id];})[0].id];"
+                + "var i=new Image();i.onload=function(){window.__sz=i.naturalWidth+'x'+i.naturalHeight;};i.onerror=function(){window.__sz='error';};i.src=u;return 1;})()");
+            String sz;
+            while ((sz = eval(sc, "window.__sz")) == null) { assertTrue("size check timed out", SystemClock.uptimeMillis() < end); Thread.sleep(50); }
+            fresh.put("decodedSize", sz);
+        }
+        JSONObject old;
+        try (ActivityScenario<MainActivity> sc = ActivityScenario.launch(MainActivity.class)) {
+            waitForGlass(sc);
+            old = new JSONObject(eval(sc, "(function(){var ids=" + pkgs + ",ok=0,t0=performance.now();"
+                + "ids.forEach(function(id){var u=AndroidBridge.getAppIcon(id);if(typeof u==='string'&&u.indexOf('data:')===0)ok++;});"
+                + "var ms=performance.now()-t0;return JSON.stringify({n:ids.length,ok:ok,wallMs:ms,blockMs:ms});})()"));
+        }
+        Log.i(TAG, "iconpaths " + new JSONObject().put("webviewServed", fresh).put("legacyBridge", old));
+        assertTrue("new path did not use URLs: " + fresh, fresh.getBoolean("allUrl"));
+        assertEquals("same icons available", old.getInt("ok"), fresh.getInt("ok"));
+        assertEquals("decoded icon size", "128x128", fresh.getString("decodedSize"));
+        assertTrue(fresh.getInt("ok") > 0);
+    }
+
     /** Verbatim 1.5 implementation (baseline AppDiscovery.installedAppsJson). */
     private static String legacyInstalledAppsJson(Context ctx) throws Exception {
         JSONArray a = new JSONArray();

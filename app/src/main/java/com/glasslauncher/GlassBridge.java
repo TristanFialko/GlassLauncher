@@ -16,7 +16,7 @@ public class GlassBridge {
 
     GlassBridge(MainActivity act) {
         this.act = act;
-        this.apps = new AppDiscovery(act);
+        this.apps = act.appDiscovery();
         this.sys = new SystemControls(act);
         this.settings = new SettingsLauncher(act);
     }
@@ -32,6 +32,8 @@ public class GlassBridge {
     }
     // ---------- Apps (Phase 3) ----------
     @JavascriptInterface public boolean isInstalled(String pkg) { return apps.isInstalled(pkg); }
+    /** Glass 2.0: base URL the WebView loads app icons from (served by MainActivity, off the JS thread). */
+    @JavascriptInterface public String iconBaseUrl() { return AppDiscovery.ICON_BASE; }
     @JavascriptInterface public String getAppIcon(String pkg) {
         Trace.beginSection("Glass:getAppIcon");
         try { return apps.iconDataUri(pkg); } finally { Trace.endSection(); }
