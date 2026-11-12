@@ -357,6 +357,16 @@ function Get-BuildKind($identity, $rust) {
   return "no native library: the 1.5 baseline or a -Pglass.rust=false build (NOT a Rust-enabled Glass 2.0 build)"
 }
 
+<# FrameLatencyProbe lines "GlassLatency: ui=<ui> key=22 ms=48.3 frame_ms=12.1" -> key->frame ms for that UI. #>
+function Get-LatencySamples([string]$log, [string]$ui) {
+  $out = @()
+  foreach ($m in [regex]::Matches($log, "ui=" + [regex]::Escape($ui) + " key=\d+ ms=(-?[\d.]+)")) {
+    $v = [double]::Parse($m.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+    if ($v -ge 0) { $out += $v }
+  }
+  return $out
+}
+
 <# Reasons a cold-start sample is rejected (empty = valid). #>
 function Get-ColdRejections($a) {
   $why = @()

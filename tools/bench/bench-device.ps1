@@ -35,12 +35,18 @@ param(
   [int]$BackgroundWaitSeconds = 15,
   [switch]$CompileSpeed,
   [switch]$Trace,
-  [string]$Serial = ""
+  [string]$Serial = "",
+  [string]$Activity = ".MainActivity",
+  [switch]$Latency
 )
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "bench-lib.ps1")
 $Pkg = "com.glasslauncher"
-$Act = "$Pkg/.MainActivity"
+$Act = "$Pkg/$Activity"
+# v5: the native UI prototype runs in its own process (manifest android:process=":native"); everything per-process uses $Proc
+$Ui = $(if ($Activity -eq ".NativeHomeActivity") { "native" } else { "webview" })
+$Proc = $(if ($Ui -eq "native") { "$($Pkg):native" } else { $Pkg })
+$Extra = $(if ($Latency) { " --ez glass.latency true" } else { "" })
 $warnings = New-Object System.Collections.ArrayList
 
 function Invoke-AdbCmd([string[]]$a) {
@@ -55,11 +61,12 @@ function Invoke-AdbCmd([string[]]$a) {
 function Invoke-AdbShell([string]$cmd) { return Invoke-AdbCmd @("shell", $cmd) }
 function Save([string]$name, [string]$text) { Add-Content -Path (Join-Path $out $name) -Value $text }
 function Warn([string]$m) { [void]$warnings.Add($m); Write-Warning $m }
-function GlassPid() { return (Invoke-AdbShell "pidof $Pkg").Trim() }
+function GlassPid() { return (Invoke-AdbShell "pidof $Proc").Trim() }
 # Callers must wrap in @(): PowerShell unrolls a returned one-element array (see Get-SumOrNull in bench-lib.ps1).
 function RendererPids() { return @(Get-RendererPids (Invoke-AdbShell "ps -A -o PID,ARGS")) }
 <# Glass's own WebView renderer(s): device-wide candidates filtered by dumpsys activity services attribution. #>
 function GlassRenderers([string]$appPid) {
+  if ($Ui -eq "native") { return @{ renderers = @(); attribution = "not applicable (native UI process has no WebView)"; error = $null } }
   $svc = Invoke-AdbShell "dumpsys activity services $Pkg"
   $sel = Select-GlassRenderers @(RendererPids) (Get-ServiceProcessPids $svc $appPid $Pkg)
   Save "renderers.txt" ("--- " + (Get-Date -Format "HH:mm:ss") + " app pid $appPid -> renderers [" + (($sel.renderers | ForEach-Object { $_.pid }) -join ",") + "] attribution=$($sel.attribution) error=$($sel.error)`n$svc")
@@ -178,6 +185,7 @@ $info = [ordered]@{
   frame_deadline_ms = $(if ($refresh) { [math]::Round(1000.0 / $refresh, 2) } else { $null })
   device_time = (Invoke-AdbShell "date").Trim()
   expected_theme = (Get-ExpectedTheme $hour)
+  ui = $Ui; activity = $Act; process = $Proc
   webview = ((Invoke-AdbShell "dumpsys webviewupdate") -split "`n" | Where-Object { $_ -match "Current WebView package" } | Select-Object -First 1)
 }
 if ($info.webview) { $info.webview = $info.webview.Trim() }
@@ -226,11 +234,11 @@ $info.build = $build
 $cold = @(); $coldRows = @(); $rustLog = ""
 # v5: one discarded launch first. The owner's first sample after a fresh run returned "LaunchState: UNKNOWN (-1)" with a
 # 442 s WaitTime (a stale wait result, not a launch time); it was rightly rejected, but it cost a third of a 3-run smoke test.
-Save "cold.txt" ("--- warm-up (discarded)`n" + (Invoke-AdbShell "am start -S -W -n $Act"))
+Save "cold.txt" ("--- warm-up (discarded)`n" + (Invoke-AdbShell "am start -S -W -n $Act$Extra"))
 Start-Sleep -Seconds 4
 for ($i = 1; $i -le $Runs; $i++) {
   Invoke-AdbCmd @("logcat", "-c") | Out-Null
-  $o = Invoke-AdbShell "am start -S -W -n $Act"
+  $o = Invoke-AdbShell "am start -S -W -n $Act$Extra"
   Start-Sleep -Seconds 4
   $lc = Invoke-AdbCmd @("logcat", "-d", "-s", "ActivityTaskManager:I", "ActivityManager:I", "GlassRust:I")
   $disp = Get-DisplayedMs $lc $Act
@@ -318,13 +326,16 @@ Write-Host "Measuring foreground idle CPU (3 x $([math]::Max(5, [int]($IdleSecon
 $cpuFg = CpuMeasure "foreground"
 
 # ---------- frames: D-pad sequence vs idle control ----------
-Invoke-AdbShell "dumpsys gfxinfo $Pkg reset" | Out-Null
+Invoke-AdbShell "dumpsys gfxinfo $Proc reset" | Out-Null
+if ($Latency) { Invoke-AdbCmd @("logcat", "-c") | Out-Null }
 $navSec = RunNav $NavRounds
-$gNav = Invoke-AdbShell "dumpsys gfxinfo $Pkg"; Save "gfxinfo-nav.txt" $gNav
-$fsNav = Invoke-AdbShell "dumpsys gfxinfo $Pkg framestats"; Save "framestats-nav.txt" $fsNav
-Invoke-AdbShell "dumpsys gfxinfo $Pkg reset" | Out-Null
+$gNav = Invoke-AdbShell "dumpsys gfxinfo $Proc"; Save "gfxinfo-nav.txt" $gNav
+$latLog = $(if ($Latency) { Invoke-AdbCmd @("logcat", "-d", "-s", "GlassLatency:I") } else { "" })
+if ($Latency) { Save "latency-nav.txt" $latLog }
+$fsNav = Invoke-AdbShell "dumpsys gfxinfo $Proc framestats"; Save "framestats-nav.txt" $fsNav
+Invoke-AdbShell "dumpsys gfxinfo $Proc reset" | Out-Null
 Start-Sleep -Milliseconds ([int]($navSec * 1000))
-$gIdle = Invoke-AdbShell "dumpsys gfxinfo $Pkg"; Save "gfxinfo-idle.txt" $gIdle
+$gIdle = Invoke-AdbShell "dumpsys gfxinfo $Proc"; Save "gfxinfo-idle.txt" $gIdle
 $period = $(if ($refresh) { 1000.0 / $refresh } else { 0 })
 $nav = ConvertFrom-Gfxinfo $gNav; $idle = ConvertFrom-Gfxinfo $gIdle
 $keys = $NavRounds * 8
@@ -334,6 +345,8 @@ $frames = [ordered]@{
   nav = $nav; nav_histogram = (Get-HistogramSummary $nav.histogram $period); nav_framestats_last_frames = (ConvertFrom-Framestats $fsNav)
   idle_control = $idle; idle_seconds = [math]::Round($navSec, 1)
   frames_per_key = $(if ($nav.frames) { [math]::Round(($nav.frames - [int]$idle.frames) / $keys, 1) } else { $null })
+  key_to_frame_ms = $(if ($Latency) { Get-Stats @(Get-LatencySamples $latLog $Ui) } else { $null })
+  key_to_frame_note = $(if ($Latency) { "FrameLatencyProbe: D-pad event time -> first frame started after dispatch, handed to the GPU (+~1 vsync to the screen). Native: the frame that draws the new focus. WebView: a LOWER BOUND (its renderer is asynchronous)." } else { "not measured (pass -Latency)" })
 }
 if ($nav.histogram) { $frames.nav.histogram = $null }   # summarised above; the raw histogram stays in gfxinfo-nav.txt
 if ($idle.histogram) { $frames.idle_control.histogram = $null }

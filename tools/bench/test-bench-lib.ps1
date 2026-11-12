@@ -334,5 +334,10 @@ $why = @(Get-ColdRejections (ConvertFrom-AmStart $first))
 CheckLike "real: stale first cold launch rejected with reason" ($why -join ";") "*LaunchState=UNKNOWN*"
 Check "real: valid cold launch accepted" (@(Get-ColdRejections (ConvertFrom-AmStart (($coldReal -split "--- run 2")[1]))).Length) 0
 
+$latLog = "11-12 I GlassLatency: probe on ui=native`n11-12 I GlassLatency: ui=native key=22 ms=41.5 frame_ms=9.0`n11-12 I GlassLatency: ui=native key=20 ms=58.25 frame_ms=11.2`n11-12 I GlassLatency: ui=webview key=22 ms=80.0 frame_ms=60.1"
+Check "latency native samples" ((Get-LatencySamples $latLog "native") -join ",") "41.5,58.25"
+Check "latency webview samples" ((Get-LatencySamples $latLog "webview") -join ",") "80"
+Check "latency none" (@(Get-LatencySamples "" "native").Length) 0
+
 Write-Host "bench-lib tests: $script:pass passed, $script:fail failed"
 if ($script:fail) { exit 1 }

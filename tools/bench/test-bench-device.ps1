@@ -28,16 +28,16 @@ $RENDERER = "com.google.android.webview:sandboxed_process0:org.chromium.content.
 
 function New-Sim([string]$name, [int]$stopAfter, [bool]$attrib, [bool]$extraRenderer) {
   return @{ name = $name; stopAfter = $stopAfter; attrib = $attrib; extraRenderer = $extraRenderer
-            glassPid = 3210; front = "glass"; glassState = "RESUMED"; polls = 0; logcat = ""; ticks = @{}; ytStarted = $false; coldCalls = 0 }
+            glassPid = 3210; front = "glass"; glassState = "RESUMED"; polls = 0; logcat = ""; ticks = @{}; ytStarted = $false; coldCalls = 0; act = ".MainActivity"; proc = $GLASS }
 }
 
 function Sim-Activities($s) {
   $glassHist = @"
-    * Hist #0: ActivityRecord{2222 u0 $GLASS/.MainActivity t5}
+    * Hist #0: ActivityRecord{2222 u0 $GLASS/$($s.act) t5}
         packageName=$GLASS processName=$GLASS
         launchedFromUid=0 launchedFromPackage=null launchedFromFeature=null userId=0
         app=ProcessRecord{9a1 $($s.glassPid):$GLASS/u0a98}
-        Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=$GLASS/.MainActivity }
+        Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=$GLASS/$($s.act) }
         haveState=$($s.glassState -eq 'STOPPED') icicle=null
         state=$($s.glassState) stopped=$($s.glassState -eq 'STOPPED') delayedResume=false finishing=false
         keysPaused=false inHistory=true setToSleep=false idle=true mStartingWindowState=STARTING_WINDOW_NOT_SHOWN
@@ -45,9 +45,9 @@ function Sim-Activities($s) {
         mVisibleRequested=$($s.front -eq 'glass') mVisible=$($s.front -eq 'glass') mClientVisible=$($s.front -eq 'glass')
 "@
   $glassTask = @"
-  * Task{c5e1 #5 visible=$($s.front -eq 'glass') type=home mode=fullscreen translucent=false I=$GLASS/.MainActivity U=0 StackId=5 sz=1}
+  * Task{c5e1 #5 visible=$($s.front -eq 'glass') type=home mode=fullscreen translucent=false I=$GLASS/$($s.act) U=0 StackId=5 sz=1}
     mBounds=Rect(0, 0 - 1920, 1080)
-    Activities=[ActivityRecord{2222 u0 $GLASS/.MainActivity t5}]
+    Activities=[ActivityRecord{2222 u0 $GLASS/$($s.act) t5}]
 $glassHist
 "@
   if ($s.front -eq "glass") {
@@ -55,9 +55,9 @@ $glassHist
 ACTIVITY MANAGER ACTIVITIES (dumpsys activity activities)
 Display #0 (activities from top to bottom):
 $glassTask
-    mResumedActivity: ActivityRecord{2222 u0 $GLASS/.MainActivity t5}
+    mResumedActivity: ActivityRecord{2222 u0 $GLASS/$($s.act) t5}
 
- ResumedActivity: ActivityRecord{2222 u0 $GLASS/.MainActivity t5}
+ ResumedActivity: ActivityRecord{2222 u0 $GLASS/$($s.act) t5}
 "@
   }
   return @"
@@ -66,7 +66,7 @@ Display #0 (activities from top to bottom):
   * Task{a8f2 #12 visible=true type=standard mode=fullscreen translucent=false A=10112:$YT U=0 StackId=12 sz=1}
     mBounds=Rect(0, 0 - 1920, 1080)
     mResumedActivity: ActivityRecord{1111 u0 $YTACT t12}
-    mLastPausedActivity: ActivityRecord{2222 u0 $GLASS/.MainActivity t5}
+    mLastPausedActivity: ActivityRecord{2222 u0 $GLASS/$($s.act) t5}
     Activities=[ActivityRecord{1111 u0 $YTACT t12}]
     * Hist #0: ActivityRecord{1111 u0 $YTACT t12}
         packageName=$YT processName=$YT
@@ -78,7 +78,7 @@ $glassTask
 }
 
 function Sim-Windows($s) {
-  if ($s.front -eq "glass") { return "  mCurrentFocus=Window{77 u0 $GLASS/$GLASS.MainActivity}`n  mFocusedApp=ActivityRecord{2222 u0 $GLASS/.MainActivity t5}" }
+  if ($s.front -eq "glass") { return "  mCurrentFocus=Window{77 u0 $GLASS/$GLASS$($s.act)}`n  mFocusedApp=ActivityRecord{2222 u0 $GLASS/$($s.act) t5}" }
   return "  mCurrentFocus=Window{88 u0 $YTACT}`n  mFocusedApp=ActivityRecord{1111 u0 $YTACT t12}"
 }
 
@@ -105,20 +105,20 @@ Uptime: 5032113 Realtime: 5032113
 function Sim-Shell([string]$c) {
   $s = $global:GlassBenchSim
   switch -regex ($c) {
-    "^pidof $GLASS$" { return "$($s.glassPid)" }
-    "^am start -S -W -n $GLASS/\.MainActivity$" {
+    "^pidof (.+)$" { if ($Matches[1] -eq $s.proc) { return "$($s.glassPid)" } else { return "" } }
+    "^am start -S -W -n $GLASS/$([regex]::Escape($s.act))(?: --ez glass\.latency true)?$" {
       $s.glassPid += 7; $s.front = "glass"; $s.glassState = "RESUMED"
       $s.coldCalls++
       # as on the VIP7802: the first force-stop launch of a run returned a stale wait result
-      if ($s.coldCalls -eq 1) { return "Stopping: $GLASS`nStarting: Intent { cmp=$GLASS/.MainActivity }`nStatus: ok`nLaunchState: UNKNOWN (-1)`nActivity: $GLASS/.MainActivity`nWaitTime: 442480`nComplete" }
-      $s.logcat = "I ActivityTaskManager: Displayed $GLASS/.MainActivity: +1s210ms"
-      return "Starting: Intent { cmp=$GLASS/.MainActivity }`nStatus: ok`nLaunchState: COLD`nActivity: $GLASS/.MainActivity`nTotalTime: $(1150 + $s.glassPid % 50)`nWaitTime: 1220`nComplete"
+      if ($s.coldCalls -eq 1) { return "Stopping: $GLASS`nStarting: Intent { cmp=$GLASS/$($s.act) }`nStatus: ok`nLaunchState: UNKNOWN (-1)`nActivity: $GLASS/$($s.act)`nWaitTime: 442480`nComplete" }
+      $s.logcat = "I ActivityTaskManager: Displayed $GLASS/$($s.act): +1s210ms"
+      return "Starting: Intent { cmp=$GLASS/$($s.act) }`nStatus: ok`nLaunchState: COLD`nActivity: $GLASS/$($s.act)`nTotalTime: $(1150 + $s.glassPid % 50)`nWaitTime: 1220`nComplete"
     }
-    "^am start -W -n $GLASS/\.MainActivity$" {
-      if ($s.front -eq "glass") { return "Starting: Intent { cmp=$GLASS/.MainActivity }`nWarning: Activity not started, intent has been delivered to currently running top-most instance.`nStatus: ok`nLaunchState: UNKNOWN (0)`nActivity: $GLASS/.MainActivity`nWaitTime: 3`nComplete" }
+    "^am start -W -n $GLASS/$([regex]::Escape($s.act))(?: --ez glass\.latency true)?$" {
+      if ($s.front -eq "glass") { return "Starting: Intent { cmp=$GLASS/$($s.act) }`nWarning: Activity not started, intent has been delivered to currently running top-most instance.`nStatus: ok`nLaunchState: UNKNOWN (0)`nActivity: $GLASS/$($s.act)`nWaitTime: 3`nComplete" }
       $s.front = "glass"; $s.glassState = "RESUMED"
-      $s.logcat = "I ActivityTaskManager: Displayed $GLASS/.MainActivity: +240ms"
-      return "Starting: Intent { cmp=$GLASS/.MainActivity }`nWarning: Activity not started, its current task has been brought to the front`nStatus: ok`nLaunchState: HOT`nActivity: $GLASS/.MainActivity`nTotalTime: $(230 + $s.polls % 20)`nWaitTime: 245`nComplete"
+      $s.logcat = "I ActivityTaskManager: Displayed $GLASS/$($s.act): +240ms"
+      return "Starting: Intent { cmp=$GLASS/$($s.act) }`nWarning: Activity not started, its current task has been brought to the front`nStatus: ok`nLaunchState: HOT`nActivity: $GLASS/$($s.act)`nTotalTime: $(230 + $s.polls % 20)`nWaitTime: 245`nComplete"
     }
     "^am start -W -n $([regex]::Escape($YTACT))$" {
       $s.front = "bg"; $s.glassState = "PAUSED"; $s.polls = 0
@@ -191,7 +191,7 @@ function Sim-Shell([string]$c) {
     "^pm path $YT$" { return "package:/data/app/~~x/$YT-1/base.apk" }
     "^pm path " { return "" }
     "^cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LEANBACK_LAUNCHER $YT$" { return "priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false`n$YTACT" }
-    "^dumpsys gfxinfo $GLASS$" { return "Total frames rendered: 240`nJanky frames: 12 (5.00%)`n50th percentile: 16ms`n90th percentile: 33ms`n95th percentile: 40ms`n99th percentile: 66ms" }
+    "^dumpsys gfxinfo (.+)$" { if ($Matches[1] -ne $s.proc) { return "No process found for: $($Matches[1])" } return "Total frames rendered: 240`nJanky frames: 12 (5.00%)`n50th percentile: 16ms`n90th percentile: 33ms`n95th percentile: 40ms`n99th percentile: 66ms" }
     default { return "" }
   }
 }
@@ -201,21 +201,24 @@ function adb {
   if ($a.Length -ge 2 -and $a[0] -eq "-s") { $a = $a[2..($a.Length - 1)] }
   switch ($a[0]) {
     "version" { return "Android Debug Bridge version 1.0.41 (simulated)" }
-    "logcat" { if ($a -contains "-d") { return $global:GlassBenchSim.logcat } else { $global:GlassBenchSim.logcat = ""; return "" } }
+    "logcat" {
+      if ($a -contains "GlassLatency:I") { return (1..8 | ForEach-Object { "11-12 I GlassLatency: ui=$(if ($global:GlassBenchSim.act -eq ".NativeHomeActivity") { "native" } else { "webview" }) key=22 ms=$(30 + $_).5 frame_ms=8.0" }) -join "`n" }
+      if ($a -contains "-d") { return $global:GlassBenchSim.logcat } else { $global:GlassBenchSim.logcat = ""; return "" }
+    }
     "shell" { return (Sim-Shell ($a[1..($a.Length - 1)] -join " ")) }
     default { return "" }
   }
 }
 function Start-Sleep { }
 
-function Invoke-Sim($sim, [int]$runs, [int]$waitSeconds) {
+function Invoke-Sim($sim, [int]$runs, [int]$waitSeconds, [hashtable]$more = @{}) {
   $global:GlassBenchSim = $sim
   $dir = Join-Path ([IO.Path]::GetTempPath()) ("glass-bench-sim-" + [guid]::NewGuid().ToString("N"))
   New-Item -ItemType Directory -Path $dir | Out-Null
   Push-Location $dir
   try {
     & (Join-Path $PSScriptRoot "bench-device.ps1") -Label $sim.name -Runs $runs -IdleSeconds 15 -NavRounds 1 -KeyIntervalMs 1 `
-      -BackgroundPackage $YT -BackgroundWaitSeconds $waitSeconds 3>$null 6>$null | Out-Null
+      -BackgroundPackage $YT -BackgroundWaitSeconds $waitSeconds @more 3>$null 6>$null | Out-Null
     $res = Get-ChildItem $dir -Directory | Select-Object -First 1
     return (Get-Content (Join-Path $res.FullName "summary.json") -Raw | ConvertFrom-Json)
   } finally { Pop-Location; Remove-Item -Recurse -Force $dir }
@@ -267,6 +270,22 @@ Check "amb cpu total not computed" ($null -eq $s.cpu_foreground_idle.total_pct) 
 $s = Invoke-Sim (New-Sim "single" 2 $false $false) 1 15
 Check "single renderer pss" $s.memory.renderer_pss_kb.median 63536
 CheckLike "single attribution flagged" $s.memory.renderer_attribution "single candidate*"
+
+# ---- native UI prototype: own process (com.glasslauncher:native), no WebView renderer, latency probe on ----
+$ns = New-Sim "native" 3 $true $true
+$ns.act = ".NativeHomeActivity"; $ns.proc = "com.glasslauncher:native"
+$s = Invoke-Sim $ns 2 15 @{ Activity = ".NativeHomeActivity"; Latency = $true }
+Check "native ui" $s.device.ui "native"
+Check "native process" $s.device.process "com.glasslauncher:native"
+Check "native cold n" $s.cold_start_ms.n 2
+Check "native warm n" $s.warm_start_ms.n 2
+Check "native app pss" $s.memory.app_pss_kb.median 53686
+Check "native renderer not applicable" $s.memory.renderer_attribution "not applicable (native UI process has no WebView)"
+Check "native renderer pss null" ($null -eq $s.memory.renderer_pss_kb) "True"
+Check "native total = app" $s.memory.total_pss_kb.median 53686
+Check "native frames" $s.frames.nav.frames 240
+Check "native latency n" $s.frames.key_to_frame_ms.n 8
+Check "native latency median" $s.frames.key_to_frame_ms.median 35
 
 Write-Host "bench-device simulation tests: $($script:pass) passed, $($script:fail) failed"
 if ($script:fail -gt 0) { exit 1 }
