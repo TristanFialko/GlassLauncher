@@ -7,7 +7,7 @@ yet: Glass still starts the WebView UI as HOME unless the owner opts in to nativ
 
 | Part | Where | Notes |
 |---|---|---|
-| Activity | `NativeHomeActivity` | Not HOME, not in the launcher list. Runs in its own process `com.glasslauncher:native`, so after a force-stop the WebView HOME the system restarts never shares its memory, CPU or frame counters. |
+| Activity | `NativeHomeActivity` | Not in the launcher list. HOME only when opted in through `MainActivity` (`UiRouter`, `--es glass.ui native`). adb-startable (`exported`) in debug builds only. Runs in its own process `com.glasslauncher:native`, so after a force-stop the WebView HOME the system restarts never shares its memory, CPU or frame counters. |
 | Drawing | `NativeHomeView` | One custom `View` draws the whole screen on Android's hardware-accelerated canvas: wallpaper (700 ms theme crossfade), clock/date, two glass docks, 9 artwork cards, focus animation, row collapse, header buttons, toast. |
 | Overlay | `NativeControlCentre` | Right-hand panel (800 px, 32 px inset, 52 px radius, 420 ms slide, scrim). Tiles: Wi-Fi, Bluetooth, Volume (Left/Right changes it, OK mutes), Appearance, Settings, About this box. |
 | Images | `NativeArt` | 800×480 PNGs decoded at 400×240 (`inSampleSize`), scaled and rounded once to 280×168. The wallpaper is pre-blurred once at 240×135 and drawn as the backdrop of glass panels, because `backdrop-filter`/`RenderEffect` blur is not available on API 30. Shadows are baked once. |

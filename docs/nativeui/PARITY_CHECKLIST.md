@@ -353,7 +353,7 @@ Only **successful** launches (bridge returned `true`) from Home cards, the Recen
 
 ## 5. Parity checklist
 
-Native status column (Home, Theme, Persistence rows): added with the Stage 1 Home work; "Implemented" means present in the native code (with the named unit test where there is one), never yet confirmed on the device.
+Native status column (Home, Theme, Control Centre, Search, Persistence rows): added with the Stage 1 Home work; "Implemented" means present in the native code (with the named unit test where there is one), never yet confirmed on the device.
 
 Legend: **P1** (●) = must be covered by the first native prototype slice (Home tiles/artwork, D-pad focus + animation, app launching, one overlay). Suggested overlay for P1: the Control Centre (static layout with exact spec above, spatial focus, all live state comes from existing Java classes; no on-screen keyboard or Rust search needed). Items marked `—` can follow later.
 
@@ -466,26 +466,26 @@ Legend: **P1** (●) = must be covered by the first native prototype slice (Home
 | C19 | native implemented (Tab / Shift+Tab with wrap); device check pending | `tabWraps` |
 
 ### Search
-| # | Check | P1 |
-|---|---|---|
-| Q1 | Search opens with an 1800 px panel at top 170 px (fade + rise + scale .965→1, 420 ms), backdrop dim, home stage at 50% | — |
-| Q2 | Field shows placeholder "Search apps and settings" and a blinking caret; keyboard focus on `a` | — |
-| Q3 | Empty query lists "Suggestions": Settings, Wi-Fi, Bluetooth, Volume, Play Store, Appearance | — |
-| Q4 | Typing updates the field instantly; results update ≈110 ms later; max 60 chars, 24 results | — |
-| Q5 | Keyboard layouts abc/num, one-shot Shift, Backspace, clear, space, 123/abc, search as in §2.5 | — |
-| Q6 | Up/Down on keyboard use nearest-x key in the new row; Left at row start with results goes to results | — |
-| Q7 | Search key with results moves focus to the first result; with none toasts "Type to search"/"Nothing matches that" | — |
-| Q8 | Results show icon, title, shortcut subtitle, right tag (App/Settings/Glass); focused row turns bright with scale 1.02 | — |
-| Q9 | Zero matches shows "No apps or settings match “…”" | — |
-| Q10 | OK on an app result launches it and Search stays open | — |
-| Q11 | OK on settings shortcuts opens the settings page; "Control Centre"/"Volume" close Search and open CC; "Appearance" toggles theme + toast | — |
-| Q12 | Back closes Search and returns focus to where it was (row card or header stop) | — |
-| Q13 | Hardware keyboard types directly; Backspace deletes; Enter within 2.5 s of typing jumps to results | — |
-| Q14 | Key sounds: alpha/space/enter/alt variants at volume .3; no extra click on key press | — |
-| Q15 | Ranking: exact > prefix > word prefix > substring > fuzzy (≥4 chars); apps before shortcuts on ties | — |
-| Q16 | Play Store answers to "play store", "store"; Settings shortcut hidden if a Settings app is installed | — |
-| Q17 | Glass itself never appears in results | — |
-| Q18 | Mouse: hover, click, wheel, backdrop click | — |
+| # | Check | P1 | Native status |
+|---|---|---|---|
+| Q1 | Search opens with an 1800 px panel at top 170 px (fade + rise + scale .965→1, 420 ms), backdrop dim, home stage at 50% | — | Implemented; emulator (`nativeSurfacesAndRouting`): opens, hardware typing changes results, Back closes; device check pending |
+| Q2 | Field shows placeholder "Search apps and settings" and a blinking caret; keyboard focus on `a` | — | Implemented (`SearchController`, `NativeSearchView`, `SearchKeyboard`; unit tests); device check pending |
+| Q3 | Empty query lists "Suggestions": Settings, Wi-Fi, Bluetooth, Volume, Play Store, Appearance | — | Implemented; emulator (`nativeSurfacesAndRouting`): opens, hardware typing changes results, Back closes; device check pending |
+| Q4 | Typing updates the field instantly; results update ≈110 ms later; max 60 chars, 24 results | — | Implemented; emulator (`nativeSurfacesAndRouting`): opens, hardware typing changes results, Back closes; device check pending |
+| Q5 | Keyboard layouts abc/num, one-shot Shift, Backspace, clear, space, 123/abc, search as in §2.5 | — | Implemented (`SearchController`, `NativeSearchView`, `SearchKeyboard`; unit tests); device check pending |
+| Q6 | Up/Down on keyboard use nearest-x key in the new row; Left at row start with results goes to results | — | Implemented (`SearchController`, `NativeSearchView`, `SearchKeyboard`; unit tests); device check pending |
+| Q7 | Search key with results moves focus to the first result; with none toasts "Type to search"/"Nothing matches that" | — | Implemented (`SearchController`, `NativeSearchView`, `SearchKeyboard`; unit tests); device check pending |
+| Q8 | Results show icon, title, shortcut subtitle, right tag (App/Settings/Glass); focused row turns bright with scale 1.02 | — | Implemented (`SearchController`, `NativeSearchView`, `SearchKeyboard`; unit tests); device check pending |
+| Q9 | Zero matches shows "No apps or settings match “…”" | — | Implemented (`SearchController`, `NativeSearchView`, `SearchKeyboard`; unit tests); device check pending |
+| Q10 | OK on an app result launches it and Search stays open | — | Implemented (`SearchController`, `NativeSearchView`, `SearchKeyboard`; unit tests); device check pending |
+| Q11 | OK on settings shortcuts opens the settings page; "Control Centre"/"Volume" close Search and open CC; "Appearance" toggles theme + toast | — | Implemented (`SearchController`, `NativeSearchView`, `SearchKeyboard`; unit tests); device check pending |
+| Q12 | Back closes Search and returns focus to where it was (row card or header stop) | — | Implemented; emulator (`nativeSurfacesAndRouting`): opens, hardware typing changes results, Back closes; device check pending |
+| Q13 | Hardware keyboard types directly; Backspace deletes; Enter within 2.5 s of typing jumps to results | — | Implemented; emulator (`nativeSurfacesAndRouting`): opens, hardware typing changes results, Back closes; device check pending |
+| Q14 | Key sounds: alpha/space/enter/alt variants at volume .3; no extra click on key press | — | Implemented (`SearchController`, `NativeSearchView`, `SearchKeyboard`; unit tests); device check pending |
+| Q15 | Ranking: exact > prefix > word prefix > substring > fuzzy (≥4 chars); apps before shortcuts on ties | — | Implemented; JVM parity: `SearchRankingParityTest`, `SearchCatalogFixtureTest` (Kotlin fallback == Rust, Rust == pre-migration `entries()`) |
+| Q16 | Play Store answers to "play store", "store"; Settings shortcut hidden if a Settings app is installed | — | Implemented; JVM parity: `SearchRankingParityTest`, `SearchCatalogFixtureTest` (Kotlin fallback == Rust, Rust == pre-migration `entries()`) |
+| Q17 | Glass itself never appears in results | — | Implemented; JVM parity: `SearchRankingParityTest`, `SearchCatalogFixtureTest` (Kotlin fallback == Rust, Rust == pre-migration `entries()`) |
+| Q18 | Mouse: hover, click, wheel, backdrop click | — | Not implemented: the box is D-pad only (see `SEARCH.md`) |
 
 ### Persistence, platform, robustness
 | # | Check | P1 | Native status |

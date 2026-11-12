@@ -1,142 +1,154 @@
 # Glass Launcher 2.0 — Migration status
 
 _Last updated: 2026-11-12 · branch `glasslauncher-2.0-migration` (PR #2, open, not merged) · baseline
-`glasslauncher-1.5-phase7-baseline` (`452320a`)_
+`glasslauncher-1.5-phase7-baseline` (`452320a`) · app version `2.0.0-dev` (versionCode 7)_
 
-## Handover (2026-11-12): what was actually done before this session
+## Summary (read this first)
 
-Verified from the code, tests and CI (run `43236935685`, head `df114e5`, 18 commits, 47 files), not from status text:
+- **The native UI is now code-complete for every surface the WebView UI has** (Home, Recently Used, header, Control
+  Centre, Search with on-screen keyboard, toasts, theme/wallpaper, empty/error states). It is Kotlin, drawn with custom
+  Views, in its own `:native` process. Status per item: `docs/nativeui/PARITY_CHECKLIST.md` §5.
+- **The WebView UI is still the HOME screen by default.** The native UI becomes HOME only when the owner opts in
+  (commands below), and it falls back to the WebView UI by itself after 2 crashes in 10 minutes.
+- **Nothing is verified on the VIP7802 yet.** Verified: JVM unit/parity tests and an Android TV 1080p **emulator** in CI
+  (software GPU). Emulator timings are never device evidence.
+- **WebView/HTML/CSS/JS are not removed yet**, on purpose: they are the fallback until the owner's device checklist and
+  A/B pass (Stage 4 in `docs/nativeui/MIGRATION_PLAN.md`). The removal inventory is ready (below).
 
-- **Rust:** `glass-core` held one subsystem — search `norm`/score/rank and the per-session index (`search.rs`). JS still
-  built every searchable entry (`entries()`), so the registry rules lived only in JavaScript. `glass-jni` (only `unsafe`
-  crate) and `glass-cli` (host harness) as described in `docs/architecture/TARGET_ARCHITECTURE.md`.
-- **Java (Android APIs, unchanged in scope):** package-wide launchable-app queries, WebView timers paused in background,
-  icons served through `shouldInterceptRequest`, Perfetto sections, `RustCore` loader with ABI/self-test and fallback.
-- **JS/HTML/CSS:** all UI, focus, animation and providers; JS ranking kept as fallback.
-- **Benchmark harness v3:** fixed the v2 parser bug, but an audit with simulated Android 11 output showed it would still
-  reject every warm sample and could count another app's WebView renderer (details: `docs/benchmarks/METHODOLOGY.md`,
-  rows 18–20). v3 was never run on the box; v4 replaces it.
-
-## This session
+## This session (2026-11-12, second half)
 
 | Commit | What |
 |---|---|
-| `c181134` | Harness v4 + simulated Android 11 device test; CI runs the harness tests in PowerShell 7 and Windows PowerShell 5.1 |
-| `e2ab394` | Parity fixtures captured from the pre-migration production `entries()` (8 cases) — before any behaviour change |
-| `018e627` | Search snapshot preparation moved into Rust (ADR 0005): production path, JS fallback, parity + JNI + emulator tests |
-| (docs) | This file, ADR 0005, architecture, methodology, results |
+| `29a521d` | Kotlin Android plugin 2.3.21 (Java/Kotlin target 17). Version `2.0.0-dev` / code 7, so 2.0 is no longer indistinguishable from 1.5 (the cause of the smoke-run mix-up) |
+| `f8a6fd6`, `5cba564` | `UiRouter`: opt-in native HOME through `MainActivity`, crash fallback, Back is a no-op when native is HOME. `NativeHomeActivity` is `exported` only in debug builds (release: reachable only through `MainActivity`) |
+| `3629971` | Native prototype ported from Java to Kotlin, no behaviour change; date/clock in `HomeClock` with tests |
+| `fc9e953` | Control Centre: every WebView tile, spatial focus, 2 s poll only while open and resumed, resume and volume-key sync, first-open location request |
+| `f09ecd7`, `6b50fa8`, `b07d3af` | Home: Recently Used (persisted), header stops, card-art fallbacks (overrides, Android icons, placeholders, initials), Tab/pointer, package-change refresh, focus restore |
+| `f0708b3`, `e3786af` | Search: catalog + Rust ranking (Kotlin fallback with parity tests), debounced off-thread engine, keyboard, results, wired into Home and the CC |
+| `3375ae1`, `0846876` | Edge fade (N14), dark-wallpaper fallback (T5); the fade's offscreen layer exists only while rows scroll |
+| `bc948bb` | `SettingsLauncher`, `FrameLatencyProbe`, `SystemControls` migrated to Kotlin |
+| `3bb357a` | Emulator test of Search, Control Centre, theme, toast and HOME routing |
+
+Verification for the head of this session: 114 JVM tests (incl. real-JNI Rust tests and Kotlin-vs-Rust ranking parity),
+Rust fmt/clippy/tests, search/snapshot/config parity, harness tests (132 parser + 46 simulated-device checks, PowerShell
+7 locally; 5.1 in CI), and the two TV-emulator UI tests. See the PR's checks for the CI run of the latest commit.
+
+## Language and process layout
+
+| Layer | Language | Files |
+|---|---|---|
+| Native UI (production candidate) | Kotlin | `app/src/main/kotlin/com/glasslauncher/*` — `NativeHomeActivity`, `NativeHomeView`, `NativeControlCentre`, `ControlCentreController/Logic`, `NativeSearchView`, `Search*`, `HomeLogic`, `HomeClock`, `NativeArt`, `NativeIcons`, `SvgIcons`, `UiRouter` |
+| Android platform glue | Kotlin | `SettingsLauncher`, `SystemControls`, `FrameLatencyProbe` |
+| Android platform glue | Java (kept) | `AppDiscovery` (shared by both UIs, icon serving for the WebView), `RustCore` (JNI symbol names/static loader; stable, tested) |
+| WebView UI (fallback, to be removed) | Java + JS/HTML/CSS | `MainActivity` (also the HOME router), `GlassBridge`, `assets/index.html`, `assets/js/*`, `assets/css/*`, `assets/apps.js` |
+| Core logic | Rust | `rust/glass-core` (search normalise/score/rank, snapshot preparation), `rust/glass-jni`, `rust/glass-cli` |
 
 ## Rust migration matrix
 
-| Subsystem | Source | Language now | Rust responsibility | Why / why not | Workload | Parity tests | Measured end-to-end impact |
-|---|---|---|---|---|---|---|---|
-| Search normalisation, scoring, ranking, index | `registry.js` `norm`/`fieldScore`/`score`/sort | **Rust** (JS fallback) | all of it | pure, per keystroke | every debounced keystroke, ~230 entries | `search-parity.js` 8,832 rankings; emulator 1,668 queries; Rust unit | emulator: −22…33 % per query via bridge |
-| Search snapshot preparation (registry rules) | `registry.js` `entries()`, built-in app provider, `supersededBy` | **Rust** (JS fallback) — new | show flag, Glass itself, hidden vendor prefixes, `available` result, `supersededBy`, ordering, index build; refs back to JS | pure rules over plain data; lazily creating entries removes ~230 objects/closures per session | once per Search session | `snapshot-parity.js` 8 fixture cases; `search-parity.js` through the snapshot path; `RustCoreJniTest` 2 new; emulator snapshot == `entries()` | host: ~249 → ~217 µs/session (JS side 125 → 79 µs); emulator through the bridge: 600 → 700 µs median, i.e. no measurable gain (timer resolution ~100 µs); **no device number** |
-| `available()` checks | `shortcuts.js` → `hasSettings` bridge | JS + Java | none | Android query (PackageManager) behind the bridge, cached | once per kind | — | — |
-| Provider callbacks, `run` closures | `registry.js`, `shortcuts.js` | JS | none | JS functions / launch side effects | — | — | — |
-| Configured-card resolution | `appdata.js` `G.apps.resolve` | JS | none (for now) | pure, but runs once at load over ~10 cards; a JNI hop would cost more than it saves | once per load | — | not worth porting |
-| App discovery | `AppDiscovery.java` | Java | none | PackageManager / Binder | boot + package changes | emulator identical-output test | emulator −76…79 % (Java change) |
-| Icons | `AppDiscovery.java`, `icons.js` | Java + JS | none | Bitmap/Drawable APIs | first view per app | emulator 13/13 | 13 icons JS block 55.1 → 0.7 ms (Java change) |
-| Recently Used, theme, sounds, toast, store | `recent.js`, `theme.js`, `glass.js` | JS | none | DOM, `localStorage`, audio; trivial logic | rare | — | — |
-| Home rows, Search UI, keyboard, Control Centre | `home.js`, `search.js`, `keyboard.js`, `controlcentre.js` | JS | none | DOM geometry, focus, animation (ADR 0001) | per key | — | rendering decision waits for device frame data |
-| Wi-Fi/Bluetooth/volume/settings | `SystemControls.java`, `SettingsLauncher.java` | Java | none | Android APIs | user actions | — | — |
+| Subsystem | Language now | Rust responsibility | Why / why not | Parity tests | Measured impact |
+|---|---|---|---|---|---|
+| Search normalisation, scoring, ranking, index | **Rust** (Kotlin fallback; JS fallback in the WebView UI) | all of it | pure, per keystroke | `search-parity.js` 8,832 rankings; emulator 1,668 queries; Rust unit; `SearchRankingParityTest` (Kotlin fallback == Rust) | emulator: −22…33 % per query via bridge |
+| Search snapshot preparation (registry rules) | **Rust** | show flag, Glass itself, hidden vendor prefixes, `available`, `supersededBy`, ordering, index | pure rules over plain data | `snapshot-parity.js` 8 cases; `SearchCatalogFixtureTest` (Kotlin catalog → Rust == pre-migration `entries()`) | no measurable end-to-end gain (host ~249 → ~217 µs); kept for one implementation of the rules |
+| Native Search catalog gathering | Kotlin | none | Android facts (installed apps, settings availability) | fixture test above | — |
+| Configured-card resolution | Kotlin (`NativeHomeConfig.resolve`) | none | ~10 cards once per load; a JNI hop costs more than it saves | `NativeHomeConfigTest` | not worth porting |
+| Control Centre texts/focus tables | Kotlin (`ControlCentreLogic`) | none | trivial, UI-coupled | `ControlCentreLogicTest` | — |
+| Recently Used, header/Tab rules | Kotlin (`HomeLogic`) | none | trivial | `HomeLogicTest` | — |
+| App discovery, icons, settings, Wi-Fi/BT/volume | Java/Kotlin | none | Android APIs | emulator tests | discovery −76…79 % (Java change) |
 
-The audit found no other pure computation with meaningful workload: everything else is Android API, DOM, or trivial.
+Audit result: no remaining pure, CPU-heavy logic justifies more Rust. The native UI removes the per-session JS→Rust
+bridge; Rust is called directly from Kotlin on a worker thread (`SearchEngine`). ABI: `armeabi-v7a` and `arm64-v8a`
+(`libglass.so` in every Rust-enabled APK; CI checks both are packaged). JNI errors return null and fall back; panics are
+caught at the JNI boundary (`glass-jni`).
 
-## Phases
-| Phase | Status |
-|---|---|
-| 0 Baseline & safety | Done |
-| 1 Audit | Static done; device metrics pending |
-| 2 Rust integration | Done; ABI 2 |
-| 3 Core logic | Search ranking + search snapshot preparation in Rust with exact parity; JS fallback retained |
-| 4 Bridge | 1 coarse call per Search session + 1 per query; icons bypass the bridge |
-| 5 Performance | Emulator/host gains below; device unmeasured |
-| 6 Rendering | Native home prototype built (`docs/nativeui/`), emulator-verified; **decision waits for the owner W/N A/B on the VIP7802** |
-| 7 Device validation | v4 smoke run on the box validated warm/renderer/background checks but measured a build without the native library; harness v5 fixes identity and the issues found |
-| 8 Release hardening | Not started; APK unsigned |
+## WebView / HTML / CSS / JS dependency inventory (for Stage 4 removal)
+
+| Item | Class | Removal |
+|---|---|---|
+| `MainActivity` WebView setup, `BACK_JS`, `glassResume`/`glassVolumeSync` calls | production runtime (fallback UI) | Stage 4; keep `MainActivity` as the HOME entry that hosts/forwards to the native UI |
+| `GlassBridge.java` (`@JavascriptInterface`) | production runtime | Stage 4 |
+| `AppDiscovery.iconResponse` (`WebResourceResponse`) | production runtime | Stage 4 (native uses `iconPng`) |
+| `assets/index.html`, `assets/js/*`, `assets/css/*`, `assets/apps.js` (18 APK entries) | production runtime | Stage 4; `apps.js` values already live in `assets/nativeui/home.json` (drift check in CI) |
+| JS ranking fallback in `registry.js` | production runtime | Stage 4 (Kotlin fallback replaces it) |
+| `app/src/main/assets_baseline`, `assets_phase1..3` | not packaged (not a source set) | historical reference; may be moved to `docs/` |
+| `tools/parity/*.js`, fixtures | dev tooling / CI | keep (they become fixture-only once `registry.js` is gone) |
+| `GlassEndToEndTest` (WebView↔bridge↔Rust) | test | remove with the WebView |
+| `FrameLatencyProbe` `ui=webview` label, harness `-Activity .MainActivity` | tooling | keep until the A/B is finished |
 
 ## Performance (emulator/host unless stated — not hardware claims)
+
 | Metric | Baseline | Current | Notes |
 |---|---:|---:|---|
-| Search per query (via bridge) | 184–325 µs | 123–254 µs | −22…33 %, emulator |
-| Search session preparation | ~249 µs / 600 µs | ~217 µs / 700 µs | host (excl. JNI) / emulator through the bridge: no measurable end-to-end gain |
+| Search per query (via bridge) | 184–325 µs | 123–254 µs | −22…33 %, emulator, WebView UI |
 | App discovery | 14.9–57.1 ms | 3.4–12.2 ms | −76…79 %, emulator |
-| 13 first-time icons, JS block | 55.1 ms | 0.7 ms | emulator |
+| 13 first-time icons, JS block | 55.1 ms | 0.7 ms | emulator, WebView UI |
 | Background polling / 10 s | 5 calls | 0 | emulator |
-| D-pad animation frames | p50 61 ms | p50 61 ms | ~15–16 fps both builds, v1 single run |
-| Cold/warm start, CPU, PSS | — | — | v1 invalid, v2 diagnostic only; awaiting v4 runs |
-| Debug APK | 2,617,976 B | 3,250,079 B | +0.63 MB native libs (`armeabi-v7a` + `arm64-v8a`), CI run `43243655890` |
+| Native D-pad key→frame | — | 43–104 ms (earlier prototype) | software GPU; says nothing about the box |
+| Cold/warm start, CPU, PSS, frame pacing on the VIP7802 | — | — | **no 2.0 device data yet** |
 
-## Preservation
-No HTML/CSS/images/sounds/layout, permissions, package ID, SDK settings or debloat scripts changed. The manifest only
-gains the explicit-start `NativeHomeActivity` (own process, no HOME/launcher filter). Search results, order, icons and
-actions are unchanged (parity above). Device feature checklist still pending.
+Native UI performance design (to be confirmed with device traces, not assumed): UI thread does keys and drawing only;
+config, image decoding/scaling, wallpaper blur, package queries, icons, sounds and search run on worker executors; no
+allocation in `onDraw`; artwork decoded once at display size; no live blur (pre-blurred wallpaper); the only
+`saveLayer`s are the 450 ms row scroll through the fade band and Search's dimming.
+
+## Owner smoke run (harness v4, earlier today): what it showed
+It did **not** measure Glass 2.0: `primaryCpuAbi=null` (no `libglass.so`), so it was the 1.5 baseline or a Rust-disabled
+build; both then reported `versionName 1.5`. None of its numbers are attributed to 2.0. It did validate the harness on
+the box (3/3 warm samples valid, renderer attribution, background CPU). Harness v5 adds build identity (signing digest,
+APK SHA-256, native-library presence), a discarded warm-up launch, per-sample rejection reasons, no fake percentiles for
+empty histograms, and exact-package renderer matching. Its tests pass locally under PowerShell 7 (132 + 46) and in CI
+under Windows PowerShell 5.1.
 
 ## Rollback
-Source: `git checkout glasslauncher-1.5-phase7-baseline`; APK: CI artifact `glasslauncher-baseline-1.5-debug-apk`.
-Partial: `PERF.core:'js'` in `apps.js` (all search in JS), `-Pglass.rust=false` (no native library), `PERF.icons:'bridge'`.
-Snapshot migration only: revert `018e627` (the ABI returns to 1 with it). Native prototype: it is never started unless
-launched explicitly; removing it is reverting `c011c97` and its follow-ups.
+- Native UI → WebView UI on the box: `adb shell am start -W --activity-clear-task -n com.glasslauncher/.MainActivity --es glass.ui webview` (also automatic after 2 native crashes in 10 min).
+- Source: `git checkout glasslauncher-1.5-phase7-baseline`; APK: CI artifact `glasslauncher-baseline-1.5-debug-apk`. 2.0 is versionCode 7 and 1.5 is 6, so going back needs `adb install -r -d` (debug APKs) or `adb uninstall com.glasslauncher` first (clears Glass's settings).
+- Partial: `-Pglass.rust=false` (no native library; search uses the Kotlin/JS fallbacks), `PERF.core:'js'` in `apps.js`.
 
-## Owner smoke run (harness v4, `bench-smoke-glass2-20261112-191851`): what it showed
+## What the owner needs to do next (when the TV is free, about 1.5 h)
 
-- **Harness:** v4 worked on the box. 3/3 warm samples were valid (YouTube in front, Glass `STOPPED` after ~1.3 s). The renderer (PID 13074) was attributed through `dumpsys activity services`, and background CPU was accepted.
-- **Build:** the run did **not** measure Glass 2.0. The package dump has `primaryCpuAbi=null`, meaning an APK with no native library, and every Rust-enabled 2.0 build ships `libglass.so`. That leaves the 1.5 baseline or a `-Pglass.rust=false` build. `versionName` is `1.5` in both builds, which hid this. None of the numbers can be attributed to 2.0.
-- **Observations** (one run, not claims):
-  - cold start 1,245 ms (2/3 valid); warm start 140 ms;
-  - PSS: app 54,362 KB, renderer 71,761 KB;
-  - D-pad frames: p50 61 ms (~16 fps), 96.65 % over budget;
-  - idle control: 0 frames over 35.25 s, which is correct for a static screen.
-- **Harness v5** (`a9306c9`) fixes what the run exposed:
-  - build identity: package, signing digest, APK SHA-256 and libglass presence, with a warning if the installed APK doesn't match `-Apk`;
-  - a discarded warm-up launch, plus a rejection reason on every cold row;
-  - no fake 4,950 ms percentiles for empty histograms; idle-window coverage recorded;
-  - renderer attribution limited to exactly `com.glasslauncher` (the real dump also listed `com.glasslauncher.utilityhub`).
+All commands are Windows CMD from the repository root. Download `glasslauncher-debug-apk` from the latest green CI run
+on `glasslauncher-2.0-migration` to `C:\glass\glass2\app-debug.apk`.
 
-  The box's real captures are now test fixtures: 132 parser and 46 simulated-device checks, in PowerShell 7 and Windows PowerShell 5.1.
+1. Install and confirm identity:
+   ```bat
+   git fetch origin && git checkout glasslauncher-2.0-migration && git pull
+   adb install -r C:\glass\glass2\app-debug.apk
+   adb shell dumpsys package com.glasslauncher | findstr /C:"versionName" /C:"primaryCpuAbi"
+   ```
+   Expect `versionName=2.0.0-dev` and `primaryCpuAbi=armeabi-v7a`. If not, stop and send the output.
+2. Look at the native UI without changing HOME (Back returns to the WebView home):
+   ```bat
+   adb shell am start -n com.glasslauncher/.NativeHomeActivity
+   ```
+   About 10 minutes with the remote, going through the checklist below. Note anything that looks or behaves differently from the WebView home.
+3. A/B benchmark, alternating, one sitting, hands off the remote during runs:
+   ```bat
+   tools\bench\bench-device.bat -Label web-1 -Apk C:\glass\glass2\app-debug.apk -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
+   tools\bench\bench-device.bat -Label native-1 -Activity .NativeHomeActivity -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
+   tools\bench\bench-device.bat -Label web-2 -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
+   tools\bench\bench-device.bat -Label native-2 -Activity .NativeHomeActivity -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
+   ```
+   Each run must print `Build under test: … has a native library (armeabi-v7a)`. If not, stop and send that folder.
+4. Only if 2 and 3 look fine: try the native UI as HOME, then reboot once to check recovery.
+   ```bat
+   adb shell am start -W -n com.glasslauncher/.MainActivity --es glass.ui native
+   adb reboot
+   ```
+   After the reboot the native UI should come up as the home screen; press Home from inside an app to check it returns. Switch back at any time with:
+   ```bat
+   adb shell am start -W --activity-clear-task -n com.glasslauncher/.MainActivity --es glass.ui webview
+   ```
+5. Send the four `bench-*` folders and your notes.
 
-## Native UI (Phase 6): status
-- `docs/nativeui/PARITY_CHECKLIST.md`: a screen-by-screen inventory and a testable parity checklist, from a source audit.
-- `docs/nativeui/PROTOTYPE.md`: the home-screen slice as a custom `View`. It covers artwork cards, D-pad focus with the CSS timings, row collapse, launching with the same resolution rules, a Control Centre overlay and theme. It is a separate activity in its own process; the WebView stays HOME.
-- `docs/nativeui/MIGRATION_PLAN.md`: stages with device-evidence gates. Nothing migrates until the owner's A/B passes Stage 0.
-- Verified so far, only on a CI emulator with the Android TV 1080p profile: it renders, focus moves, the Entertainment row scrolls, the Control Centre opens and closes, and every D-pad key produced a measured frame. Screenshots and logs are in the `native-ui-prototype` artifact. Emulator timings are not device numbers.
-
-## What the owner needs to do next (hardware, about 1 h)
-
-1. Download the `glasslauncher-debug-apk` artifact from the latest green CI run on `glasslauncher-2.0-migration`, to `C:\glass\glass2\app-debug.apk`.
-2. From the repository root, in Windows CMD:
-
-```bat
-git fetch origin
-git checkout glasslauncher-2.0-migration
-git pull
-adb install -r C:\glass\glass2\app-debug.apk
-```
-
-   If the install reports `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, run `adb uninstall com.glasslauncher` first (this clears Glass's saved settings), then install again.
-3. Look at the prototype with the remote (visual judgement, about 2 minutes); Back returns to Glass:
-
-```bat
-adb shell am start -n com.glasslauncher/.NativeHomeActivity
-```
-
-4. Run the WebView and native UIs alternately, in one sitting, without touching the remote during runs:
-
-```bat
-tools\bench\bench-device.bat -Label web-1 -Apk C:\glass\glass2\app-debug.apk -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
-tools\bench\bench-device.bat -Label native-1 -Activity .NativeHomeActivity -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
-tools\bench\bench-device.bat -Label web-2 -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
-tools\bench\bench-device.bat -Label native-2 -Activity .NativeHomeActivity -CompileSpeed -Latency -Runs 5 -IdleSeconds 30 -NavRounds 10 -BackgroundPackage com.google.android.youtube.tv
-```
-
-   Each run prints `Build under test: …` first. It must say `has a native library (armeabi-v7a)` for all four runs; if it doesn't, stop and send that folder.
-5. Send back the four `bench-*` folders.
-
-The 1.5-vs-2.0 WebView A/B is a separate comparison: it needs the baseline APK artifact and an uninstall before each switch. It has lower priority than the UI decision.
+### Remote checklist for step 2 (P1 first)
+- Home: clock/date ("Thursday 12 November" style, no comma), 9 cards, artwork crisp, focus scale/halo/shine, Left/Right/Down/Up incl. carrying the column between rows, row 2 collapses the clock.
+- Header: Up from row 0; Recently Used appears after launching an app and relaunches it; Search; Control Centre.
+- Launch an app from a card, press Home/Back to return: same card still focused, Recently Used updated.
+- Control Centre: every tile, Left/Right on Volume, OK mutes, remote volume keys move the slider, Wi-Fi name shown (first open asks for location permission once), Appearance toggles theme, Settings/Sound/Display open and Back returns with fresh values.
+- Search: on-screen keyboard (abc/123, Shift, Backspace, clear, space), results with icons, OK launches/opens, "Volume" opens the CC on the volume row, Back restores focus.
+- Leave it 10 minutes, then sleep/wake the box: clock correct, no stuck animation, no crash.
+- Open/close the Control Centre and Search 20 times quickly: no stutter build-up or stuck dimming.
 
 ## Next engineering actions
-1. Analyse the WebView/native A/B against the Stage 0 gate in `docs/nativeui/MIGRATION_PLAN.md`.
-2. If the gate passes, start Stage 1 (complete the native Home). If it fails, profile the WebView focus animation with `-Trace`, starting with the docks' backdrop blur, before considering a port.
-3. Remote-control parity checklist on the box (P1 items in `PARITY_CHECKLIST.md`) for the prototype.
-
+1. Analyse the A/B against the Stage 0 gate in `docs/nativeui/MIGRATION_PLAN.md`; profile with `-Trace` before optimising anything.
+2. Fix whatever the owner's checklist finds; re-run the emulator tests.
+3. After the device gate and one release with native as HOME without regressions: Stage 4 removal per the inventory above, then promote `NativeHomeActivity` to the HOME entry directly.
