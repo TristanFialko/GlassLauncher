@@ -7,7 +7,8 @@
 //!   value (`-1` / `null`), never an unwind into the JVM.
 //! * No native thread is ever created and no Java callback is made, so no lock
 //!   is held across a call into Android.
-//! * State is one process-wide search index behind a `Mutex`; replacing it is
+//! * State is one process-wide search index behind a `Mutex` (set by
+//!   `nativeSetSearchIndex` or `nativePrepareSearch`); replacing it is
 //!   idempotent, so activity recreation needs no native cleanup.
 
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -15,6 +16,7 @@ use std::ptr;
 use std::sync::Mutex;
 
 use glass_core::search::SearchIndex;
+use glass_core::snapshot::prepare;
 use jni_sys::{jbyte, jbyteArray, jclass, jint, jsize, JNIEnv};
 
 static INDEX: Mutex<Option<SearchIndex>> = Mutex::new(None);
@@ -160,5 +162,39 @@ pub unsafe extern "system" fn Java_com_glasslauncher_RustCore_nativeSearch(
         }
         // SAFETY: env is supplied by the JVM for this thread; the lock is released.
         unsafe { new_bytes(env, out.as_bytes()) }
+    })
+}
+
+/// `static native byte[] nativePrepareSearch(byte[] snapshotUtf8)` → refs of
+/// the kept entries (comma-separated snapshot record numbers, UTF-8), or null
+/// if the snapshot is malformed/unsupported (JavaScript then stays on its own
+/// path). On success the prepared index replaces the current one.
+/// # Safety
+/// Called only by the JVM with a valid `JNIEnv` for the current thread.
+#[no_mangle]
+pub unsafe extern "system" fn Java_com_glasslauncher_RustCore_nativePrepareSearch(
+    env: *mut JNIEnv,
+    _class: jclass,
+    snapshot: jbyteArray,
+) -> jbyteArray {
+    guard(ptr::null_mut(), || {
+        // SAFETY: env/snapshot come straight from the JVM for this call.
+        let Some(bytes) = (unsafe { read_bytes(env, snapshot) }) else {
+            return ptr::null_mut();
+        };
+        let Ok(text) = String::from_utf8(bytes) else {
+            return ptr::null_mut();
+        };
+        // Prepared outside the lock; only the swap happens while holding it.
+        let Ok(prepared) = prepare(&text) else {
+            return ptr::null_mut();
+        };
+        let refs = prepared.refs_wire();
+        {
+            let mut slot = INDEX.lock().unwrap_or_else(|p| p.into_inner());
+            *slot = Some(prepared.index);
+        }
+        // SAFETY: env is supplied by the JVM for this thread; the lock is released.
+        unsafe { new_bytes(env, refs.as_bytes()) }
     })
 }

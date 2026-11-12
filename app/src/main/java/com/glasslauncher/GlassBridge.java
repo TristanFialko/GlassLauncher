@@ -50,6 +50,10 @@ public class GlassBridge {
         Trace.beginSection("Glass:coreSearchIndex");
         try { return RustCore.setSearchIndex(wire); } finally { Trace.endSection(); }
     }
+    @JavascriptInterface public String coreSearchSnapshot(String snapshot) {
+        Trace.beginSection("Glass:coreSearchSnapshot");
+        try { return RustCore.prepareSearch(snapshot); } finally { Trace.endSection(); }
+    }
     @JavascriptInterface public String coreSearch(String query, int max) {
         Trace.beginSection("Glass:coreSearch");
         try { return RustCore.search(query, max); } finally { Trace.endSection(); }

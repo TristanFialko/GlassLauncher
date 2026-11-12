@@ -14,5 +14,8 @@ public class RustCoreInstrumentedTest {
         assertTrue("status: " + RustCore.status(), RustCore.isAvailable());
         assertEquals(2, RustCore.setSearchIndex("app\u001fYouTube\u001eshortcut\u001fWi-Fi\u001fwifi"));
         assertEquals("1", RustCore.search("wifi", 24));
+        assertEquals("0,2", RustCore.prepareSearch("glass-snapshot\u001f1\u001ei\u001fcom.google.android.youtube.tv\u001fYouTube\u001f1"
+                + "\u001ei\u001fcom.samsung.x\u001fHidden\u001f1\u001ee\u001fshortcut\u001f1\u001f\u001fWi-Fi\u001fwifi"));
+        assertEquals("1", RustCore.search("wifi", 24));
     }
 }

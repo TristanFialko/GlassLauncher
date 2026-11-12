@@ -60,4 +60,33 @@ public class RustCoreJniTest {
         assertEquals(5000, RustCore.setSearchIndex(sb.toString()));
         assertEquals(24, RustCore.search("app", 0).split(",").length);
     }
+
+    private static final String SNAP = "glass-snapshot" + F + "1";
+
+    @Test public void prepareSearchAppliesRegistryRulesAndReplacesTheIndex() {
+        String snap = SNAP
+                + R + "i" + F + "com.google.android.youtube.tv" + F + "YouTube" + F + "1" + F + "yt"   // 0 kept
+                + R + "i" + F + "com.samsung.tvplus" + F + "Samsung TV Plus" + F + "1"            // 1 hidden vendor
+                + R + "i" + F + "com.glasslauncher" + F + "Glass" + F + "1"                       // 2 Glass itself
+                + R + "i" + F + "com.android.tv.settings" + F + "Settings" + F + "0"              // 3 show:false
+                + R + "e" + F + "shortcut" + F + "1" + F + "com.android.settings\u001dcom.android.tv.settings" + F + "Settings"  // 4 superseded
+                + R + "e" + F + "shortcut" + F + "1" + F + "" + F + "Wi-Fi" + F + "wifi"          // 5 kept
+                + R + "e" + F + "shortcut" + F + "0" + F + "" + F + "Storage";                     // 6 unavailable
+        assertEquals("0,5", RustCore.prepareSearch(snap));
+        assertEquals("0", RustCore.search("yt", 24));       // index positions follow the refs
+        assertEquals("1", RustCore.search("wifi", 24));
+        assertEquals("", RustCore.search("samsung", 24));
+    }
+
+    @Test public void prepareSearchRejectsBadSnapshotsWithoutTouchingTheIndex() {
+        assertEquals(2, RustCore.setSearchIndex("app" + F + "YouTube" + R + "app" + F + "Netflix"));
+        assertNull(RustCore.prepareSearch(null));
+        assertNull(RustCore.prepareSearch(""));
+        assertNull(RustCore.prepareSearch("glass-snapshot" + F + "9"));
+        assertNull(RustCore.prepareSearch(SNAP + R + "i" + F + "only.id"));
+        assertNull(RustCore.prepareSearch(SNAP + R + "e" + F + "?" + F + "1" + F + "" + F + "Unknown kind"));
+        assertEquals("1", RustCore.search("netflix", 24));
+        assertEquals("", RustCore.prepareSearch(SNAP));
+        assertEquals("", RustCore.search("netflix", 24));
+    }
 }

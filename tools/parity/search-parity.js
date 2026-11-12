@@ -81,17 +81,20 @@ function main() {
 
   // 2. ranking parity through the real adapter
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'glass-parity-'));
-  const wireFile = path.join(tmp, 'index.wire');
+  const wireFile = path.join(tmp, 'index.snapshot');
   let answers = null, indexCalls = 0, searchCalls = 0;
   const bridge = {
-    coreSearchIndex(w) {
+    /* production path since the snapshot migration: registry.js snapshot -> Rust prepare -> Rust query */
+    coreSearchSnapshot(w) {
       indexCalls++; fs.writeFileSync(wireFile, w, 'utf8');
+      const refs = execFileSync(CLI, ['prepare', wireFile]).toString().replace(/\n$/, '');
+      if (refs.startsWith('ERR')) return null;
       answers = {};
       for (const max of [24, 5]) {
-        const out = cli(['query', wireFile, String(max)], qs.map(hex));
+        const out = cli(['squery', wireFile, String(max)], qs.map(hex));
         qs.forEach((q, i) => { answers[max + '|' + q] = out[i]; });
       }
-      return w ? w.split('\u001e').length : 0;
+      return refs;
     },
     coreSearch(q, max) { searchCalls++; const r = answers[max + '|' + q]; return r === undefined ? null : r; },
     hasSettings(k) { return !unavailable.includes(k); },
@@ -128,15 +131,23 @@ function bench(ref, qs, wireFile, fast) {
   }
   samples.sort((a, b) => a - b);
   const p = (f) => samples[Math.round((samples.length - 1) * f)];
-  const t0 = process.hrtime.bigint();
-  for (let i = 0; i < 200; i++) ref.registry.wire(ref.registry.entries());
-  const wireUs = Number(process.hrtime.bigint() - t0) / 1e3 / 200;
+  const time = (fn, n) => { for (let i = 0; i < 20; i++) fn(); const t = process.hrtime.bigint(); for (let i = 0; i < n; i++) fn(); return Number(process.hrtime.bigint() - t) / 1e3 / n; };
+  // Search-session preparation, JavaScript side. Before: entries() (filter + supersede scans + entry objects) + wire().
+  // After: snapshotWire() (facts only; Rust applies the rules). The Rust side is bench-prepare below; JNI copy not included.
+  const wireUs = time(() => ref.registry.wire(ref.registry.entries()), 200);
+  const snapUs = time(() => ref.registry.snapshotWire(), 200);
+  const oldWire = path.join(path.dirname(wireFile), 'index.wire');
+  fs.writeFileSync(oldWire, ref.registry.wire(ref.registry.entries()), 'utf8');
+  fs.writeFileSync(wireFile, ref.registry.snapshotWire(), 'utf8');
   const qFile = wireFile + '.queries';
   fs.writeFileSync(qFile, qs.map(hex).join('\n'));
-  const rust = JSON.parse(execFileSync(CLI, ['bench', wireFile, qFile, String(rounds)]).toString());
+  const rust = JSON.parse(execFileSync(CLI, ['bench', oldWire, qFile, String(rounds)]).toString());
+  const prep = JSON.parse(execFileSync(CLI, ['bench-prepare', wireFile, '200']).toString());
   console.log(JSON.stringify({ impl: 'js-original (node ' + process.version + ')', entries: ref.registry.entries().length, queries: qs.length, rounds,
-    per_query_us_median: +p(0.5).toFixed(3), per_query_us_p95: +p(0.95).toFixed(3), wire_serialise_us: +wireUs.toFixed(2) }));
+    per_query_us_median: +p(0.5).toFixed(3), per_query_us_p95: +p(0.95).toFixed(3),
+    session_prep_before_js_entries_plus_wire_us: +wireUs.toFixed(2), session_prep_after_js_snapshot_us: +snapUs.toFixed(2) }));
   console.log(JSON.stringify(rust));
+  console.log(JSON.stringify(prep));
 }
 
 main();

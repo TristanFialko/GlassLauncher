@@ -25,37 +25,89 @@ function score(e,q,qc){
 }
 var providers=[], shortcuts=[], settingsOk={};
 
-/* Glass 2.0: the same ranking computed by the Rust core (libglass, AndroidBridge.core*). The index is normalised once per
-   Search session instead of re-normalising every entry on every keystroke. Any problem (no native library, PERF.core:'js',
-   an unexpected entry kind, a bridge error) drops back to the JavaScript path below, which is unchanged. */
-var core={on:null,ents:null,sent:null}, STRIP=/[\u001e\u001f]/g;
+/* Glass 2.0: Search sessions are prepared and ranked by the Rust core (libglass, AndroidBridge.core*). Once per Search
+   session JavaScript gathers live facts only - the installed list as Android reported it, alias lists, every other
+   provider/shortcut entry with its available() answer - into one compact snapshot; Rust applies the entries() rules
+   (visibility, hidden vendors, Glass itself, supersededBy), orders and normalises the entries and builds the index
+   (rust/glass-core/src/snapshot.rs). Entry objects are created only for results actually shown. Any problem (no native
+   library, PERF.core:'js', data outside what the Rust port covers, a bridge error) drops back to the JavaScript path
+   below, which is unchanged. */
+var core={on:null,ents:null,sent:null,refs:null,src:null,isApp:null,made:null}, STRIP=/[\u001c-\u001f]/g, CTL=/[\u001c-\u001f]/;
 /* a lone UTF-16 surrogate has no UTF-8 form, so such (practically impossible) text stays on the JavaScript path */
 var LONE=/[\ud800-\udbff](?![\udc00-\udfff])|(^|[^\ud800-\udbff])[\udc00-\udfff]/;
-function clean(s){ return String(s||'').replace(STRIP,''); }   // separators are removed by norm() anyway, so ranking is unaffected
+function clean(s){ s=String(s||''); return CTL.test(s)?s.replace(STRIP,''):s; }   // separators are removed by norm() anyway, so ranking is unaffected
 function wire(list){
   return list.map(function(e){ return [e.kind==='app'?'app':'shortcut',clean(e.title)].concat((e.keywords||[]).map(clean)).join('\u001f'); }).join('\u001e');
 }
+var appProvider=null;
+function appEntry(x){
+  return {id:'app:'+x.id,kind:'app',title:x.name,subtitle:x.id,pkg:x.id,tag:'App',
+    keywords:G.cfg.aliases[x.id]||[],
+    run:function(){ G.launch({name:x.name,id:x.id}); }};
+}
+/* snapshot.rs wire format, built by string concatenation (cheapest in V8); false when outside what the Rust port covers */
+function listed(e,acc){
+  if(!e) return false;
+  var av=!(e.available&&!e.available()), sup=e.supersededBy, kw=e.keywords||[], s='', k, n=0;
+  if((sup&&!Array.isArray(sup))||!Array.isArray(kw)) return false;
+  if(sup) for(k=0;k<sup.length;k++) if(typeof sup[k]==='string'&&!CTL.test(sup[k])) s+=(n++?'\u001d':'')+sup[k];
+  s='\u001ee\u001f'+(e.kind==='app'?'app':e.kind==='shortcut'?'shortcut':'?')+'\u001f'+(av?'1':'0')+'\u001f'+s+'\u001f'+clean(e.title);
+  for(k=0;k<kw.length;k++) s+='\u001f'+clean(kw[k]);
+  acc.w+=s; acc.src.push(e); acc.isApp.push(false);
+  return true;
+}
+function snapshot(){
+  var acc={w:'glass-snapshot\u001f1',src:[],isApp:[]}, inst=G.apps.installed, aliases=G.cfg.aliases, i, j, k, list, x, al, s;
+  for(i=0;i<providers.length;i++){
+    if(providers[i]===appProvider){
+      for(j=0;j<inst.length;j++){
+        x=inst[j];
+        if(!x||typeof x.id!=='string'||CTL.test(x.id)) return null;
+        al=aliases[x.id]||[]; if(!Array.isArray(al)) return null;
+        s='\u001ei\u001f'+x.id+'\u001f'+clean(x.name)+(x.show===false?'\u001f0':'\u001f1');
+        for(k=0;k<al.length;k++) s+='\u001f'+clean(al[k]);
+        acc.w+=s; acc.src.push(x); acc.isApp.push(true);
+      }
+      continue;
+    }
+    try{ list=providers[i].entries()||[]; }catch(e){ continue; }   // as in entries(): a failing provider contributes nothing
+    if(!Array.isArray(list)) return null;
+    for(j=0;j<list.length;j++) if(!listed(list[j],acc)) return null;
+  }
+  for(i=0;i<shortcuts.length;i++) if(!listed(shortcuts[i],acc)) return null;
+  return {wire:acc.w,src:acc.src,isApp:acc.isApp};
+}
 function coreOn(){
-  if(core.on===null) core.on=!(window.PERF&&window.PERF.core==='js')&&G.bridge.available('coreSearch')&&G.bridge.available('coreSearchIndex');
+  if(core.on===null) core.on=!(window.PERF&&window.PERF.core==='js')&&G.bridge.available('coreSearch')&&G.bridge.available('coreSearchSnapshot');
   return core.on;
+}
+/* prepares the Rust index for this Search session; false keeps the session on the JavaScript path */
+function prepare(){
+  var s=snapshot(), i;
+  if(!s||LONE.test(s.wire)) return false;
+  if(s.wire!==core.sent){
+    var r=AndroidBridge.coreSearchSnapshot(s.wire);
+    if(typeof r!=='string') return false;               // malformed or unsupported snapshot (e.g. an unknown entry kind)
+    core.sent=s.wire; core.refs=r?r.split(',').map(Number):[];
+  }
+  for(i=0;i<core.refs.length;i++) if(!(core.refs[i]>=0&&core.refs[i]<s.src.length)) return false;
+  core.src=s.src; core.isApp=s.isApp; core.made={}; core.ents=core.refs;
+  return true;
+}
+function entryAt(n){
+  var r=core.ents[n];
+  if(!core.made.hasOwnProperty(r)) core.made[r]=core.isApp[r]?appEntry(core.src[r]):core.src[r];
+  return core.made[r];
 }
 function coreQuery(text,max){
   if(!coreOn()||!(max===undefined||max>0)||LONE.test(String(text))) return null;
   try{
-    if(core.ents===null){
-      var ents=G.registry.entries(), i;
-      /* registry.js orders unknown kinds with an asymmetric comparator; only app/shortcut are ported exactly */
-      for(i=0;i<ents.length;i++) if(ents[i].kind!=='app'&&ents[i].kind!=='shortcut'){ core.ents=false; return null; }
-      var w=wire(ents);
-      if(LONE.test(w)){ core.ents=false; return null; }
-      if(w!==core.sent){ if(AndroidBridge.coreSearchIndex(w)!==ents.length){ core.on=false; return null; } core.sent=w; }
-      core.ents=ents;
-    }
+    if(core.ents===null&&!prepare()){ core.ents=false; return null; }
     if(!core.ents) return null;
     var r=AndroidBridge.coreSearch(String(text),max||24);
     if(typeof r!=='string'){ core.on=false; return null; }
     if(!r) return [];
-    return r.split(',').map(function(i){ return core.ents[+i]; });
+    return r.split(',').map(function(i){ return entryAt(+i); });
   }catch(e){ core.on=false; return null; }
 }
 
@@ -96,16 +148,23 @@ G.registry={
     });
     return res.slice(0,max||24).map(function(r){return r.e;});
   },
+  /* the snapshot text sent to Rust for this session, or null if it would stay on JavaScript (tests and benchmarks) */
+  snapshotWire:function(){ var s=snapshot(); return s&&s.wire; },
+  /* every entry of a freshly prepared Rust snapshot, in order (null when the session would use JavaScript); for parity checks */
+  snapshotEntries:function(){
+    core.ents=null;
+    try{ if(!coreOn()||!prepare()){ core.ents=null; return null; } }catch(e){ core.ents=null; return null; }
+    var out=[], i; for(i=0;i<core.ents.length;i++) out.push(entryAt(i));
+    return out;
+  },
   /* true while the current Search session is being ranked by the Rust core */
   coreActive:function(){ return core.on===true&&!!core.ents; }
 };
 
-/* provider 1: installed applications (live from Android) */
-G.registry.register({entries:function(){
-  return G.apps.installed.filter(function(x){ return x.show!==false&&x.id!=='com.glasslauncher'&&!G.apps.HIDDEN.test(x.id); }).map(function(x){
-    return {id:'app:'+x.id,kind:'app',title:x.name,subtitle:x.id,pkg:x.id,tag:'App',
-      keywords:G.cfg.aliases[x.id]||[],
-      run:function(){ G.launch({name:x.name,id:x.id}); }};
-  });
-}});
+/* provider 1: installed applications (live from Android). Its rules are ported to Rust (snapshot.rs); this function
+   remains the JavaScript fallback and the parity reference. */
+appProvider={entries:function(){
+  return G.apps.installed.filter(function(x){ return x.show!==false&&x.id!=='com.glasslauncher'&&!G.apps.HIDDEN.test(x.id); }).map(appEntry);
+}};
+G.registry.register(appProvider);
 })();

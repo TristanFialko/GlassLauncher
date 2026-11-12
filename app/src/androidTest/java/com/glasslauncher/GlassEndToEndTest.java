@@ -49,7 +49,8 @@ public class GlassEndToEndTest {
         throw new AssertionError("Glass UI did not boot");
     }
 
-    /** Search through the real WebView -> AndroidBridge -> JNI -> Rust path must rank exactly like registry.js. */
+    /** Search through the real WebView -> AndroidBridge -> JNI -> Rust path (snapshot preparation + ranking) must list and rank
+     *  exactly like registry.js. */
     @Test public void searchParityThroughWebViewBridge() throws Exception {
         try (ActivityScenario<MainActivity> sc = ActivityScenario.launch(MainActivity.class)) {
             waitForGlass(sc);
@@ -60,17 +61,24 @@ public class GlassEndToEndTest {
                 + "fake.push({id:'bench:'+i,kind:'app',title:t.join(' ')+(i%3?'':' '+i),keywords:[],run:function(){}});}"
                 + "G.registry.register({entries:function(){return fake;}});G.registry.invalidate();"
                 + "var ents=G.registry.entries(),qs=[];ents.forEach(function(e){var s=String(e.title||'');for(var n=1;n<=Math.min(8,s.length);n++)qs.push(s.slice(0,n));});"
+                + "var sid=function(e){return e.id;},se=G.registry.snapshotEntries(),snapshotMatches=!!se&&se.map(sid).join(',')===ents.map(sid).join(',');"
                 + "var mism=0,first=null;qs.forEach(function(q){var a=G.registry.query(q,24).map(function(e){return e.id;}).join(','),"
                 + "b=G.registry.queryJs(q,24).map(function(e){return e.id;}).join(',');if(a!==b){mism++;if(!first)first=[q,a,b];}});"
                 + "var active=G.registry.coreActive();"
                 + "function time(fn){var s=[];for(var r=0;r<9;r++){var t=performance.now();for(var j=0;j<qs.length;j++)fn(qs[j],24);s.push((performance.now()-t)*1000/qs.length);}"
                 + "s.sort(function(a,b){return a-b;});return {median:+s[4].toFixed(1),max:+s[8].toFixed(1)};}"
                 + "var tj=time(G.registry.queryJs),tr=time(G.registry.query);"
-                + "return JSON.stringify({entries:ents.length,queries:qs.length,mismatches:mism,first:first,coreActive:active,"
-                + "core:JSON.parse(AndroidBridge.coreInfo()),jsUsPerQuery:tj,rustViaBridgeUsPerQuery:tr});})()");
+                // session preparation through the bridge, uncached: before = entries()+wire()+index; after = snapshot+prepare (last, so
+                // the native index ends up holding the current snapshot again)
+                + "function once(fn){var s=[];for(var r=0;r<9;r++){var t=performance.now();fn();s.push((performance.now()-t)*1000);}s.sort(function(a,b){return a-b;});return {median:+s[4].toFixed(0),max:+s[8].toFixed(0)};}"
+                + "var pb=once(function(){AndroidBridge.coreSearchIndex(G.registry.wire(G.registry.entries()));}),"
+                + "pa=once(function(){AndroidBridge.coreSearchSnapshot(G.registry.snapshotWire());});"
+                + "return JSON.stringify({entries:ents.length,snapshotMatches:snapshotMatches,queries:qs.length,mismatches:mism,first:first,coreActive:active,"
+                + "core:JSON.parse(AndroidBridge.coreInfo()),jsUsPerQuery:tj,rustViaBridgeUsPerQuery:tr,sessionPrepUsBefore:pb,sessionPrepUsAfter:pa});})()");
             Log.i(TAG, "search " + r);
             JSONObject o = new JSONObject(r);
             assertTrue("Rust core inactive: " + r, o.getBoolean("coreActive"));
+            assertTrue("Rust snapshot entries differ from registry.js entries(): " + r, o.getBoolean("snapshotMatches"));
             assertEquals("ranking differs: " + o.opt("first"), 0, o.getInt("mismatches"));
             assertTrue(o.getInt("queries") > 500);
         }

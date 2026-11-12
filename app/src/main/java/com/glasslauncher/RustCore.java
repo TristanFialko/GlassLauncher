@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
  */
 final class RustCore {
     /** Must equal glass_core::ABI_VERSION; a mismatch disables the native path. */
-    static final int EXPECTED_ABI = 1;
+    static final int EXPECTED_ABI = 2;
     private static final String TAG = "GlassRust";
 
     private static volatile boolean available;
@@ -52,6 +52,16 @@ final class RustCore {
         catch (Throwable t) { return -1; }
     }
 
+    /** Prepares a search session from a registry.js snapshot and makes it the current index. Returns the kept
+     *  entries' snapshot record numbers, comma-separated ("" if none); null if unavailable, malformed or unsupported. */
+    static String prepareSearch(String snapshot) {
+        if (!available || snapshot == null) return null;
+        try {
+            byte[] r = nativePrepareSearch(snapshot.getBytes(StandardCharsets.UTF_8));
+            return r == null ? null : new String(r, StandardCharsets.UTF_8);
+        } catch (Throwable t) { return null; }
+    }
+
     /** Comma-separated indices into the last index, best first ("" for no hits); null on any failure. */
     static String search(String query, int max) {
         if (!available || query == null) return null;
@@ -65,4 +75,5 @@ final class RustCore {
     private static native boolean nativeSelfTest();
     private static native int nativeSetSearchIndex(byte[] wireUtf8);
     private static native byte[] nativeSearch(byte[] queryUtf8, int max);
+    private static native byte[] nativePrepareSearch(byte[] snapshotUtf8);
 }

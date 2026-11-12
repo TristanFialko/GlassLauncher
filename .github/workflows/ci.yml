@@ -42,6 +42,8 @@ jobs:
         run: |
           cargo build --locked --release -p glass-cli --manifest-path rust/Cargo.toml
           node tools/parity/search-parity.js --bench | tee parity.txt
+      - name: Registry snapshot parity (production JavaScript fixtures vs Rust snapshot preparation)
+        run: node tools/parity/snapshot-parity.js | tee -a parity.txt
       - uses: actions/upload-artifact@v4
         with:
           name: parity-report

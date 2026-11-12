@@ -5,11 +5,15 @@
 //!   glass-cli norm                      <hex>            → <hex of norm()>
 //!   glass-cli query <wire-file> <max>   <hex query>      → comma-separated indices
 //!   glass-cli bench <wire-file> <queries-file> <rounds>  → timing summary
+//!   glass-cli prepare <snapshot-file>                     → refs line, or "ERR <reason>"
+//!   glass-cli squery <snapshot-file> <max>  <hex query>  → comma-separated index positions
+//!   glass-cli bench-prepare <snapshot-file> <rounds>      → snapshot preparation timing
 
 use std::io::{self, BufRead, Write};
 use std::time::Instant;
 
 use glass_core::search::{norm, SearchIndex};
+use glass_core::snapshot::prepare;
 
 fn unhex(s: &str) -> String {
     let bytes: Vec<u8> = (0..s.len() / 2)
@@ -89,9 +93,53 @@ fn main() {
             )
             .unwrap();
         }
+        Some("prepare") => {
+            // snapshot file -> refs line ("ERR <reason>" if JavaScript must fall back)
+            let wire = std::fs::read_to_string(&args[2]).expect("read snapshot file");
+            match prepare(&wire) {
+                Ok(p) => writeln!(out, "{}", p.refs_wire()).unwrap(),
+                Err(e) => writeln!(out, "ERR {e:?}").unwrap(),
+            }
+        }
+        Some("squery") => {
+            let wire = std::fs::read_to_string(&args[2]).expect("read snapshot file");
+            let idx = prepare(&wire).expect("valid snapshot").index;
+            let max: usize = args[3].parse().unwrap();
+            for line in stdin.lock().lines() {
+                writeln!(
+                    out,
+                    "{}",
+                    join(&idx.query(&unhex(line.unwrap().trim()), max))
+                )
+                .unwrap();
+            }
+        }
+        Some("bench-prepare") => {
+            let wire = std::fs::read_to_string(&args[2]).expect("read snapshot file");
+            let rounds: usize = args[3].parse().unwrap();
+            let mut samples = Vec::with_capacity(rounds);
+            let mut n = 0;
+            for _ in 0..rounds {
+                let t = Instant::now();
+                n = std::hint::black_box(
+                    prepare(std::hint::black_box(&wire)).expect("valid snapshot"),
+                )
+                .refs
+                .len();
+                samples.push(t.elapsed().as_secs_f64() * 1e6);
+            }
+            samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            let p = |f: f64| samples[((samples.len() - 1) as f64 * f).round() as usize];
+            writeln!(
+                out,
+                "{{\"impl\":\"rust prepare\",\"snapshot_bytes\":{},\"entries\":{},\"rounds\":{},\"prepare_us_median\":{:.2},\"prepare_us_p95\":{:.2}}}",
+                wire.len(), n, rounds, p(0.5), p(0.95)
+            )
+            .unwrap();
+        }
         _ => {
             eprintln!(
-                "usage: glass-cli norm | query <wire> <max> | bench <wire> <queries> <rounds>"
+                "usage: glass-cli norm | query <wire> <max> | bench <wire> <queries> <rounds> | prepare <snapshot> | squery <snapshot> <max> | bench-prepare <snapshot> <rounds>"
             );
             std::process::exit(2);
         }
