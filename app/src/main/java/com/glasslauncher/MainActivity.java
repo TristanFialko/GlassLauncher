@@ -55,8 +55,16 @@ public class MainActivity extends Activity {
         web.loadUrl("file:///android_asset/index.html");
     }
 
+    @Override protected void onPause() {
+        // Glass 2.0: while another app is in front, stop the hidden launcher's JS timers (clock tick, and the
+        // Control Centre's 2 s Wi-Fi/Bluetooth/volume poll if it was left open) so it costs no CPU in the background.
+        if (web != null) { web.onPause(); web.pauseTimers(); }
+        super.onPause();
+    }
+
     @Override protected void onResume() {
         super.onResume();
+        if (web != null) { web.resumeTimers(); web.onResume(); }
         // Lets the Control Centre refresh after returning from a system settings screen.
         if (web != null) web.postDelayed(() -> web.evaluateJavascript("window.glassResume&&glassResume()", null), 400);
     }
