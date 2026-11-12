@@ -100,16 +100,17 @@ public class GlassEndToEndTest {
         JSONArray apps = new JSONArray(new AppDiscovery(ctx).installedAppsJson());
         AppDiscovery d = new AppDiscovery(ctx);
         long[] t = new long[apps.length()];
-        long chars = 0;
+        long chars = 0, total = 0;
         for (int i = 0; i < apps.length(); i++) {
             long s = SystemClock.elapsedRealtimeNanos();
             String uri = d.iconDataUri(apps.getJSONObject(i).getString("id"));
             t[i] = SystemClock.elapsedRealtimeNanos() - s;
             chars += uri.length();
+            total += t[i];
         }
         Arrays.sort(t);
         Log.i(TAG, "icons " + new JSONObject().put("icons", t.length).put("msMedian", t[t.length / 2] / 1e6).put("msMax", t[t.length - 1] / 1e6)
-                .put("msTotal", Arrays.stream(t).sum() / 1e6).put("avgDataUriChars", chars / Math.max(1, t.length)));
+                .put("msTotal", total / 1e6).put("avgDataUriChars", chars / Math.max(1, t.length)));
         assertTrue(chars > 0);
     }
 
