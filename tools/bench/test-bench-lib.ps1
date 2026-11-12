@@ -8,6 +8,9 @@ $script:fail = 0; $script:pass = 0
 function Check([string]$name, $actual, $expected) {
   if ("$actual" -eq "$expected") { $script:pass++ } else { $script:fail++; Write-Host "FAIL $name : got '$actual' expected '$expected'" }
 }
+function CheckLike([string]$name, $actual, [string]$pattern) {
+  if ("$actual" -like $pattern) { $script:pass++ } else { $script:fail++; Write-Host "FAIL $name : got '$actual' expected like '$pattern'" }
+}
 
 # ---- am start -W ----
 $cold = @"
@@ -297,6 +300,39 @@ Check "renderers single" (@((Select-GlassRenderers @($cand[0]) @()).renderers).L
 Check "renderers single lone object (PS 5.1)" (@((Select-GlassRenderers $cand[0] @()).renderers).Length) 1
 Check "renderers other apps only" (@((Select-GlassRenderers $cand @("7777")).renderers).Length) 0
 Check "renderers none" (Select-GlassRenderers @() @()).attribution "none running"
+
+# ---- harness v5: REAL captures from the owner's VIP7802 smoke run (2026-11-12, Android 11, WebView 157) ----
+$fx = Join-Path $PSScriptRoot "fixtures/vip7802-android11"
+function Fx([string]$n) { return [IO.File]::ReadAllText((Join-Path $fx $n)) }
+$svcReal = Fx "dumpsys-activity-services.txt"
+Check "real: services attribute renderer 13074 only (utilityhub's 1548 excluded)" ((Get-ServiceProcessPids $svcReal "13040" "com.glasslauncher") -join ",") "13074"
+Check "real: unfiltered dump would also pick utilityhub" (((Get-ServiceProcessPids $svcReal "13040") -join ",") -like "*1548*") "True"
+$candReal = @([pscustomobject]@{ pid = "13074"; name = "com.google.android.webview:sandboxed_process0:org.chromium.content.app.Sand" })
+Check "real: renderer selected" ((Select-GlassRenderers $candReal (Get-ServiceProcessPids $svcReal "13040" "com.glasslauncher")).attribution) "dumpsys activity services"
+Check "real: renderer meminfo" (ConvertFrom-Meminfo (Fx "meminfo-renderer.txt")).pss_kb 70310
+$idReal = Get-PackageIdentity (Fx "dumpsys-package.txt")
+Check "real: versionName" $idReal.versionName "1.5"
+Check "real: versionCode" $idReal.versionCode 6
+Check "real: primaryCpuAbi null = no native library" ($null -eq $idReal.primaryCpuAbi) "True"
+Check "real: signature digest" $idReal.signatures "f30c21bb"
+CheckLike "real: build kind" (Get-BuildKind $idReal $null) "no native library*NOT a Rust-enabled Glass 2.0 build*"
+Check "glass2 kind with native lib" ((Get-BuildKind @{ primaryCpuAbi = "armeabi-v7a" } $null) -like "has a native library (armeabi-v7a)*") "True"
+Check "glass2 kind with rust log" (Get-BuildKind @{ primaryCpuAbi = "armeabi-v7a" } (Get-RustCoreStatus "11-12 I GlassRust: Rust core v0.1.0 (ok)")) "glass2 (Rust core v0.1.0 loaded)"
+Check "rust unavailable" (Get-RustCoreStatus "I GlassRust: Rust core unavailable (ABI mismatch: 0.1.0;1)").status "ABI mismatch: 0.1.0;1"
+Check "rust none" ($null -eq (Get-RustCoreStatus "nothing")) "True"
+Check "sha256 parse" (Get-Sha256FromOutput "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855  /data/app/x/base.apk") "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+$idle = ConvertFrom-Gfxinfo (Fx "gfxinfo-idle.txt")
+Check "real: idle frames 0" $idle.frames 0
+Check "real: idle percentiles nulled (gfxinfo prints 4950ms for empty)" ($null -eq $idle.p50_ms) "True"
+Check "real: idle window" $idle.stats_window_s 35.25
+$navReal = ConvertFrom-Gfxinfo (Fx "gfxinfo-nav.txt")
+Check "real: nav frames" $navReal.frames 418
+Check "real: nav p50" $navReal.p50_ms 61
+$coldReal = Fx "am-start-cold.txt"
+$first = ($coldReal -split "--- run 2")[0]
+$why = @(Get-ColdRejections (ConvertFrom-AmStart $first))
+CheckLike "real: stale first cold launch rejected with reason" ($why -join ";") "*LaunchState=UNKNOWN*"
+Check "real: valid cold launch accepted" (@(Get-ColdRejections (ConvertFrom-AmStart (($coldReal -split "--- run 2")[1]))).Length) 0
 
 Write-Host "bench-lib tests: $script:pass passed, $script:fail failed"
 if ($script:fail) { exit 1 }

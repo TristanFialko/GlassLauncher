@@ -1,4 +1,4 @@
-# Device benchmark methodology (harness v4)
+# Device benchmark methodology (harness v5)
 
 `tools/bench/bench-device.ps1` measures an installed build over adb. v2 replaced v1 after the first VIP7802 comparison
 (2026-11-12) exposed problems in v1's method. v3 fixes the device-specific problems found in the first VIP7802 run of v2.
@@ -32,6 +32,22 @@ This page lists each problem, how the harness handles it now, and how to run a v
 | 16 | **Renderer PSS was blank in the summary** even though `meminfo.txt` had it (renderer PID 4958, ~63.5 MB). | `RendererPids` returned a one-element array, which PowerShell unwraps into a single object. Windows PowerShell 5.1 gives a lone `[pscustomobject]` no `.Count`, so `$rend.Count` was empty and the renderer sum was dropped. Renderer CPU was blanked the same way. PowerShell 7, used for the earlier tests, does have `.Count`, which is why the tests passed. | Results are wrapped in `@()` and summed by `Get-SumOrNull([object[]])`, so one renderer works the same as several. `meminfo.txt` now records the parsed values for each sample. The summary has app, renderer and total PSS. |
 | 17 | **Background CPU was recorded even when Glass wasn't confirmed hidden.** | Same as 14/15. | Background CPU is measured only after the check above passes, and re-checked afterwards. If either check fails, `cpu_background` is null and `cpu_background_rejected` gives the reason. App, renderer and combined CPU are reported for foreground idle and background. |
 
+## What the owner's VIP7802 smoke run of v4 showed, and what v5 does
+
+The first real-device v4 run (`bench-smoke-glass2-20261112-191851`, 2026-11-12) validated the core fixes: 3/3 warm
+samples valid (YouTube in front, Glass `STOPPED` after ~1.3 s), renderer attributed through `dumpsys activity services`
+(PID 13074), background CPU accepted. The real captures are now fixtures in `tools/bench/fixtures/vip7802-android11/`.
+
+| # | Finding | v5 behaviour |
+|---|---|---|
+| 21 | **The installed build was not identifiable** — `versionName` is `1.5` in the baseline *and* in Glass 2.0. The smoke run's package dump shows `primaryCpuAbi=null`, i.e. an APK without native code, which no Rust-enabled 2.0 build is. That run measured the 1.5 baseline or a `-Pglass.rust=false` build. | `device.build`: package identity (versionCode, primaryCpuAbi, signing cert digest, path), on-device APK SHA-256, and with `-Apk` the local file's SHA-256 and whether it contains `lib/*/libglass.so`; a mismatch is a warning. `build.kind` classifies the build from that evidence and is printed at the start. |
+| 22 | **First cold sample: `LaunchState: UNKNOWN (-1)`, `WaitTime: 442480`** — a stale wait result, correctly rejected but with no reason recorded. | One discarded warm-up launch before sampling; every cold row carries `rejected_because`. |
+| 23 | **Idle control "0 frames" with percentiles of 4,950 ms.** 0 frames over a 35.25 s window is the correct result for a static screen; the 4,950 ms is gfxinfo's top bucket printed for an empty histogram. | Percentiles are null when there are no frames; `stats_window_s` (Uptime − "Stats since") is recorded and `idle_control_window_ok` says whether the counters covered the idle window. |
+| 24 | **`dumpsys activity services com.glasslauncher` prefix-matches** — the real dump also listed `com.glasslauncher.utilityhub`. Harmless in that run, but a Utility Hub WebView would have been attributed to Glass. | Only `app=` lines inside ServiceRecords filed under exactly `com.glasslauncher/` count. |
+
+Also observed: each `input keyevent` takes ~1 s on this box, so the effective key interval was 1,460 ms, not 500 ms
+(recorded as `effective_key_interval_ms`). gfxinfo frame durations are HWUI render times, not input-to-screen latency.
+
 ## What v3 would still have got wrong, and what v4 does
 
 Found by auditing v3 against realistic Android 11 output before any further device run. All three are reproduced by
@@ -48,7 +64,7 @@ Also: `meminfo` totals tolerate digit grouping (`63,536`), and the `Hist` header
 
 ### Off-device verification
 
-- `tools/bench/test-bench-lib.ps1`: 108 parser checks against Android 11 and 12+ fixtures.
+- `tools/bench/test-bench-lib.ps1`: 129 parser checks against Android 11 and 12+ fixtures, including real VIP7802 captures.
 - `tools/bench/test-bench-device.ps1`: runs the **real** `bench-device.ps1` against a simulated Android 11 TV (a fake
   `adb` function with an activity/window/services/meminfo/proc state machine). Scenarios: Android 11 with a trampolining
   YouTube, brought-to-front relaunches and a second app's WebView renderer (expects all warm samples valid, renderer PSS =

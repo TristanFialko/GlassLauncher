@@ -28,7 +28,7 @@ $RENDERER = "com.google.android.webview:sandboxed_process0:org.chromium.content.
 
 function New-Sim([string]$name, [int]$stopAfter, [bool]$attrib, [bool]$extraRenderer) {
   return @{ name = $name; stopAfter = $stopAfter; attrib = $attrib; extraRenderer = $extraRenderer
-            glassPid = 3210; front = "glass"; glassState = "RESUMED"; polls = 0; logcat = ""; ticks = @{}; ytStarted = $false }
+            glassPid = 3210; front = "glass"; glassState = "RESUMED"; polls = 0; logcat = ""; ticks = @{}; ytStarted = $false; coldCalls = 0 }
 }
 
 function Sim-Activities($s) {
@@ -108,6 +108,9 @@ function Sim-Shell([string]$c) {
     "^pidof $GLASS$" { return "$($s.glassPid)" }
     "^am start -S -W -n $GLASS/\.MainActivity$" {
       $s.glassPid += 7; $s.front = "glass"; $s.glassState = "RESUMED"
+      $s.coldCalls++
+      # as on the VIP7802: the first force-stop launch of a run returned a stale wait result
+      if ($s.coldCalls -eq 1) { return "Stopping: $GLASS`nStarting: Intent { cmp=$GLASS/.MainActivity }`nStatus: ok`nLaunchState: UNKNOWN (-1)`nActivity: $GLASS/.MainActivity`nWaitTime: 442480`nComplete" }
       $s.logcat = "I ActivityTaskManager: Displayed $GLASS/.MainActivity: +1s210ms"
       return "Starting: Intent { cmp=$GLASS/.MainActivity }`nStatus: ok`nLaunchState: COLD`nActivity: $GLASS/.MainActivity`nTotalTime: $(1150 + $s.glassPid % 50)`nWaitTime: 1220`nComplete"
     }
@@ -130,6 +133,10 @@ function Sim-Shell([string]$c) {
     "^dumpsys window windows$" { return (Sim-Windows $s) }
     "^dumpsys activity services $GLASS$" {
       $out = "ACTIVITY MANAGER SERVICES (dumpsys activity services)`n  User 0 active services:"
+      # the real VIP7802 dump also lists com.glasslauncher.utilityhub (prefix match); here it owns the OTHER renderer
+      if ($s.extraRenderer) {
+        $out += "`n  * ServiceRecord{77 u0 com.glasslauncher.utilityhub/org.chromium.content.app.SandboxedProcessService0:1}`n    packageName=com.glasslauncher.utilityhub`n    app=ProcessRecord{78 6123:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:1/u0a81i3}"
+      }
       if ($s.attrib) {
         $out += @"
 
@@ -178,7 +185,9 @@ function Sim-Shell([string]$c) {
     "^date \+%H$" { return "20" }
     "^date$" { return "Thu Nov 12 20:00:00 GMT 2026" }
     "^dumpsys SurfaceFlinger$" { return "Display 0 HWC layers:`n refresh-rate              : 60.000000 fps" }
-    "^dumpsys package $GLASS$" { return "  versionName=2.0-sim`n  primaryCpuAbi=armeabi-v7a`n  lastUpdateTime=2026-11-12 10:00:00`n    arm: [status=speed-profile] [reason=install]" }
+    "^dumpsys package $GLASS$" { return "    versionCode=6 minSdk=23 targetSdk=30`n    versionName=1.5`n    primaryCpuAbi=armeabi-v7a`n    apkSigningVersion=2`n    signatures=PackageSignatures{b8 version:2, signatures:[0a1b2c3d], past signatures:[]}`n    lastUpdateTime=2026-11-12 10:00:00`n    arm: [status=speed-profile] [reason=install]" }
+    "^pm path $GLASS$" { return "package:/data/app/~~g/$GLASS-1/base.apk" }
+    "^sha256sum /data/app/~~g/$GLASS-1/base.apk$" { return "ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34  /data/app/~~g/$GLASS-1/base.apk" }
     "^pm path $YT$" { return "package:/data/app/~~x/$YT-1/base.apk" }
     "^pm path " { return "" }
     "^cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LEANBACK_LAUNCHER $YT$" { return "priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false`n$YTACT" }
@@ -214,8 +223,13 @@ function Invoke-Sim($sim, [int]$runs, [int]$waitSeconds) {
 
 # ---- android11: the VIP7802 failure modes, all expected to measure correctly now ----
 $s = Invoke-Sim (New-Sim "android11" 3 $true $true) 3 15
-Check "a11 harness version" $s.device.harness_version 4
-Check "a11 cold n" $s.cold_start_ms.n 3
+Check "a11 harness version" $s.device.harness_version 5
+Check "a11 cold n (stale first launch is the discarded warm-up)" $s.cold_start_ms.n 3
+Check "a11 cold rows all valid" (@($s.cold_start_runs | Where-Object { $_.valid }).Count) 3
+CheckLike "a11 build kind" $s.device.build.kind "has a native library (armeabi-v7a)*"
+Check "a11 device apk sha256" $s.device.build.device_apk_sha256 "ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34"
+Check "a11 signature" $s.device.build.identity.signatures "0a1b2c3d"
+Check "a11 idle window ok" $s.frames.idle_control_window_ok ""
 Check "a11 warm n (brought-to-front warning accepted)" $s.warm_start_ms.n 3
 Check "a11 warm runs valid" (@($s.warm_start_runs | Where-Object { $_.valid }).Count) 3
 Check "a11 warm launch state" $s.warm_start_runs[0].am.launch_state "HOT"

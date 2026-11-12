@@ -1,0 +1,63 @@
+ACTIVITY MANAGER SERVICES (dumpsys activity services)
+  User 0 active services:
+  * ServiceRecord{deaa5f9 u0 com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0}
+    intent={cmp=com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0}
+    packageName=com.glasslauncher
+    processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+    baseDir=/data/app/~~Uixkda-0vpkSjHE8bm4pYQ==/com.google.android.webview-h9O882GSVujDVWRxXl_JlQ==/base.apk
+    dataDir=/data/user/0/com.google.android.webview
+    app=ProcessRecord{aa4d6a7 13074:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0a96i65}
+    isolatedProc=ProcessRecord{aa4d6a7 13074:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0a96i65}
+    allowWhileInUsePermissionInFgs=true
+    startForegroundCount=0
+    recentCallingPackage=com.glasslauncher
+    createTime=-35s756ms startingBgTimeout=--
+    lastActivity=-35s356ms restartTime=-35s701ms createdFromFg=true
+    Bindings:
+    * IntentBindRecord{4ee6846 CREATE}:
+      intent={cmp=com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0}
+      binder=android.os.BinderProxy@96bea07
+      requested=true received=true hasBound=true doRebind=false
+      * Client AppBindRecord{caaf734 ProcessRecord{ecb843a 13040:com.glasslauncher/u0a96}}
+        Per-process Connections:
+          ConnectionRecord{b3373b9 u0 CR IMP com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0:@1b02180}
+          ConnectionRecord{e4696fd u0 CR WPRI com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0:@dc07754}
+    All Connections:
+      ConnectionRecord{b3373b9 u0 CR IMP com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0:@1b02180}
+      ConnectionRecord{e4696fd u0 CR WPRI com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0:@dc07754}
+
+  * ServiceRecord{1d86305 u0 com.glasslauncher.utilityhub/.AppKeyService}
+    intent={cmp=com.glasslauncher.utilityhub/.AppKeyService}
+    packageName=com.glasslauncher.utilityhub
+    processName=com.glasslauncher.utilityhub
+    permission=android.permission.BIND_ACCESSIBILITY_SERVICE
+    baseDir=/data/app/~~YD_LeUY2Ysn4gXWVlOZdZA==/com.glasslauncher.utilityhub-9kz5qWQA_08O3FxOsp2JzQ==/base.apk
+    dataDir=/data/user/0/com.glasslauncher.utilityhub
+    app=ProcessRecord{7527372 1548:com.glasslauncher.utilityhub/u0a81}
+    hasBindingWhitelistingBgActivityStarts=true
+    allowWhileInUsePermissionInFgs=true
+    startForegroundCount=0
+    recentCallingPackage=android
+    createTime=-10d23h53m2s333ms startingBgTimeout=--
+    lastActivity=-10d23h53m1s554ms restartTime=-10d23h53m1s554ms createdFromFg=true
+    Bindings:
+    * IntentBindRecord{255495d CREATE}:
+      intent={cmp=com.glasslauncher.utilityhub/.AppKeyService}
+      binder=android.os.BinderProxy@598c2d2
+      requested=true received=true hasBound=true doRebind=false
+      * Client AppBindRecord{dd31fa3 ProcessRecord{b26574 579:system/1000}}
+        Per-process Connections:
+          ConnectionRecord{95ad87d u0 CR FGSA CAPS com.glasslauncher.utilityhub/.AppKeyService:@a5eced4}
+    All Connections:
+      ConnectionRecord{95ad87d u0 CR FGSA CAPS com.glasslauncher.utilityhub/.AppKeyService:@a5eced4}
+
+  Connection bindings to services:
+  * ConnectionRecord{b3373b9 u0 CR IMP com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0:@1b02180}
+    binding=AppBindRecord{caaf734 com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0:com.glasslauncher}
+    conn=android.os.BinderProxy@1b02180 flags=0x80000041
+  * ConnectionRecord{95ad87d u0 CR FGSA CAPS com.glasslauncher.utilityhub/.AppKeyService:@a5eced4}
+    binding=AppBindRecord{dd31fa3 com.glasslauncher.utilityhub/.AppKeyService:system}
+    conn=android.app.LoadedApk$ServiceDispatcher$InnerConnection@a5eced4 flags=0x2101001
+  * ConnectionRecord{e4696fd u0 CR WPRI com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0:@dc07754}
+    binding=AppBindRecord{caaf734 com.glasslauncher/org.chromium.content.app.SandboxedProcessService0:0:com.glasslauncher}
+    conn=android.os.BinderProxy@dc07754 flags=0x80000021

@@ -1,5 +1,5 @@
 <#
-  Glass Launcher on-device benchmark (Android TV over adb), harness v4. Measures any APK the same way so the baseline
+  Glass Launcher on-device benchmark (Android TV over adb), harness v5. Measures any APK the same way so the baseline
   and a Glass 2.0 build can be compared on the SAME device under the SAME conditions.
 
   Usage (Windows):  tools\bench\bench-device.bat -Label baseline -Apk C:\path\glasslauncher-baseline.apk -CompileSpeed
@@ -61,7 +61,7 @@ function RendererPids() { return @(Get-RendererPids (Invoke-AdbShell "ps -A -o P
 <# Glass's own WebView renderer(s): device-wide candidates filtered by dumpsys activity services attribution. #>
 function GlassRenderers([string]$appPid) {
   $svc = Invoke-AdbShell "dumpsys activity services $Pkg"
-  $sel = Select-GlassRenderers @(RendererPids) (Get-ServiceProcessPids $svc $appPid)
+  $sel = Select-GlassRenderers @(RendererPids) (Get-ServiceProcessPids $svc $appPid $Pkg)
   Save "renderers.txt" ("--- " + (Get-Date -Format "HH:mm:ss") + " app pid $appPid -> renderers [" + (($sel.renderers | ForEach-Object { $_.pid }) -join ",") + "] attribution=$($sel.attribution) error=$($sel.error)`n$svc")
   return $sel
 }
@@ -167,7 +167,7 @@ $sfDump = Invoke-AdbShell "dumpsys SurfaceFlinger"; Save "surfaceflinger.txt" $s
 $refresh = Get-RefreshHz $displayDump $sfDump
 $hour = 0; [void][int]::TryParse((Invoke-AdbShell "date +%H").Trim(), [ref]$hour)
 $info = [ordered]@{
-  label = $Label; timestamp = $stamp; harness_version = 4
+  label = $Label; timestamp = $stamp; harness_version = 5
   model = (Invoke-AdbShell "getprop ro.product.model").Trim()
   android = (Invoke-AdbShell "getprop ro.build.version.release").Trim()
   sdk = (Invoke-AdbShell "getprop ro.build.version.sdk").Trim()
@@ -200,20 +200,49 @@ if ($pkgDump -match "versionName=(\S+)") { $info.versionName = $Matches[1] }
 if ($pkgDump -match "primaryCpuAbi=(\S+)") { $info.primaryCpuAbi = $Matches[1] }
 if ($pkgDump -match "lastUpdateTime=(.+)") { $info.lastUpdateTime = $Matches[1].Trim() }
 $info.dexopt_status = Get-DexoptStatus $pkgDump
+# ---------- build identity (v5): versionName is 1.5 in the baseline AND in Glass 2.0 ----------
+$ident = Get-PackageIdentity $pkgDump
+$apkPath = ((Invoke-AdbShell "pm path $Pkg") -split "\r?\n" | Where-Object { $_ -match "^package:" } | Select-Object -First 1)
+if ($apkPath) { $apkPath = $apkPath.Trim().Substring(8) }
+$build = [ordered]@{ identity = $ident; device_apk_path = $apkPath
+                     device_apk_sha256 = $(if ($apkPath) { Get-Sha256FromOutput (Invoke-AdbShell "sha256sum $apkPath") } else { $null })
+                     local_apk_sha256 = $null; local_apk_has_libglass = $null; kind = $null; rust_core = $null }
+if ($Apk) {
+  $build.local_apk_sha256 = (Get-FileHash -Algorithm SHA256 -Path $Apk).Hash.ToLowerInvariant()
+  try {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $z = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $Apk).Path)
+    try { $build.local_apk_has_libglass = (@($z.Entries | Where-Object { $_.FullName -like "lib/*/libglass.so" }).Length -gt 0) } finally { $z.Dispose() }
+  } catch { $build.local_apk_has_libglass = $null }
+  if ($build.device_apk_sha256 -and $build.device_apk_sha256 -ne $build.local_apk_sha256) {
+    Warn "Installed APK (sha256 $($build.device_apk_sha256)) is NOT the -Apk file ($($build.local_apk_sha256)); results do not belong to that file"
+  }
+}
+$build.kind = Get-BuildKind $ident $null
+Write-Host "Build under test: $($build.kind); apk sha256 $($build.device_apk_sha256)"
+$info.build = $build
 
 # ---------- cold start ----------
-$cold = @(); $coldRows = @()
+$cold = @(); $coldRows = @(); $rustLog = ""
+# v5: one discarded launch first. The owner's first sample after a fresh run returned "LaunchState: UNKNOWN (-1)" with a
+# 442 s WaitTime (a stale wait result, not a launch time); it was rightly rejected, but it cost a third of a 3-run smoke test.
+Save "cold.txt" ("--- warm-up (discarded)`n" + (Invoke-AdbShell "am start -S -W -n $Act"))
+Start-Sleep -Seconds 4
 for ($i = 1; $i -le $Runs; $i++) {
   Invoke-AdbCmd @("logcat", "-c") | Out-Null
   $o = Invoke-AdbShell "am start -S -W -n $Act"
   Start-Sleep -Seconds 4
-  $disp = Get-DisplayedMs (Invoke-AdbCmd @("logcat", "-d", "-s", "ActivityTaskManager:I", "ActivityManager:I")) $Act
+  $lc = Invoke-AdbCmd @("logcat", "-d", "-s", "ActivityTaskManager:I", "ActivityManager:I", "GlassRust:I")
+  $disp = Get-DisplayedMs $lc $Act
+  if ($lc -match "Rust core") { $rustLog += "`n" + $lc }
   $a = ConvertFrom-AmStart $o
-  $valid = ($a.status -eq "ok" -and $a.launch_state -eq "COLD" -and $a.total_ms -gt 0)
-  $coldRows += [ordered]@{ run = $i; am = $a; displayed_ms = $disp; valid = $valid }
-  Save "cold.txt" "--- run $i (valid=$valid displayed_ms=$disp)`n$o"
+  $why = @(Get-ColdRejections $a)
+  $valid = ($why.Length -eq 0)
+  $coldRows += [ordered]@{ run = $i; am = $a; displayed_ms = $disp; valid = $valid; rejected_because = $why }
+  Save "cold.txt" "--- run $i (valid=$valid displayed_ms=$disp reasons=$($why -join '; '))`n$o"
   if ($valid) { $cold += $a.total_ms }
 }
+if ($rustLog) { $build.rust_core = Get-RustCoreStatus $rustLog; $build.kind = Get-BuildKind $ident $build.rust_core }
 
 # ---------- warm start ----------
 $bg = PickBackground
@@ -309,6 +338,10 @@ $frames = [ordered]@{
 if ($nav.histogram) { $frames.nav.histogram = $null }   # summarised above; the raw histogram stays in gfxinfo-nav.txt
 if ($idle.histogram) { $frames.idle_control.histogram = $null }
 if ($nav.frames -and $idle.frames -and $idle.frames -gt 0.2 * $nav.frames) { Warn "Idle control rendered $($idle.frames) frames vs $($nav.frames) during D-pad: frames are not attributable to the key presses" }
+# v5: an idle control is valid when its counters really covered the idle window; 0 frames then means "a static screen
+# draws nothing" (correct), not a failed capture. The owner's smoke run: 0 frames over 35.25 s for a 35 s window.
+$frames.idle_control_window_ok = $(if ($null -ne $idle.stats_window_s) { $idle.stats_window_s -ge 0.9 * $navSec } else { $null })
+if ($frames.idle_control_window_ok -eq $false) { Warn "Idle control counters cover only $($idle.stats_window_s) s of the $([math]::Round($navSec, 1)) s idle window (gfxinfo reset late?); idle frame count is not comparable" }
 if (-not $nav.frames) { Warn "gfxinfo returned no frame data for the D-pad sequence" }
 
 # ---------- optional Perfetto trace ----------
@@ -357,7 +390,7 @@ if ($bg.component -and $warm.Length -lt $Runs) {
 }
 
 $summary = [ordered]@{
-  schema_version = 3
+  schema_version = 4
   device = $info
   cold_start_ms = $coldStats; cold_start_runs = $coldRows
   warm_start_ms = $warmStats; warm_start_runs = $warmRows

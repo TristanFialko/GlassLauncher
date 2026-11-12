@@ -86,6 +86,14 @@ function ConvertFrom-Gfxinfo([string]$o) {
     foreach ($m in [regex]::Matches($Matches[1], "(\d+)ms=(\d+)")) { $h[[int]$m.Groups[1].Value] = [int]$m.Groups[2].Value }
     $r.histogram = $h
   }
+  # v5: gfxinfo prints its top bucket (e.g. "4950ms") as every percentile of an EMPTY histogram; that is not a measurement
+  if ($r.frames -eq 0) { $r.p50_ms = $null; $r.p90_ms = $null; $r.p95_ms = $null; $r.p99_ms = $null }
+  # window covered by these counters = Uptime (ms) - "Stats since" (ns, same uptime clock)
+  $r.stats_window_s = $null
+  if ($o -match "(?m)^Uptime:\s*(\d+)" ) {
+    $up = [double]$Matches[1]
+    if ($o -match "(?m)^Stats since:\s*(\d+)ns") { $r.stats_window_s = [math]::Round(($up * 1e6 - [double]$Matches[1]) / 1e9, 2) }
+  }
   return $r
 }
 
@@ -273,11 +281,17 @@ function Test-GlassCovered($fg, $st, [string]$pkg) {
   an external isolated service: its ServiceRecord is filed under the HOST app's package and carries
   "app=ProcessRecord{<hash> <pid>:com.google.android.webview:sandboxed_process0:.../u0i9}". $exclude is the app's own PID.
 #>
-function Get-ServiceProcessPids([string]$services, [string]$exclude) {
+function Get-ServiceProcessPids([string]$services, [string]$exclude, [string]$pkg = "") {
   $out = @()
-  foreach ($m in [regex]::Matches($services, "(?m)^\s*app=ProcessRecord\{\S+\s+(\d+):")) {
-    $p = $m.Groups[1].Value
-    if ($p -ne $exclude -and $out -notcontains $p) { $out += $p }
+  $inPkg = ($pkg -eq "")
+  foreach ($l in ($services -split "\r?\n")) {
+    # v5: `dumpsys activity services <pkg>` prefix-matches (on the VIP7802 it also listed com.glasslauncher.utilityhub),
+    # so only app= lines inside ServiceRecords filed under exactly <pkg>/ count
+    if ($pkg -and $l -match "^\s*\*\s*ServiceRecord\{\S+\s+u\d+\s+([^/\s]+)/") { $inPkg = ($Matches[1] -eq $pkg); continue }
+    if ($inPkg -and $l -match "^\s*app=ProcessRecord\{\S+\s+(\d+):") {
+      $p = $Matches[1]
+      if ($p -ne $exclude -and $out -notcontains $p) { $out += $p }
+    }
   }
   return $out
 }
@@ -300,4 +314,55 @@ function Select-GlassRenderers([object[]]$candidates, [object[]]$attributedPids)
   if ($c.Length -eq 1) { return @{ renderers = $c; attribution = "single candidate (not confirmed by dumpsys activity services)"; error = $null } }
   $names = ($c | ForEach-Object { "$($_.pid) $($_.name)" }) -join ", "
   return @{ renderers = @(); attribution = "ambiguous"; error = "$($c.Length) WebView renderer processes running and none attributed to Glass by dumpsys activity services: $names" }
+}
+
+<#
+  Harness v5: which build is installed. versionName is 1.5 in BOTH the baseline and Glass 2.0, so identity comes from
+  `dumpsys package` (primaryCpuAbi is null when the APK has no native library - every Rust-enabled 2.0 build ships
+  lib/<abi>/libglass.so), the signing certificate digest, the on-device APK hash, and RustCore's own log line.
+#>
+function Get-PackageIdentity([string]$o) {
+  $r = [ordered]@{ versionCode = $null; versionName = $null; primaryCpuAbi = $null; signatures = $null; apkSigningVersion = $null; codePath = $null; lastUpdateTime = $null }
+  if ($o -match "(?m)^\s*versionCode=(\d+)") { $r.versionCode = [int]$Matches[1] }
+  if ($o -match "(?m)^\s*versionName=(\S+)") { $r.versionName = $Matches[1] }
+  if ($o -match "(?m)^\s*primaryCpuAbi=(\S+)") { $r.primaryCpuAbi = $(if ($Matches[1] -eq "null") { $null } else { $Matches[1] }) }
+  if ($o -match "signatures:\[([^\]]*)\]") { $r.signatures = $Matches[1] }
+  if ($o -match "(?m)^\s*apkSigningVersion=(\d+)") { $r.apkSigningVersion = [int]$Matches[1] }
+  if ($o -match "(?m)^\s*codePath=(\S+)") { $r.codePath = $Matches[1] }
+  if ($o -match "(?m)^\s*lastUpdateTime=(.+?)\s*$") { $r.lastUpdateTime = $Matches[1] }
+  return $r
+}
+
+<# RustCore's load line: "Rust core v0.1.0 (ok)" / "Rust core unavailable (<status>)"; the last one wins. #>
+function Get-RustCoreStatus([string]$log) {
+  $m = [regex]::Matches($log, "Rust core (v[\w.\-]+|unavailable) \((.*?)\)\s*$", "Multiline")
+  if ($m.Count -eq 0) { return $null }
+  $last = $m[$m.Count - 1]
+  return [ordered]@{ loaded = ($last.Groups[1].Value -ne "unavailable"); version = $(if ($last.Groups[1].Value -ne "unavailable") { $last.Groups[1].Value.Substring(1) } else { $null }); status = $last.Groups[2].Value }
+}
+
+<# First 64-hex-digit hash in `sha256sum` output, lower case. #>
+function Get-Sha256FromOutput([string]$o) {
+  if ($o -match "\b([0-9a-fA-F]{64})\b") { return $Matches[1].ToLowerInvariant() }
+  return $null
+}
+
+<# Plain-language build classification from the evidence above (never from versionName). #>
+function Get-BuildKind($identity, $rust) {
+  if ($rust -and $rust.loaded) { return "glass2 (Rust core v$($rust.version) loaded)" }
+  if ($identity.primaryCpuAbi) {
+    if ($rust) { return "has a native library ($($identity.primaryCpuAbi)) but Rust core unavailable: $($rust.status)" }
+    return "has a native library ($($identity.primaryCpuAbi)): Rust-enabled build (Rust core loads on first search, not exercised here)"
+  }
+  return "no native library: the 1.5 baseline or a -Pglass.rust=false build (NOT a Rust-enabled Glass 2.0 build)"
+}
+
+<# Reasons a cold-start sample is rejected (empty = valid). #>
+function Get-ColdRejections($a) {
+  $why = @()
+  if ($a.error) { $why += "error: $($a.error)" }
+  if ($a.status -ne "ok") { $why += "status=$($a.status)" }
+  if ($a.launch_state -ne "COLD") { $why += "LaunchState=$($a.launch_state) (not COLD; e.g. the system relaunched HOME itself after the force-stop)" }
+  if (-not ($a.total_ms -gt 0)) { $why += "no TotalTime" }
+  return $why
 }
