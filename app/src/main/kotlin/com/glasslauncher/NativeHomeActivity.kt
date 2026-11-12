@@ -1,6 +1,7 @@
 package com.glasslauncher
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
 import android.media.AudioAttributes
 import android.media.SoundPool
@@ -40,6 +41,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     private var sNav = 0
     private var sClick = 0
     private var probe: FrameLatencyProbe? = null
+    private var asHome = false
     private val ticker = object : Runnable {
         override fun run() { view?.tick(); ui.postDelayed(this, 10_000) }
     }
@@ -48,6 +50,8 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         Trace.beginSection("Glass:nativeCreate")
         try {
             super.onCreate(b)
+            installCrashHandler(applicationContext)
+            asHome = intent.getBooleanExtra(EXTRA_AS_HOME, false)
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             apps = AppDiscovery(this)
             sys = SystemControls(this)
@@ -214,7 +218,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         ui.post { view.invalidate() }
     }
 
-    override fun exitPrototype() { finish() }
+    override fun exitPrototype() { if (!asHome) finish() }
 
     override fun dispatchKeyEvent(e: KeyEvent): Boolean {
         val r = super.dispatchKeyEvent(e)
@@ -222,7 +226,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         return r
     }
 
-    override fun onResume() { super.onResume(); ui.post(ticker) }
+    override fun onResume() { super.onResume(); ui.post(ticker); checkStillHome() }
     override fun onPause() { ui.removeCallbacks(ticker); super.onPause() }
 
     override fun onDestroy() {
@@ -236,7 +240,38 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     fun homeView(): NativeHomeView? = view
     fun installedLoaded(): Boolean = loaded
 
-    private companion object {
-        const val TAG = "GlassNative"
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        asHome = asHome || intent.getBooleanExtra(EXTRA_AS_HOME, false)
+    }
+
+    /** As HOME, hand back to the WebView UI if the owner switched modes (or the crash fallback did) while we were away. */
+    private fun checkStillHome() {
+        if (!asHome) return
+        worker.execute {
+            if (UiRouter.mode(this) != UiRouter.NATIVE) ui.post {
+                startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                finish()
+            }
+        }
+    }
+
+    companion object {
+        private const val TAG = "GlassNative"
+        /** Set by MainActivity when the native UI is the HOME screen: Back at the root then does nothing, like a launcher. */
+        const val EXTRA_AS_HOME = "glass.asHome"
+        @Volatile private var crashHandlerInstalled = false
+
+        /** Records native-process crashes for UiRouter's fallback, then lets the default handler kill the process. */
+        private fun installCrashHandler(app: android.content.Context) {
+            if (crashHandlerInstalled) return
+            crashHandlerInstalled = true
+            val previous = Thread.getDefaultUncaughtExceptionHandler()
+            Thread.setDefaultUncaughtExceptionHandler { t, e ->
+                try { UiRouter.recordNativeCrash(app, System.currentTimeMillis(), e) } catch (_: Throwable) {}
+                previous?.uncaughtException(t, e)
+            }
+        }
     }
 }
