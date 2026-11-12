@@ -85,7 +85,8 @@ function CpuMeasure([string]$name) {
                      total_pct_median = $(if ($rendS.Count) { [math]::Round((Get-Stats $appS).median + (Get-Stats $rendS).median, 3) } else { (Get-Stats $appS).median }) }
 }
 function RunNav([int]$rounds) {
-  $sleep = "{0:0.###}" -f ($KeyIntervalMs / 1000.0)
+  # invariant culture: a comma-decimal Windows locale would otherwise send "sleep 0,5" to the device
+  $sleep = ($KeyIntervalMs / 1000.0).ToString("0.###", [Globalization.CultureInfo]::InvariantCulture)
   $cmd = "for r in `$(seq 1 $rounds); do for k in 22 22 22 20 21 21 21 19; do input keyevent `$k; sleep $sleep; done; done"
   $sw = [Diagnostics.Stopwatch]::StartNew()
   Invoke-AdbShell $cmd | Out-Null
