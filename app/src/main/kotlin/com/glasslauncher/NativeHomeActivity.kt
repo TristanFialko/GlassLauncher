@@ -49,8 +49,8 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     private var receiverOn = false
     @Volatile private var loaded = false
     private var sounds: SoundPool? = null
-    private var sNav = 0
-    private var sClick = 0
+    @Volatile private var sNav = 0
+    @Volatile private var sClick = 0
     private var probe: FrameLatencyProbe? = null
     private var asHome = false
     private val ticker = object : Runnable {
@@ -265,12 +265,16 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         val sp = SoundPool.Builder().setMaxStreams(3)
             .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION).build()).build()
         sounds = sp
+        // Asset I/O stays off the UI thread. Queued ahead of loadAssets, so the sounds are ready long before the artwork.
+        worker.execute { loadUiSounds(sp); loadKeySounds(sp) }
+    }
+
+    private fun loadUiSounds(sp: SoundPool) {
         try {
             assets.openFd("sounds/navigate.wav").use { n -> assets.openFd("sounds/click.wav").use { c ->
                 sNav = sp.load(n, 1); sClick = sp.load(c, 1)
             } }
         } catch (e: Exception) { Log.w(TAG, "sounds", e) }
-        worker.execute { loadKeySounds(sp) }
     }
 
     /** glass.js KEY_SOUNDS: sounds/keys/<kind>/d*.mp3, a random variant per key press. Worker thread (asset I/O). */
@@ -373,8 +377,10 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         recordLaunch(pkg, name)
     }
 
+    /** startActivity is a binder round trip into system_server, so it runs on [pm] like app launches (the Control Centre uses its worker). */
     override fun openSettings(kind: String) {
-        if (!settings!!.open(kind)) view?.showToast("That settings page is not available on this box.")
+        val s = settings ?: return
+        pm.execute { if (!s.open(kind)) ui.post { view?.showToast("That settings page is not available on this box.") } }
     }
 
     override fun controlCentreAction(id: String, delta: Int) { cc?.handle(id, delta) }

@@ -118,6 +118,15 @@ class NativeSearchView(
     private val tHint = text(19f, REGULAR)
     private val tHintB = text(19f, BOLD)
     private val tNone = text(24f, REGULAR).apply { color = 0xADFFFFFF.toInt() }
+    // Sizes and faces of these paints never change, so their metrics are read once: Paint.getFontMetrics() allocates.
+    private val fmField = tField.fontMetrics
+    private val fmHdr = tHdr.fontMetrics
+    private val fmInit = tInit.fontMetrics
+    private val fmTitle = tTitle.fontMetrics
+    private val fmSub = tSub.fontMetrics
+    private val fmTag = tTag.fontMetrics
+    private val fmKey = tKey.fontMetrics
+    private val fmKeyFn = tKeyFn.fontMetrics
     private val saturate = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(1.55f) })
     private val dashEffect = DashPathEffect(floatArrayOf(2.6f, 3.1f), 0f)
 
@@ -489,7 +498,7 @@ class NativeSearchView(
         drawIcon(c, "search", BAR_X + 38 + 21, cy, 42f, Color.WHITE, 204)
         val fx = BAR_X + 38 + 42 + 24
         val avail = BAR_X + BAR_W - 38 - fx - 3.7f
-        val fm = tField.fontMetrics
+        val fm = fmField
         val base = cy - (fm.ascent + fm.descent) / 2
         if (queryText.isEmpty()) {
             tPlaceholder.color = 0x80FFFFFF.toInt()
@@ -521,7 +530,7 @@ class NativeSearchView(
         var y = 0f
         if (hasHeader) {
             tHdr.color = 0xADFFFFFF.toInt()
-            val fm = tHdr.fontMetrics
+            val fm = fmHdr
             c.drawText("SUGGESTIONS", ROW_X + 20, oy + 10 - fm.ascent, tHdr)
             y = HDR_H
         }
@@ -560,17 +569,17 @@ class NativeSearchView(
             res.kind == ResultKind.APP -> {
                 val bmp = res.pkg?.let { iconCache.get(it) }
                 if (bmp != null) { r.set(ix, iy, ix + ib, iy + ib); c.drawBitmap(bmp, null, r, pBmp) }
-                else { tInit.color = fg; val fm = tInit.fontMetrics; c.drawText(row.initials, ix + ib / 2, iy + ib / 2 - (fm.ascent + fm.descent) / 2, tInit) }
+                else { tInit.color = fg; val fm = fmInit; c.drawText(row.initials, ix + ib / 2, iy + ib / 2 - (fm.ascent + fm.descent) / 2, tInit) }
             }
             else -> drawIcon(c, res.icon, ix + ib / 2, iy + ib / 2, ib * .6f, fg, 255)
         }
         val tx = ix + ib + 22
         tTitle.color = fg
-        val f1 = tTitle.fontMetrics
+        val f1 = fmTitle
         val l1 = f1.descent - f1.ascent + f1.leading
         if (row.sub != null) {
             tSub.color = fg; tSub.alpha = 158
-            val f2 = tSub.fontMetrics
+            val f2 = fmSub
             val l2 = f2.descent - f2.ascent + f2.leading
             val bt = top + (ROW_H - (l1 + 1 + l2)) / 2
             c.drawText(row.title, tx, bt - f1.ascent, tTitle)
@@ -578,7 +587,7 @@ class NativeSearchView(
         } else c.drawText(row.title, tx, top + (ROW_H - l1) / 2 - f1.ascent, tTitle)
         if (!sug && row.tag.isNotEmpty()) {
             tTag.color = fg; tTag.alpha = 128
-            val fm = tTag.fontMetrics
+            val fm = fmTag
             c.drawText(row.tag, ROW_X + ROW_W - 20 - row.tagW, top + ROW_H / 2 - (fm.ascent + fm.descent) / 2, tTag)
         }
         c.restore()
@@ -620,7 +629,7 @@ class NativeSearchView(
         else {
             val tp = if (key.fn || key.type == SearchKeyboard.Type.SPACE) tKeyFn else tKey
             tp.color = fg
-            val fm = tp.fontMetrics
+            val fm = if (tp === tKey) fmKey else fmKeyFn
             c.drawText(labels[ri][i], cx, cy - (fm.ascent + fm.descent) / 2, tp)
         }
         c.restore()
@@ -628,7 +637,8 @@ class NativeSearchView(
 
     private fun drawHint(c: Canvas) {
         val base = HINT_Y + 17f
-        for ((i, h) in HINTS.withIndex()) {
+        for (i in HINTS.indices) {
+            val h = HINTS[i]
             tHintB.color = 0xE6FFFFFF.toInt(); c.drawText(h.first, hintX[i * 2], base, tHintB)
             tHint.color = 0x9EFFFFFF.toInt(); c.drawText(h.second, hintX[i * 2 + 1], base, tHint)
         }
