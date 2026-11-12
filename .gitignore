@@ -4,3 +4,14 @@ build/
 local.properties
 *.iml
 .hoplite/
+# Rust / native
+rust/target/
+.cxx/
+.externalNativeBuild/
+captures/
+# Signing material and secrets
+*.jks
+*.keystore
+keystore.properties
+*.pem
+.env
