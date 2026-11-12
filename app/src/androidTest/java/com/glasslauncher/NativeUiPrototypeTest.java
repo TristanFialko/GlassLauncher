@@ -11,7 +11,9 @@ import android.util.Log;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 
 import java.io.BufferedReader;
@@ -24,6 +26,8 @@ import java.nio.charset.StandardCharsets;
  * logs in <app external files>/nativeui for the CI artifact; asserts the prototype renders, moves focus, opens the
  * Control Centre and that every D-pad key produced a measured frame. Emulator numbers are NOT device performance.
  */
+// a_ runs first: it clears the screenshot folder, and b_ leaves HOME routing exercised afterwards
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(AndroidJUnit4.class)
 public class NativeUiPrototypeTest {
     private static final String TAG = "GlassNativeTest";
@@ -73,7 +77,7 @@ public class NativeUiPrototypeTest {
         return log;
     }
 
-    @Test public void nativePrototypeVersusWebView() throws Exception {
+    @Test public void a_nativeVersusWebView() throws Exception {
         ua = InstrumentationRegistry.getInstrumentation().getUiAutomation();
         sh("rm -rf /data/local/tmp/glass-nativeui"); sh("mkdir -p /data/local/tmp/glass-nativeui");
         int[] path = {22, 22, 20, 21, 19, 19};   // right, right, down (row 2), left, up, up (header)
@@ -149,7 +153,7 @@ public class NativeUiPrototypeTest {
      * only: screenshots go to the CI artifact for visual review. Recently Used needs a configured app installed, which this
      * emulator image lacks, so it is covered by JVM tests and the owner's device checklist.
      */
-    @Test public void nativeSurfacesAndRouting() throws Exception {
+    @Test public void b_nativeSurfacesAndRouting() throws Exception {
         ua = InstrumentationRegistry.getInstrumentation().getUiAutomation();
         sh("mkdir -p /data/local/tmp/glass-nativeui");
         sh("logcat -c");
