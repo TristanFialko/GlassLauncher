@@ -52,8 +52,26 @@ memory. It does show, credibly, that frame rendering during focus animation is f
 - Background polling: the effect is binary (poll stops) and was observed; the CPU saving it represents on the box is unmeasured.
 - APK size grows by the two native libraries; see ADR 0003 for the 32-bit-only option.
 
+## Search snapshot preparation in Rust (ADR 0005, commit `018e627`)
+
+| Measurement | Before (JS `entries()` + `wire()` + index) | After (JS snapshot + Rust `prepare`) | Where |
+|---|---:|---:|---|
+| Host, JS side, 228 entries | ~125 µs | ~79 µs | `search-parity.js --bench`, node 24, 3 runs |
+| Host, Rust side | ~124 µs (index build) | ~138 µs (rules + index) | `glass-cli bench` / `bench-prepare` |
+| Host total (excl. JNI copy) | ~249 µs | ~217 µs | sum of the above |
+| Emulator, full path through the WebView bridge, 225 entries | 600 µs median (max 1,500) | 700 µs median (max 6,600) | `GlassEndToEndTest`, CI run `43243655890` |
+
+Reading: on the host the JavaScript work per Search session drops by about a third and the total by ~13 %. Through the
+real bridge on the emulator there is **no measurable gain**: the medians differ by one tick of WebView's coarsened
+`performance.now()` (~100 µs), and the snapshot carries all installed apps (including hidden ones) so it is larger than the
+old filtered wire. Either way this is sub-millisecond, once per Search session. The migration's value is ownership: the
+registry rules now live in tested, platform-independent Rust, and ~230 entry objects/closures per session are no longer
+allocated on the JavaScript thread. It is **not** claimed as a user-visible speedup; no VIP7802 measurement exists.
+
+Debug APK after this commit: 3,250,079 B (release unsigned 3,235,220 B), both ABIs packaged (CI check).
+
 ## Regressions / trade-offs
-- APK +0.59 MB (native libraries).
+- APK +0.63 MB (native libraries, both ABIs).
 - WebView timers are paused whenever the activity is paused, including when a dialog (e.g. the one-time location-permission
   prompt) covers Glass; the UI behind the dialog does not update until it closes. The `G.perf.watch` blur-fallback sampler
   also cannot count frames during that window, so it records nothing for that opening (it neither marks it slow nor fast).
@@ -63,9 +81,12 @@ memory. It does show, credibly, that frame rendering during focus animation is f
 | Check | Result | Where |
 |---|---|---|
 | `norm()` JS vs Rust | 4,409 strings, 0 differences (7 lone-surrogate strings excluded — no UTF-8 form; adapter keeps them on JS) | `tools/parity/search-parity.js` (host + CI) |
-| Ranking JS vs adapter→Rust | 8,832 query/max combinations, 0 differences | same |
+| Ranking JS vs adapter→Rust | 8,832 query/max combinations, 0 differences (through the snapshot path since `018e627`) | same |
+| Snapshot entries vs pre-migration `entries()` fixtures | 8 cases (228/228/226/23/14/19/19/52 entries), 0 differences | `tools/parity/snapshot-parity.js` (host + CI) |
+| Snapshot entries vs `entries()` inside the Android WebView | 225 entries, identical | `GlassEndToEndTest.searchParityThroughWebViewBridge` (emulator) |
+| Harness v4 on simulated Android 11 (PowerShell 7 and Windows PowerShell 5.1) | 108 parser + 30 end-to-end checks; v3 fails 19 of the 30 | `tools/bench/test-bench-*.ps1` (CI) |
 | Ranking JS vs Rust inside the Android WebView | 1,668 queries, 0 differences | `GlassEndToEndTest.searchParityThroughWebViewBridge` (emulator) |
 | App discovery 1.5 vs 2.0 output | identical JSON | `GlassEndToEndTest.appDiscoveryMatchesLegacyAlgorithm` (emulator) |
-| JNI on host JVM (load, index, unicode, bad input, 5,000 entries) | 5/5 pass | `RustCoreJniTest` |
+| JNI on host JVM (load, index, unicode, bad input, 5,000 entries, snapshot rules, bad snapshots) | 7/7 pass | `RustCoreJniTest` |
 | Native load on Android | pass | `RustCoreInstrumentedTest` (emulator) |
 | Icons via WebView vs 1.5 bridge: same set available, decoded 128×128 | 13/13, pass | `GlassEndToEndTest.iconsLoadOffTheJsThread` (emulator) |

@@ -1,4 +1,4 @@
-# Device benchmark methodology (harness v3)
+# Device benchmark methodology (harness v4)
 
 `tools/bench/bench-device.ps1` measures an installed build over adb. v2 replaced v1 after the first VIP7802 comparison
 (2026-11-12) exposed problems in v1's method. v3 fixes the device-specific problems found in the first VIP7802 run of v2.
@@ -32,14 +32,35 @@ This page lists each problem, how the harness handles it now, and how to run a v
 | 16 | **Renderer PSS was blank in the summary** even though `meminfo.txt` had it (renderer PID 4958, ~63.5 MB). | `RendererPids` returned a one-element array, which PowerShell unwraps into a single object. Windows PowerShell 5.1 gives a lone `[pscustomobject]` no `.Count`, so `$rend.Count` was empty and the renderer sum was dropped. Renderer CPU was blanked the same way. PowerShell 7, used for the earlier tests, does have `.Count`, which is why the tests passed. | Results are wrapped in `@()` and summed by `Get-SumOrNull([object[]])`, so one renderer works the same as several. `meminfo.txt` now records the parsed values for each sample. The summary has app, renderer and total PSS. |
 | 17 | **Background CPU was recorded even when Glass wasn't confirmed hidden.** | Same as 14/15. | Background CPU is measured only after the check above passes, and re-checked afterwards. If either check fails, `cpu_background` is null and `cpu_background_rejected` gives the reason. App, renderer and combined CPU are reported for foreground idle and background. |
 
-The parsing functions live in `tools/bench/bench-lib.ps1`. They are unit-tested against Android 11 and Android 12+
-output fixtures by `tools/bench/test-bench-lib.ps1` (90 checks, run in CI). The Android 11 activity-dump fixture fails
-against the v2 parser and passes against v3. The full harness was also run end to end against a simulated Android 11
-device in two modes:
-- The background app comes to the front and Glass stops after a delay: all warm samples are accepted, background CPU is measured, and renderer PSS/CPU are present.
-- The background launch leaves Glass in front, as on the box: every warm sample and the background CPU are rejected with the diagnostic.
+## What v3 would still have got wrong, and what v4 does
 
-**v3 has not yet been run on the VIP7802.**
+Found by auditing v3 against realistic Android 11 output before any further device run. All three are reproduced by
+`tools/bench/test-bench-device.ps1` (below): it fails 19 checks against the v3 script and passes against v4.
+
+| # | v3 problem | Cause | v4 behaviour |
+|---|---|---|---|
+| 18 | **Every warm sample would still be rejected.** | Relaunching a Glass whose task is behind another app *always* prints `Warning: Activity not started, its current task has been brought to the front` (that message is the warm/hot relaunch itself; row 14's v2 log shows it). v3 rejected any sample with an `am` warning. This also means v2's YouTube launches most likely *did* displace Glass, and the v2 rejections came from the state parser (row 13). | Only that warning is accepted (`Test-WarmRelaunchWarning`); any other warning — e.g. `delivered to currently running top-most instance`, meaning Glass was already in front — still rejects the sample. |
+| 19 | **Another app's WebView would be counted as Glass's renderer.** | v3 summed every `sandboxed_process`/`privileged_process` on the device and only warned when there were several. | Glass's renderer is attributed via `dumpsys activity services com.glasslauncher` (WebView's renderer is an external isolated service whose ServiceRecord is filed under the host package, with `app=ProcessRecord{… <pid>:…sandboxed_process…}`). One unattributed renderer is accepted and flagged (`renderer_attribution`); several unattributed renderers are **rejected** (`renderer_rejected`, renderer and total null) instead of summed. The services dump is saved to `renderers.txt`. |
+| 20 | **A trampolining background app failed the sample outright.** | `am start -W` of a splash/trampoline activity reports `Status: timeout`; v3 treated any non-`ok` status as fatal. It also required the requested package itself to be in front, which fails if it hands off to another package. | Only `Error:` is fatal. The polling decides: Glass's own record `STOPPED` **and** a package other than Glass in front (`requested_in_front` is recorded for review). |
+
+Also: `meminfo` totals tolerate digit grouping (`63,536`), and the `Hist` header tolerates Android 12+ spacing.
+`summary.json` is `schema_version` 3 / `harness_version` 4.
+
+### Off-device verification
+
+- `tools/bench/test-bench-lib.ps1`: 108 parser checks against Android 11 and 12+ fixtures.
+- `tools/bench/test-bench-device.ps1`: runs the **real** `bench-device.ps1` against a simulated Android 11 TV (a fake
+  `adb` function with an activity/window/services/meminfo/proc state machine). Scenarios: Android 11 with a trampolining
+  YouTube, brought-to-front relaunches and a second app's WebView renderer (expects all warm samples valid, renderer PSS =
+  63,536 KB from PID 4958 only, background CPU accepted); Glass never stopping (expects every warm sample and background
+  CPU rejected with the reason); two unattributed renderers (expects renderer PSS/CPU rejected, app PSS kept); one
+  unattributed renderer (accepted, flagged).
+- CI runs both under PowerShell 7 (Linux) **and Windows PowerShell 5.1** (`windows-latest`, `powershell.exe`), the shell
+  the owner uses — 5.1's array semantics are what blanked renderer PSS in v2.
+
+Limits: the simulated dumps follow AOSP Android 11 formats, not captures from this box. The `dumpsys activity services`
+attribution in particular is unverified on the VIP7802; if it finds nothing, the harness falls back to the single/ambiguous
+rules above and says so. **v4 has not yet been run on the VIP7802.**
 
 ## Running a valid A/B comparison
 

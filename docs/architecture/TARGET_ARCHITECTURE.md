@@ -1,6 +1,6 @@
 # Glass Launcher 2.0 — Target architecture
 
-Status: **implemented for the first migrated subsystem (search ranking)**; later steps are listed at the end.
+Status: **implemented for two migrated subsystems (search ranking; search snapshot preparation)**; later steps are listed at the end.
 Evidence for every claim below is in `MIGRATION_STATUS.md` and `docs/benchmarks/RESULTS.md`.
 
 ## Layers
@@ -36,7 +36,7 @@ navigation (it needs live DOM rectangles), overlays, animation. See `docs/decisi
 
 | Crate | Kind | Purpose | Dependencies |
 |---|---|---|---|
-| `glass-core` | lib | Platform-independent logic. `#![forbid(unsafe_code)]`. Currently: search index (`search.rs`) — exact port of `registry.js` `norm`/`compact`/`subseq`/`fieldScore`/`score`/comparator. | none |
+| `glass-core` | lib | Platform-independent logic. `#![forbid(unsafe_code)]`. Currently: search index (`search.rs`) — exact port of `registry.js` `norm`/`compact`/`subseq`/`fieldScore`/`score`/comparator; search snapshot preparation (`snapshot.rs`) — the `entries()` rules (show flag, Glass itself, hidden vendors, `available`, `supersededBy`) and ordering. | none |
 | `glass-jni` | cdylib → `libglass.so` | JNI entry points for `com.glasslauncher.RustCore`. The only crate with `unsafe` (raw JNI calls), each block documented. | `glass-core`, `jni-sys =0.3.0` (no transitive deps) |
 | `glass-cli` | bin (host only) | Line-protocol harness used by `tools/parity` (parity checks, benchmarks). Never shipped. | `glass-core` |
 
@@ -49,6 +49,7 @@ Toolchain pinned by `rust/rust-toolchain.toml` (stable 1.91.0, targets `armv7-li
 | static init | `nativeVersion` | — | UTF-8 `"<semver>;<abi>"` | load/ABI/self-test failure ⇒ `isAvailable()==false` |
 | static init | `nativeSelfTest` | — | `boolean` | `false` |
 | `setSearchIndex(String wire)` | `nativeSetSearchIndex` | UTF-8 bytes of the wire format | entry count | `-1` (panic / bad input / not loaded) |
+| `prepareSearch(String snapshot)` | `nativePrepareSearch` (ABI 2) | UTF-8 snapshot (see data flow) | UTF-8 `"r,s,t"`: kept snapshot record numbers in index order (`""` none); replaces the index | `null` (malformed / unsupported / not loaded); index untouched |
 | `search(String q, int max)` | `nativeSearch` | UTF-8 query, max results (≤0 ⇒ 24) | UTF-8 `"i,j,k"` indices into the last index, `""` for none | `null` |
 
 Rules (all enforced in code):
@@ -59,20 +60,29 @@ Rules (all enforced in code):
 - `RustCore.EXPECTED_ABI` must equal `glass_core::ABI_VERSION`; a mismatched library disables the native path rather than misbehaving.
 - Calls arrive on the WebView **JavaBridge thread**, never the Android UI thread.
 
-## Search data flow (Glass 2.0)
+## Search data flow (Glass 2.0, snapshot migration — ADR 0005)
 
 1. `search.js open()` → `G.registry.invalidate()` (one index per Search session).
-2. First query of the session: `registry.js` snapshots `G.registry.entries()` (same filtering as before: `available()`,
-   `supersededBy`), serialises them (`G.registry.wire`: entries split by U+001E, fields `kind,title,keyword…` split by U+001F)
-   and calls `AndroidBridge.coreSearchIndex` **only if the payload changed** since the last session.
-3. Each (debounced) query: `AndroidBridge.coreSearch(text, max)` → indices → the session's entry objects (with their
-   `run` closures), rendered exactly as before.
-4. The original JavaScript ranking runs instead when: the bridge methods are missing (plain browser), `PERF.core:'js'` is
-   set in `apps.js`, the native library failed to load or returned an error (sticky for the page lifetime), an entry has a
-   kind other than `app`/`shortcut` (registry.js orders those with an asymmetric comparator), text contains a lone UTF-16
-   surrogate (no UTF-8 form), or `max` is not positive.
+2. First query of the session: `registry.js` builds a **snapshot of live facts** — every installed app as Android
+   reported it (`i` record: id, name, show flag, alias list), then every other provider entry and shortcut with its
+   `available()` answer already evaluated and its `supersededBy` packages (`e` records). Format: records split by U+001E,
+   fields by U+001F, list items by U+001D, header `glass-snapshot␟1`; U+001C–U+001F are stripped from text first.
+3. `AndroidBridge.coreSearchSnapshot(snapshot)` (sent **only if it changed** since the last session) →
+   `glass_core::snapshot::prepare` applies the rules `entries()` used to apply in JavaScript (show flag, Glass itself,
+   hidden vendor prefixes, unavailable, superseded), orders the kept entries, builds the index and returns the kept
+   records' numbers (`"0,1,5,…"`).
+4. Each (debounced) query: `AndroidBridge.coreSearch(text, max)` → index positions → snapshot records → entry objects,
+   created lazily (only for results shown) by the same constructor the JavaScript provider uses, so `run` closures,
+   icons and rendering are unchanged.
+5. The original JavaScript path (`entries()` + `queryJs`) runs instead when: the bridge methods are missing (plain
+   browser), `PERF.core:'js'` is set in `apps.js`, the native library failed to load or a search call failed (sticky for
+   the page lifetime), the snapshot is outside what the port covers (non-array aliases/keywords/`supersededBy`, an id
+   with control characters, a kept entry whose kind is neither `app` nor `shortcut` — Rust returns `null`), text
+   contains a lone UTF-16 surrogate, or `max` is not positive.
 
-Parity is checked by `tools/parity/search-parity.js`, which loads the production `registry.js` + `shortcuts.js`.
+Parity: `tools/parity/snapshot-parity.js` (entries vs fixtures generated from the pre-migration `entries()`, 8 cases)
+and `tools/parity/search-parity.js` (8,832 rankings through the snapshot path), both on the production `registry.js` +
+`shortcuts.js`; the emulator test checks snapshot entries == `entries()` and ranking through the real WebView bridge.
 
 ## Build integration
 
