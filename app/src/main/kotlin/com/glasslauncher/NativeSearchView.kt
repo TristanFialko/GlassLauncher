@@ -91,7 +91,10 @@ class NativeSearchView(
     val isOpen: Boolean get() = controller.isOpen
 
     init {
-        engine.listener = SearchEngine.Listener { q, r -> controller.onResults(q, r) }
+        engine.listener = object : SearchEngine.Listener {
+            override fun onResults(query: String, results: List<SearchResult>) = controller.onResults(query, results)
+            override fun onFailed(query: String) = controller.onFailed(query)
+        }
         visibility = INVISIBLE
         isFocusable = true
         isFocusableInTouchMode = true
@@ -374,7 +377,9 @@ class NativeSearchView(
         hasHeader = q.isEmpty()
         noneLayout = null
         if (q.isNotEmpty() && res.isEmpty()) {
-            val msg = "No apps or settings match \u201c$q\u201d"
+            // Same block and style as the no-match text; an internal failure must not read as "no match".
+            val msg = if (controller.failed) "Search isn\u2019t working right now. Close Search and open it again to retry."
+                else "No apps or settings match \u201c$q\u201d"
             noneLayout = StaticLayout.Builder.obtain(msg, 0, msg.length, tNone, (ROW_W - 48).toInt()).setAlignment(Layout.Alignment.ALIGN_NORMAL).build()
         }
         rows = Array(res.size) { i ->

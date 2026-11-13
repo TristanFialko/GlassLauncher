@@ -76,7 +76,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
             @Suppress("DEPRECATION")
             v.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             // Home, then Search above it, then a toast layer so toasts stay visible over Search (glass.js toast z-order).
-            val engine = SearchEngine(searchExec, MainLooperScheduler(), searchFacts)
+            val engine = SearchEngine(searchExec, MainLooperScheduler(), searchFacts, RustBackend) { Log.i(TAG, it) }   // route changes only, never per key
             val s = NativeSearchView(this, searchHost, engine, IconSource { pkg, size -> searchIcon(pkg, size) }, pm)
             search = s
             val toastLayer = object : View(this) { override fun onDraw(c: android.graphics.Canvas) { v.drawToastLayer(c) } }
@@ -330,12 +330,14 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
 
     /** Runs on [searchExec]. */
     private val searchFacts = object : SearchFactsSource {
-        override fun installedApps(): List<InstalledApp> = try {
-            val a = JSONArray(apps!!.installedAppsJson())
-            List(a.length()) { i -> a.getJSONObject(i).let { InstalledApp(it.getString("id"), it.optString("name"), it.optBoolean("show", true)) } }
-        } catch (t: Throwable) { Log.e(TAG, "search apps", t); emptyList() }
+        // Essential fact: a failure must reach SearchEngine (explicit failure, retried on the next open), not become "no apps".
+        override fun installedApps(): List<InstalledApp> {
+            val a = JSONArray(apps!!.installedAppsJsonOrThrow())
+            return List(a.length()) { i -> a.getJSONObject(i).let { InstalledApp(it.getString("id"), it.optString("name"), it.optBoolean("show", true)) } }
+        }
         override fun aliases(): Map<String, List<String>> = emptyMap()   // window.SEARCH_ALIASES is not configured in apps.js
-        override fun hasSettings(kind: String): Boolean = settings?.has(kind) == true
+        // Not ready yet: throw, so the engine treats the kind as unavailable for this session only instead of caching false.
+        override fun hasSettings(kind: String): Boolean = settings!!.has(kind)
     }
 
     /** Runs on [pm]. */

@@ -78,6 +78,79 @@ Candidates for the owner's `-Trace` run, in rough order of expected cost on the 
 
 Checked and fine: Home, Control Centre and icon drawing preallocate paints, paths, shaders and rects; the docks' fade layer exists only while rows scroll; art is decoded off the UI thread at display size; Control Centre system calls and polling run on its worker. UI-thread file reads left on purpose: `NativeHomeConfig.load` (`home.json`) in `onCreate` and `UiRouter.mode` in `MainActivity`. Both are small and needed before the first frame or the routing decision.
 
+## Full-native branch (`glasslauncher-2.0-full-native`)
+
+Goal: a fully native launcher (Kotlin UI + Rust core over JNI; no WebView, HTML, CSS, JavaScript or Node in source, build
+or APK). Branched from `glasslauncher-2.0-native-audit` @ `d513e24`. Nothing has been removed yet; the WebView UI is
+still the default HOME and nothing on this branch has run on the VIP7802.
+
+- **M1** (`025a21c`): Rust golden test (`rust/glass-core/tests/golden.rs`) reads `ranking-golden.json` without Node;
+  Kotlin `SearchLoneSurrogateTest` (lone-surrogate queries are ranked by Kotlin, the Rust backend is never asked).
+  The push had no CI run (CI runs on `main`, `glasslauncher-2.0-consolidated`, pull requests and manual dispatch).
+- **M1 review fixes** (tests and docs only, no production change):
+  - `golden.rs`: the hand-written parser accepted malformed input (any byte as separator, unknown escapes, unpaired
+    surrogates via an overflowing subtraction, out-of-bounds panics). Replaced with a strict RFC 8259 parser that returns
+    errors (bounds, escapes, surrogate pairs, number grammar, duplicate keys, trailing data, depth limit), with its own
+    accept/reject tests. Kept dependency-free so `cargo test --locked` needs no lockfile change.
+  - The fixture shape is now asserted: 228 entries, 2,522 cases, max 24, short limit 5, unique ids and queries, indices
+    in range and not repeated.
+  - Added `tools/parity/fixtures/PROVENANCE.md`, which `golden.rs` referenced but did not exist; it states the
+    fixture was captured from `registry.js` `queryJs()` while the web UI is still present.
+- **CI:** results come only from the draft PR's checks for this branch; see the PR. Device verification: **not performed**.
+- **M2** (native search ranking authority; start `1e7394d`): Rust is the production ranker and the Kotlin port an explicit fallback.
+  - Before: `NativeHomeActivity` -> `SearchEngine(RustBackend)` -> `RustCore`; any thrown error in `rank` was swallowed into an
+    empty list, a throwing `prepare` left `usingRust` stale, the fallback was silent, and a cached preparation could be reused after
+    another engine replaced the process-wide native index.
+  - After: same path; `SearchEngine.fallback` (`RankFallback`: `NATIVE_UNAVAILABLE`, `CATALOG_NOT_WIRE_SAFE`, `PREPARE_FAILED`,
+    `SEARCH_FAILED`, `INVALID_RESULT`) and `lastRanker` make the route observable; route changes are logged once (`GlassNative`).
+    Native nulls, throws, bad/duplicate/over-limit indices fall back to Kotlin for the same query (never empty, never reordered).
+    Index ownership is checked under a lock, so Rust never ranks another engine's or a previous catalog. Details: `docs/nativeui/SEARCH.md`.
+  - Tests: `SearchEngineRoutingTest` (routing, each fallback, invalid indices, refresh/staleness, shared-index replacement, blank and
+    lone-surrogate queries, debounce, all 2,522 golden queries through the engine with Rust and with Kotlin).
+  - Unchanged: WebView, HTML/CSS/JS, `MainActivity.java`, `GlassBridge.java`, default HOME, UI, golden fixture.
+  - Verification: no local Rust/Gradle toolchain was available; results come only from the PR #5 checks. Device: **not performed**.
+  - CI: run [43341398658](https://github.com/TristanFialko/GlassLauncher/actions/runs/43341398658) on `80de992` passed all six jobs.
+- **M3** (native Search reliability and lifecycle; start `80de992`): commits `e7ed2c9` (failure contract, activation fix, tests),
+  `bb1c1f3` (lifecycle tests), plus this docs commit.
+  - Before: an unexpected throw while ranking was delivered as an empty list (looked like "no match"); a throw in `prepare` escaped the
+    executor task and left the previous session's catalog and references; route logs included exception messages; the static index owner
+    kept the last engine alive; OK on a list row while a new query was ranking launched the previous query's result.
+  - After: `SearchEngine.Listener.onFailed` / `Ranker.FAILED` / `failureCount`; `prepare` never throws and clears all state on failure;
+    `SearchController.failed` drives a distinct message and toast; logs are once per stage and class, class name only; weak index owner;
+    stale-row activation is ignored. Debounce, limits, ranking, golden fixture, UI layout, WebView and default HOME are unchanged.
+  - Tests: `SearchEngineFailureTest`, `SearchEngineLifecycleTest`, `SearchControllerTest` (M3 cases). Details: `docs/nativeui/SEARCH.md`.
+  - Verification: nothing was compiled or run locally (no Gradle/Kotlin/cargo in the agent sandbox); results come only from the PR #5
+    checks on the M3 head. VIP7802 device testing: **pending**.
+  - M3 head `efbe882` CI: "Android build + JVM/JNI tests" **failed** (run 43347316496; the other five jobs passed). Logs were not
+    readable from the agent; the likely cause is `SearchEngineLifecycleTest` expecting `onFailed` when `installedApps()` throws while
+    `prepareUnchecked` still swallowed it into an empty catalog.
+- **M3 follow-up** (fact policy for `SearchEngine` preparation): installed apps essential (explicit failure, retried on next open);
+  aliases, extra entries and per-kind `hasSettings` optional (left out for the session, reported once under `FACTS`, exposed as
+  `omittedFacts`); a `hasSettings` failure now means unavailable and is not cached (was: available, cached). `AppDiscovery` gained
+  `installedAppsJsonOrThrow()` for native Search; the WebView path is unchanged. Policy table: `docs/nativeui/SEARCH.md` "Fact policy".
+  Tests: `SearchEngineFactsPolicyTest`. Verification: GitHub Actions only (no local Gradle/Kotlin/cargo). Device: **pending**.
+
+## Native audit branch (2026-11-13, `glasslauncher-2.0-native-audit`)
+
+Branched from `glasslauncher-2.0-consolidated` @ `f01f4637`. PR #3 (`glasslauncher-2.0-render-opt`) is separate, not merged,
+not cherry-picked and not touched here; its CI result is not device verification. Gates below are unchanged.
+
+- **Measured code split** (`python3 tools/metrics/loc.py`, production only): Kotlin 62.7 %, JavaScript 17.6 %, Rust 8.5 %,
+  Java 5.7 %, CSS 3.4 %, HTML 0.8 % of 5957 code lines; all WebView assets (HTML/CSS/JS) 21.8 %. The "~45 % JS" figure is
+  not what the tree shows. Method and full tables: `docs/nativeui/WEBVIEW_INVENTORY.md`.
+- **WebView/JS inventory** (every `android.webkit` use, bridge method → JS caller → native equivalent, asset by asset):
+  `docs/nativeui/WEBVIEW_INVENTORY.md`. **Removal matrix** (gap, contract, tests, whether it blocks 4c):
+  `docs/nativeui/WEBVIEW_REMOVAL_MATRIX.md`.
+- **Frozen JS ranking reference** (tests only, no production change): `tools/parity/fixtures/ranking-golden.json` is
+  `registry.js` `queryJs()` on the parity fixture box (228 entries, 2522 queries, max 24 and 5), generated by
+  `node tools/parity/ranking-golden.js --write`. CI (`rust` job) checks that registry.js still reproduces it and that Rust
+  (`glass-cli`) matches it; `SearchRankingGoldenTest` checks the Kotlin fallback (no native library needed), the Kotlin catalog
+  + ranking path, and Rust over JNI when built. This keeps a JS-derived ranking reference after Stage 4c deletes registry.js.
+- **CI fix:** the parity steps piped into `tee` under GitHub's default `bash -e` (no `pipefail`), so a failing parity script
+  could not fail the job. Those steps now use `shell: bash` (`-eo pipefail`).
+- Locally observed only: `node tools/parity/ranking-golden.js` passes against the current registry.js (node 24). Kotlin, Rust and
+  Android results come from this branch's PR checks only; see the PR for the run.
+
 ## Language and process layout
 
 | Layer | Language | Files |
@@ -113,7 +186,7 @@ caught at the JNI boundary (`glass-jni`).
 | `GlassBridge.java` (`@JavascriptInterface`) | production runtime | Stage 4 |
 | `AppDiscovery.iconResponse` (`WebResourceResponse`) | production runtime | Stage 4 (native uses `iconPng`) |
 | `assets/index.html`, `assets/js/*`, `assets/css/*`, `assets/apps.js` (18 APK entries) | production runtime | Stage 4; `apps.js` values already live in `assets/nativeui/home.json` (drift check in CI) |
-| JS ranking fallback in `registry.js` | production runtime | Stage 4 (Kotlin fallback replaces it) |
+| JS ranking fallback in `registry.js` | production runtime | Stage 4 (Kotlin fallback replaces it; frozen reference: `tools/parity/fixtures/ranking-golden.json`) |
 | `app/src/main/assets_baseline`, `assets_phase1..3` | not packaged (not a source set) | historical reference; may be moved to `docs/` |
 | `tools/parity/*.js`, fixtures | dev tooling / CI | keep (they become fixture-only once `registry.js` is gone) |
 | `GlassEndToEndTest` (WebView↔bridge↔Rust) | test | remove with the WebView |
