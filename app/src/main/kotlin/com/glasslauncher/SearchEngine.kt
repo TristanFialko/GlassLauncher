@@ -58,12 +58,19 @@ enum class Ranker { RUST, KOTLIN, NONE, FAILED }
 
 /** Live facts for a Search session. Called only on the engine's background executor (PackageManager access is fine here). */
 interface SearchFactsSource {
+    /** Essential (SEARCH.md "Fact policy"): a throw fails the session's preparation (onFailed, retried on the next open). Empty is valid. */
     fun installedApps(): List<InstalledApp>
-    /** package id -> extra search words (window.SEARCH_ALIASES); shortcuts.js' default Play Store words are added by the engine. */
+    /**
+     * Optional: package id -> extra search words (window.SEARCH_ALIASES); shortcuts.js' default Play Store words are added by the
+     * engine. A throw leaves only the defaults for this session.
+     */
     fun aliases(): Map<String, List<String>>
-    /** SettingsLauncher.has(kind); asked once per kind and cached for the process, like registry.hasSettings. */
+    /**
+     * Optional, per kind: SettingsLauncher.has(kind). An answer is cached for the engine, like registry.hasSettings; a throw makes that
+     * kind unavailable for this session only (never offered as a possibly dead shortcut) and it is asked again on the next open.
+     */
     fun hasSettings(kind: String): Boolean
-    /** Other registry providers' entries; none in production. */
+    /** Optional: other registry providers' entries; none in production. A throw contributes nothing, like registry.js entries(). */
     fun extraEntries(): List<CatalogEntry> = emptyList()
 }
 
@@ -108,7 +115,7 @@ class SearchEngine(
     }
 
     /** Where an internal failure happened (log key; never includes the query). */
-    private enum class Stage { PREPARE, RUST, KOTLIN }
+    private enum class Stage { PREPARE, FACTS, RUST, KOTLIN }
 
     companion object {
         const val DEBOUNCE_MS = 110L
@@ -156,6 +163,12 @@ class SearchEngine(
         private set
     /** Requests answered with [Listener.onFailed] (counted when ranked, whether or not still current at delivery). */
     @Volatile var failureCount = 0
+        private set
+    /**
+     * Optional facts left out of the current session's catalog because their source threw ("aliases", "extraEntries",
+     * "settings:<kind>"); empty when the catalog is complete or preparation failed. Not a request failure.
+     */
+    @Volatile var omittedFacts: Set<String> = emptySet()
         private set
 
     override val hasPending: Boolean get() = pendingQuery != null
@@ -210,7 +223,7 @@ class SearchEngine(
 
     /** Never throws. On failure no catalog or references survive and the session's queries are answered with onFailed. */
     private fun prepare() {
-        snapshot = null; refs = null; fallbackEntries = null; prepareFailed = false
+        snapshot = null; refs = null; fallbackEntries = null; prepareFailed = false; omittedFacts = emptySet()
         try { prepareUnchecked() } catch (t: Throwable) {
             // Nothing from a previous session may survive a failed preparation (no stale catalog, no stale references).
             snapshot = null; refs = null; fallbackEntries = null; prepareFailed = true
@@ -219,11 +232,15 @@ class SearchEngine(
     }
 
     private fun prepareUnchecked() {
-        val installed = try { facts.installedApps() } catch (t: Throwable) { emptyList() }
-        val aliases = SearchCatalog.mergeAliases(try { facts.aliases() } catch (t: Throwable) { emptyMap() })
-        val shortcuts = SearchCatalog.shortcuts { k -> settingsCache.getOrPut(k) { try { facts.hasSettings(k) } catch (t: Throwable) { true } } }
-        val extra = try { facts.extraEntries() } catch (t: Throwable) { emptyList() }
+        // Fact policy (SEARCH.md): the installed list is essential, so its failure propagates to prepare() (explicit failure,
+        // retried on the next open) instead of becoming a catalog without apps. The other facts are optional.
+        val installed = facts.installedApps()
+        val omitted = LinkedHashSet<String>()
+        val aliases = SearchCatalog.mergeAliases(optionalFact(omitted, "aliases", emptyMap<String, List<String>>()) { facts.aliases() })
+        val shortcuts = SearchCatalog.shortcuts { k -> settingAvailable(k, omitted) }
+        val extra = optionalFact(omitted, "extraEntries", emptyList<CatalogEntry>()) { facts.extraEntries() }
         val snap = SearchCatalog.build(installed, aliases, extra, shortcuts)
+        omittedFacts = omitted
         snapshot = snap
         fallbackEntries = null
         refs = null
@@ -238,6 +255,23 @@ class SearchEngine(
             }
         }
         route(why, error)
+    }
+
+    /** An optional fact: a throw is reported (FACTS, class only), recorded in [omitted] and replaced by [empty] for this session. */
+    private inline fun <T> optionalFact(omitted: MutableSet<String>, name: String, empty: T, get: () -> T): T =
+        try { get() } catch (t: Throwable) { omitted.add(name); report(Stage.FACTS, t); empty }
+
+    /**
+     * Answers are cached for the engine (registry.hasSettings asked Android once per kind). A throw is not cached and means
+     * unavailable: registry.js treated a bridge error as available, which could offer a dead shortcut (SEARCH.md "Fact policy").
+     */
+    private fun settingAvailable(kind: String, omitted: MutableSet<String>): Boolean {
+        settingsCache[kind]?.let { return it }
+        return try {
+            facts.hasSettings(kind).also { settingsCache[kind] = it }
+        } catch (t: Throwable) {
+            omitted.add("settings:$kind"); report(Stage.FACTS, t); false
+        }
     }
 
     private fun nativeAvailable(): Boolean = try { backend.available } catch (t: Throwable) { false }

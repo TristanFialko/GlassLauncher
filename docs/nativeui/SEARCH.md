@@ -113,7 +113,7 @@ Every flushed request that is still current when it completes gets exactly one d
 | Internal failure | `onFailed(q)` | `failed = true`, no rows, "Search isn’t working right now. Close Search and open it again to retry."; Enter toasts `UNAVAILABLE_TOAST`; focus leaves the list |
 | Superseded request, or session closed / reopened | nothing | unchanged |
 
-* An internal failure is: catalog preparation threw (anything other than the per-fact `try`s already in `prepare`), or the Kotlin
+* An internal failure is: catalog preparation threw (including the essential installed-apps fact, see "Fact policy"), or the Kotlin
   ranking threw after Rust could not answer. It is never delivered as an empty list. Before M3 a throw in `rank` became
   `onResults(q, emptyList())` (indistinguishable from no match), and a throw in `prepare` escaped the executor task and left the
   previous session's snapshot and references in place.
@@ -122,9 +122,33 @@ Every flushed request that is still current when it completes gets exactly one d
 * Blank queries never fail (they rank to nothing without a catalog).
 * A failed preparation clears snapshot, references and the cached fallback entries; queries of that session get `onFailed`, the next
   `beginSession` retries. `SEARCH_FAILED` / `INVALID_RESULT` stay sticky for the engine (one activity); a new engine tries Rust again.
-* Logging: once per stage (`PREPARE`, `RUST`, `KOTLIN`) and exception class per engine, at most 4 lines, class name only. Route
+* Logging: once per stage (`PREPARE`, `FACTS`, `RUST`, `KOTLIN`) and exception class per engine, at most 4 lines, class name only. Route
   change lines also carry only the class name now (an exception message could echo the query). `failureCount` counts failed requests.
 * The process-wide index owner is a `WeakReference`, so a destroyed activity's engine (listener, view, facts) is not kept alive.
+
+### Fact policy (M3 follow-up)
+
+Before this follow-up `prepareUnchecked` swallowed every fact failure: no apps, no aliases, no extra entries, and `hasSettings`
+failures became **available** (cached for the engine). A broken PackageManager therefore looked like "no match", which contradicted the
+failure contract above, and `AppDiscovery.installedAppsJson()` already turned PackageManager failures into `[]` before the engine saw them.
+
+| Source | Policy | On throw | User impact | Retry |
+| --- | --- | --- | --- | --- |
+| `installedApps()` | **Essential** | Preparation fails: snapshot, references and fallback entries cleared, `onFailed` for that session's queries, `PREPARE` logged once, route `PREPARE_FAILED` | "Search isn't working right now…" instead of a fake "No apps or settings match" | Next open (`beginSession`) |
+| `aliases()` | Optional | Configured aliases left out; shortcuts.js' default Play Store words still merged | Apps still found by name; alias words miss for that session | Next open |
+| `extraEntries()` | Optional (none in production) | Contributes nothing, as registry.js `entries()` / `snapshot()` skipped a failing provider | Those rows are missing for that session | Next open |
+| `hasSettings(kind)` | Optional, per kind | That kind is **unavailable** for this session and not cached; `set:main` never asks and stays available | That Settings shortcut is not offered (never a dead shortcut) | Next open; real answers stay cached for the engine, like `registry.hasSettings` |
+
+* Evidence: registry.js `snapshot()` read `G.apps.installed` directly (no catalog without its app list), skipped a throwing provider
+  (`catch(e){ continue; }`), and `hasSettings` treated a bridge `null` as available. The last is deliberately not kept: an unanswerable
+  kind is a false positive (`SettingsLauncher.has` itself answers `false` on an exception), and the next open asks again.
+* An empty installed list or an empty alias map returned normally is valid data, not a failure.
+* Optional failures are not request failures: `failureCount` is unchanged, the route is unchanged (a partial catalog still goes to
+  Rust), they are logged once per engine under `FACTS` with the class name only, and `SearchEngine.omittedFacts` names what was left out
+  of the current session (`aliases`, `extraEntries`, `settings:<kind>`; empty after a failed preparation).
+* Production: `NativeHomeActivity` now calls `AppDiscovery.installedAppsJsonOrThrow()` (same list; the WebView keeps the lenient
+  `installedAppsJson()`), and throws from `hasSettings` while `SettingsLauncher` is not ready instead of caching `false`.
+* Tests: `SearchEngineFactsPolicyTest`; `SearchEngineLifecycleTest` already expected `onFailed` when `installedApps()` throws.
 
 Tests: `SearchEngineFailureTest` (prepare failure, Kotlin failure, Rust then Kotlin failure, Rust fails then Kotlin succeeds,
 legitimate no-match, superseded and close/reopen during a failure, once-only logging without query text),

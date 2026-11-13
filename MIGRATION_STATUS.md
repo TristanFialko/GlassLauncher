@@ -121,6 +121,14 @@ still the default HOME and nothing on this branch has run on the VIP7802.
   - Tests: `SearchEngineFailureTest`, `SearchEngineLifecycleTest`, `SearchControllerTest` (M3 cases). Details: `docs/nativeui/SEARCH.md`.
   - Verification: nothing was compiled or run locally (no Gradle/Kotlin/cargo in the agent sandbox); results come only from the PR #5
     checks on the M3 head. VIP7802 device testing: **pending**.
+  - M3 head `efbe882` CI: "Android build + JVM/JNI tests" **failed** (run 43347316496; the other five jobs passed). Logs were not
+    readable from the agent; the likely cause is `SearchEngineLifecycleTest` expecting `onFailed` when `installedApps()` throws while
+    `prepareUnchecked` still swallowed it into an empty catalog.
+- **M3 follow-up** (fact policy for `SearchEngine` preparation): installed apps essential (explicit failure, retried on next open);
+  aliases, extra entries and per-kind `hasSettings` optional (left out for the session, reported once under `FACTS`, exposed as
+  `omittedFacts`); a `hasSettings` failure now means unavailable and is not cached (was: available, cached). `AppDiscovery` gained
+  `installedAppsJsonOrThrow()` for native Search; the WebView path is unchanged. Policy table: `docs/nativeui/SEARCH.md` "Fact policy".
+  Tests: `SearchEngineFactsPolicyTest`. Verification: GitHub Actions only (no local Gradle/Kotlin/cargo). Device: **pending**.
 
 ## Native audit branch (2026-11-13, `glasslauncher-2.0-native-audit`)
 

@@ -45,19 +45,29 @@ class AppDiscovery {
      *  Binder calls per installed package. Package order and the resulting set are unchanged. */
     String installedAppsJson() {
         JSONArray a = new JSONArray();
-        try {
-            PackageManager pm = ctx.getPackageManager();
-            Set<String> launchable = launchablePackages(pm);
-            for (PackageInfo p : pm.getInstalledPackages(0)) {
-                if (!launchable.contains(p.packageName)) continue;
-                JSONObject o = new JSONObject();
-                o.put("id", p.packageName);
-                o.put("name", p.applicationInfo.loadLabel(pm).toString());
-                o.put("show", true);
-                a.put(o);
-            }
-        } catch (Exception ignored) {}
+        try { addInstalledApps(a); } catch (Exception ignored) {}
         return a.toString();
+    }
+
+    /** Same list as {@link #installedAppsJson()}, but a PackageManager failure is thrown instead of returning what was gathered
+     *  so far: native Search treats the installed list as an essential fact (docs/nativeui/SEARCH.md "Fact policy"). */
+    String installedAppsJsonOrThrow() throws Exception {
+        JSONArray a = new JSONArray();
+        addInstalledApps(a);
+        return a.toString();
+    }
+
+    private void addInstalledApps(JSONArray a) throws Exception {
+        PackageManager pm = ctx.getPackageManager();
+        Set<String> launchable = launchablePackages(pm);
+        for (PackageInfo p : pm.getInstalledPackages(0)) {
+            if (!launchable.contains(p.packageName)) continue;
+            JSONObject o = new JSONObject();
+            o.put("id", p.packageName);
+            o.put("name", p.applicationInfo.loadLabel(pm).toString());
+            o.put("show", true);
+            a.put(o);
+        }
     }
 
     private static final String[] LAUNCH_CATEGORIES = {

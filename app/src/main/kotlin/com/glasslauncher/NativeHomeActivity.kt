@@ -330,12 +330,14 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
 
     /** Runs on [searchExec]. */
     private val searchFacts = object : SearchFactsSource {
-        override fun installedApps(): List<InstalledApp> = try {
-            val a = JSONArray(apps!!.installedAppsJson())
-            List(a.length()) { i -> a.getJSONObject(i).let { InstalledApp(it.getString("id"), it.optString("name"), it.optBoolean("show", true)) } }
-        } catch (t: Throwable) { Log.e(TAG, "search apps", t); emptyList() }
+        // Essential fact: a failure must reach SearchEngine (explicit failure, retried on the next open), not become "no apps".
+        override fun installedApps(): List<InstalledApp> {
+            val a = JSONArray(apps!!.installedAppsJsonOrThrow())
+            return List(a.length()) { i -> a.getJSONObject(i).let { InstalledApp(it.getString("id"), it.optString("name"), it.optBoolean("show", true)) } }
+        }
         override fun aliases(): Map<String, List<String>> = emptyMap()   // window.SEARCH_ALIASES is not configured in apps.js
-        override fun hasSettings(kind: String): Boolean = settings?.has(kind) == true
+        // Not ready yet: throw, so the engine treats the kind as unavailable for this session only instead of caching false.
+        override fun hasSettings(kind: String): Boolean = settings!!.has(kind)
     }
 
     /** Runs on [pm]. */
