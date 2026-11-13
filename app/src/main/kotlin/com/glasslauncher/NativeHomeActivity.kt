@@ -76,7 +76,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
             @Suppress("DEPRECATION")
             v.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             // Home, then Search above it, then a toast layer so toasts stay visible over Search (glass.js toast z-order).
-            val engine = SearchEngine(searchExec, MainLooperScheduler(), searchFacts)
+            val engine = SearchEngine(searchExec, MainLooperScheduler(), searchFacts, RustBackend) { Log.i(TAG, it) }   // route changes only, never per key
             val s = NativeSearchView(this, searchHost, engine, IconSource { pkg, size -> searchIcon(pkg, size) }, pm)
             search = s
             val toastLayer = object : View(this) { override fun onDraw(c: android.graphics.Canvas) { v.drawToastLayer(c) } }
