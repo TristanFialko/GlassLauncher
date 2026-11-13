@@ -97,6 +97,18 @@ still the default HOME and nothing on this branch has run on the VIP7802.
   - Added `tools/parity/fixtures/PROVENANCE.md`, which `golden.rs` referenced but did not exist; it states the
     fixture was captured from `registry.js` `queryJs()` while the web UI is still present.
 - **CI:** results come only from the draft PR's checks for this branch; see the PR. Device verification: **not performed**.
+- **M2** (native search ranking authority; start `1e7394d`): Rust is the production ranker and the Kotlin port an explicit fallback.
+  - Before: `NativeHomeActivity` -> `SearchEngine(RustBackend)` -> `RustCore`; any thrown error in `rank` was swallowed into an
+    empty list, a throwing `prepare` left `usingRust` stale, the fallback was silent, and a cached preparation could be reused after
+    another engine replaced the process-wide native index.
+  - After: same path; `SearchEngine.fallback` (`RankFallback`: `NATIVE_UNAVAILABLE`, `CATALOG_NOT_WIRE_SAFE`, `PREPARE_FAILED`,
+    `SEARCH_FAILED`, `INVALID_RESULT`) and `lastRanker` make the route observable; route changes are logged once (`GlassNative`).
+    Native nulls, throws, bad/duplicate/over-limit indices fall back to Kotlin for the same query (never empty, never reordered).
+    Index ownership is checked under a lock, so Rust never ranks another engine's or a previous catalog. Details: `docs/nativeui/SEARCH.md`.
+  - Tests: `SearchEngineRoutingTest` (routing, each fallback, invalid indices, refresh/staleness, shared-index replacement, blank and
+    lone-surrogate queries, debounce, all 2,522 golden queries through the engine with Rust and with Kotlin).
+  - Unchanged: WebView, HTML/CSS/JS, `MainActivity.java`, `GlassBridge.java`, default HOME, UI, golden fixture.
+  - Verification: no local Rust/Gradle toolchain was available; results come only from the PR #5 checks. Device: **not performed**.
 
 ## Native audit branch (2026-11-13, `glasslauncher-2.0-native-audit`)
 
