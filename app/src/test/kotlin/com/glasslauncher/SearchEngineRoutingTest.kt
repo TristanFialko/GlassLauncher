@@ -92,7 +92,7 @@ class SearchEngineRoutingTest {
             val e = engine(rust)
             e.beginSession(); exec.runAll()
             assertFalse(e.usingRust); assertEquals(RankFallback.NATIVE_UNAVAILABLE, e.fallback)
-            assertEquals(listOf("Netflix"), e.ask("net"))
+            assertEquals(kotlinOnly("net"), e.ask("net"))
             assertEquals(Ranker.KOTLIN, e.lastRanker)
             assertTrue(rust.prepared.isEmpty() && rust.searched.isEmpty())
             assertEquals(1, logs.size); assertTrue(logs[0], logs[0].contains("NATIVE_UNAVAILABLE"))
@@ -104,7 +104,7 @@ class SearchEngineRoutingTest {
         val e = engine(rust, Facts(apps + InstalledApp("com.bad\u001fpkg", "Bad")))
         e.beginSession(); exec.runAll()
         assertEquals(RankFallback.CATALOG_NOT_WIRE_SAFE, e.fallback)
-        assertEquals(listOf("Netflix"), e.ask("net"))
+        assertEquals(kotlinOnly("net"), e.ask("net"))
         assertTrue(rust.prepared.isEmpty() && rust.searched.isEmpty())
     }
 
@@ -115,7 +115,7 @@ class SearchEngineRoutingTest {
             val e = engine(rust)
             e.beginSession(); exec.runAll()
             assertEquals(mode, RankFallback.PREPARE_FAILED, e.fallback)
-            assertEquals(listOf("Netflix"), e.ask("net"))
+            assertEquals(kotlinOnly("net"), e.ask("net"))
             assertTrue(rust.searched.isEmpty())
             rust.prepareMode = "ok"
             e.endSession(); e.beginSession(); exec.runAll()
@@ -133,7 +133,7 @@ class SearchEngineRoutingTest {
             val e = engine(rust)
             e.beginSession(); exec.runAll()
             assertEquals(kotlinOnly("net"), e.ask("net"))          // the failing query itself is answered by Kotlin
-            assertEquals(listOf("Netflix"), kotlinOnly("net"))
+            assertTrue(kotlinOnly("net").contains("Netflix"))   // "net" also matches the Wi-Fi shortcut ("network")
             assertEquals(RankFallback.SEARCH_FAILED, e.fallback); assertFalse(e.usingRust)
             assertEquals(listOf("YouTube"), e.ask("you"))
             e.endSession(); e.beginSession(); exec.runAll()
@@ -150,7 +150,7 @@ class SearchEngineRoutingTest {
             val rust = FakeRust().apply { this.answer = { answer } }
             val e = engine(rust)
             e.beginSession(); exec.runAll()
-            assertEquals("answer <$answer>", listOf("Netflix"), e.ask("net"))
+            assertEquals("answer <$answer>", kotlinOnly("net"), e.ask("net"))
             assertEquals("answer <$answer>", RankFallback.INVALID_RESULT, e.fallback)
             assertEquals(Ranker.KOTLIN, e.lastRanker)
         }
@@ -206,7 +206,7 @@ class SearchEngineRoutingTest {
         rust.prepareMode = "null"
         e.endSession(); e.beginSession(); exec.runAll()
         assertEquals(RankFallback.PREPARE_FAILED, e.fallback)
-        assertEquals(listOf("Netflix"), e.ask("net"))
+        assertEquals(kotlinOnly("net"), e.ask("net"))
         assertEquals(listOf("kodi"), rust.searched)
     }
 
