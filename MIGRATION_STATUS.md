@@ -78,6 +78,26 @@ Candidates for the owner's `-Trace` run, in rough order of expected cost on the 
 
 Checked and fine: Home, Control Centre and icon drawing preallocate paints, paths, shaders and rects; the docks' fade layer exists only while rows scroll; art is decoded off the UI thread at display size; Control Centre system calls and polling run on its worker. UI-thread file reads left on purpose: `NativeHomeConfig.load` (`home.json`) in `onCreate` and `UiRouter.mode` in `MainActivity`. Both are small and needed before the first frame or the routing decision.
 
+## Full-native branch (`glasslauncher-2.0-full-native`)
+
+Goal: a fully native launcher (Kotlin UI + Rust core over JNI; no WebView, HTML, CSS, JavaScript or Node in source, build
+or APK). Branched from `glasslauncher-2.0-native-audit` @ `d513e24`. Nothing has been removed yet; the WebView UI is
+still the default HOME and nothing on this branch has run on the VIP7802.
+
+- **M1** (`025a21c`): Rust golden test (`rust/glass-core/tests/golden.rs`) reads `ranking-golden.json` without Node;
+  Kotlin `SearchLoneSurrogateTest` (lone-surrogate queries are ranked by Kotlin, the Rust backend is never asked).
+  The push had no CI run (CI runs on `main`, `glasslauncher-2.0-consolidated`, pull requests and manual dispatch).
+- **M1 review fixes** (tests and docs only, no production change):
+  - `golden.rs`: the hand-written parser accepted malformed input (any byte as separator, unknown escapes, unpaired
+    surrogates via an overflowing subtraction, out-of-bounds panics). Replaced with a strict RFC 8259 parser that returns
+    errors (bounds, escapes, surrogate pairs, number grammar, duplicate keys, trailing data, depth limit), with its own
+    accept/reject tests. Kept dependency-free so `cargo test --locked` needs no lockfile change.
+  - The fixture shape is now asserted: 228 entries, 2,522 cases, max 24, short limit 5, unique ids and queries, indices
+    in range and not repeated.
+  - Added `tools/parity/fixtures/PROVENANCE.md`, which `golden.rs` referenced but did not exist; it states the
+    fixture was captured from `registry.js` `queryJs()` while the web UI is still present.
+- **CI:** results come only from the draft PR's checks for this branch; see the PR. Device verification: **not performed**.
+
 ## Native audit branch (2026-11-13, `glasslauncher-2.0-native-audit`)
 
 Branched from `glasslauncher-2.0-consolidated` @ `f01f4637`. PR #3 (`glasslauncher-2.0-render-opt`) is separate, not merged,
