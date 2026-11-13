@@ -109,6 +109,18 @@ still the default HOME and nothing on this branch has run on the VIP7802.
     lone-surrogate queries, debounce, all 2,522 golden queries through the engine with Rust and with Kotlin).
   - Unchanged: WebView, HTML/CSS/JS, `MainActivity.java`, `GlassBridge.java`, default HOME, UI, golden fixture.
   - Verification: no local Rust/Gradle toolchain was available; results come only from the PR #5 checks. Device: **not performed**.
+  - CI: run [43341398658](https://github.com/TristanFialko/GlassLauncher/actions/runs/43341398658) on `80de992` passed all six jobs.
+- **M3** (native Search reliability and lifecycle; start `80de992`): commits `e7ed2c9` (failure contract, activation fix, tests),
+  `bb1c1f3` (lifecycle tests), plus this docs commit.
+  - Before: an unexpected throw while ranking was delivered as an empty list (looked like "no match"); a throw in `prepare` escaped the
+    executor task and left the previous session's catalog and references; route logs included exception messages; the static index owner
+    kept the last engine alive; OK on a list row while a new query was ranking launched the previous query's result.
+  - After: `SearchEngine.Listener.onFailed` / `Ranker.FAILED` / `failureCount`; `prepare` never throws and clears all state on failure;
+    `SearchController.failed` drives a distinct message and toast; logs are once per stage and class, class name only; weak index owner;
+    stale-row activation is ignored. Debounce, limits, ranking, golden fixture, UI layout, WebView and default HOME are unchanged.
+  - Tests: `SearchEngineFailureTest`, `SearchEngineLifecycleTest`, `SearchControllerTest` (M3 cases). Details: `docs/nativeui/SEARCH.md`.
+  - Verification: nothing was compiled or run locally (no Gradle/Kotlin/cargo in the agent sandbox); results come only from the PR #5
+    checks on the M3 head. VIP7802 device testing: **pending**.
 
 ## Native audit branch (2026-11-13, `glasslauncher-2.0-native-audit`)
 

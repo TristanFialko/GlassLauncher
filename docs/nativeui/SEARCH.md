@@ -103,12 +103,45 @@ Tests: `SearchEngineRoutingTest` (routing, every fallback reason, failure answer
 replacement, blank/lone-surrogate queries, debounce, background-only work, all 2,522 golden queries through the engine with Rust and
 with Kotlin), `SearchRankingGoldenTest` (Kotlin and Rust at limits 24 and 5), `SearchRankingParityTest`, `SearchLoneSurrogateTest`.
 
+## Failure contract (M3)
+
+Every flushed request that is still current when it completes gets exactly one delivery on the UI thread:
+
+| Outcome | Listener call | Controller / view |
+| --- | --- | --- |
+| Rust or Kotlin ranked (possibly zero rows) | `onResults(q, list)` | rows, or "No apps or settings match “q”"; Enter toasts "Nothing matches that" |
+| Internal failure | `onFailed(q)` | `failed = true`, no rows, "Search isn’t working right now. Close Search and open it again to retry."; Enter toasts `UNAVAILABLE_TOAST`; focus leaves the list |
+| Superseded request, or session closed / reopened | nothing | unchanged |
+
+* An internal failure is: catalog preparation threw (anything other than the per-fact `try`s already in `prepare`), or the Kotlin
+  ranking threw after Rust could not answer. It is never delivered as an empty list. Before M3 a throw in `rank` became
+  `onResults(q, emptyList())` (indistinguishable from no match), and a throw in `prepare` escaped the executor task and left the
+  previous session's snapshot and references in place.
+* Rust failures are not failures of the request: native nulls/throws/bad indices switch the route (M2), and a throw on the Kotlin side
+  of the Rust path answers that one query with Kotlin. Only if Kotlin also fails is the request failed (`Ranker.FAILED`).
+* Blank queries never fail (they rank to nothing without a catalog).
+* A failed preparation clears snapshot, references and the cached fallback entries; queries of that session get `onFailed`, the next
+  `beginSession` retries. `SEARCH_FAILED` / `INVALID_RESULT` stay sticky for the engine (one activity); a new engine tries Rust again.
+* Logging: once per stage (`PREPARE`, `RUST`, `KOTLIN`) and exception class per engine, at most 4 lines, class name only. Route
+  change lines also carry only the class name now (an exception message could echo the query). `failureCount` counts failed requests.
+* The process-wide index owner is a `WeakReference`, so a destroyed activity's engine (listener, view, facts) is not kept alive.
+
+Tests: `SearchEngineFailureTest` (prepare failure, Kotlin failure, Rust then Kotlin failure, Rust fails then Kotlin succeeds,
+legitimate no-match, superseded and close/reopen during a failure, once-only logging without query text),
+`SearchEngineLifecycleTest` (two engines on one index, reuse across sessions, new apps on next open, failed prepare leaves no stale
+references, re-prepare after replacement failing, pending/in-flight/posted delivery dropped on close, no delivery into a later session for
+the same query, 100 open/close cycles leave no timers/tasks/posts, sticky vs per-session fallbacks), `SearchControllerTest` M3 cases.
+
 ## Deliberate differences
 
 * Results arrive asynchronously. Where search.js read freshly rendered results (`flushRender` in Enter/Left/Tab), the controller flushes the
   debounce and completes the action when the results arrive (Enter shows "Nothing matches that" or moves to the list then). If the list is
   focused and the new results are empty, focus returns to the keyboard (same end state as the WebView).
 * On open, suggestions are shown immediately instead of after the first 110 ms render.
+* Activation while refreshing (M3 fix): search.js ranked synchronously, so a row always belonged to the typed query. Natively the list
+  can still show the previous query's rows while the new ranking runs; OK on such a row now flushes and is ignored instead of launching a
+  stale result (static suggestions for the empty query stay activatable). Regression: `rowsOfThePreviousQueryAreNotActivatedWhileTheNewOneRanks`.
+* Internal failure has its own message and toast; registry.js could not fail, so there is no WebView equivalent.
 * Held OK repeats on the keyboard but not on a result (the WebView would relaunch repeatedly).
 * No pointer/mouse/wheel handling (the target box is D-pad only). Backdrop-click-to-close is not implemented.
 * The panel's inner dark inset shadow, the key drop shadows of unfocused keys and the second small panel shadow are omitted; blur is the
