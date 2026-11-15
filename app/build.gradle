@@ -14,10 +14,24 @@ android {
         versionCode 7
         versionName '2.0.0-dev'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-        // NativeHomeActivity is adb-launchable only in debug builds (owner testing / benchmarks); release reaches it via MainActivity.
+        // Legacy recovery APK only: NativeHomeActivity is adb-launchable in debug builds (owner testing / benchmarks); release
+        // reaches it via MainActivity. In the native production APK it is the exported HOME activity (src/native manifest).
         manifestPlaceholders = [nativeUiExported: "false"]
     }
-    // android.util.Log / android.os.Trace are stubs on the host JVM; RustCore and GlassBridge only log/trace.
+    // N5: two APKs from one tree (docs/nativeui/MIGRATION_PLAN.md, "N5 flavor split").
+    //   native  production launcher: Kotlin + Rust, NativeHomeActivity is HOME/Leanback; no WebView, Java, HTML, CSS or JS.
+    //   legacy  recovery launcher: the pre-N5 WebView UI (MainActivity HOME, opt-in native UI). src/legacy only.
+    // Same applicationId and versionCode, so either installs over the other with `adb install -r`; the recovery build is
+    // told apart by its versionName suffix.
+    flavorDimensions.add('ui')
+    productFlavors {
+        create('native') { dimension = 'ui' }
+        create('legacy') {
+            dimension = 'ui'
+            versionNameSuffix = '-legacy'
+        }
+    }
+    // android.util.Log / android.os.Trace are stubs on the host JVM; RustCore only logs/traces.
     testOptions { unitTests.returnDefaultValues = true }
     // Sideloaded onto Android 11 boxes, not published on Google Play; targetSdk 30 is deliberate (see MIGRATION_STATUS.md).
     lint { disable 'ExpiredTargetSdkVersion' }

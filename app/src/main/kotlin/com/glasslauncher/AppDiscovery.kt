@@ -6,23 +6,18 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.net.Uri
-import android.os.Trace
-import android.util.Base64
 import android.util.LruCache
-import android.webkit.WebResourceResponse
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 /**
  * Finds launchable apps, launches them and renders their real icons for the native Home rows and Search.
- * Pure Android framework work, so it lives in Kotlin. The two legacy WebView helpers at the bottom go away with the WebView host.
+ * Pure Android framework work, so it lives in Kotlin. N5: the WebView-only icon helpers (data URIs, intercepted icon
+ * responses) moved to LegacyWebIcons in the legacy recovery source set; nothing here depends on the WebView.
  */
 class AppDiscovery(private val ctx: Context) {
     private val pngCache = LruCache<String, ByteArray>(96)
-    private val iconCache = LruCache<String, String>(96)
 
     private fun launchIntent(pkg: String): Intent? {
         val pm = ctx.packageManager
@@ -90,35 +85,7 @@ class AppDiscovery(private val ctx: Context) {
         } catch (e: Throwable) { null }
     }
 
-    // ---- Legacy WebView-only surface (MainActivity / GlassBridge). Deleted together with the WebView host. ----
-
-    /** The app's real icon as a PNG data URI (cached). Empty string if unavailable. */
-    fun iconDataUri(pkg: String?): String {
-        if (pkg == null) return ""
-        iconCache.get(pkg)?.let { return it }
-        val png = iconPng(pkg) ?: return ""
-        val uri = "data:image/png;base64," + Base64.encodeToString(png, Base64.NO_WRAP)
-        iconCache.put(pkg, uri)
-        return uri
-    }
-
-    /** Response for an icon URL, or null if the URL is not an icon URL (normal loading continues). */
-    fun iconResponse(url: String?): WebResourceResponse? {
-        if (url == null || !url.startsWith(ICON_BASE)) return null
-        Trace.beginSection("Glass:iconResponse")
-        try {
-            val pkg = Uri.decode(url.substring(ICON_BASE.length))
-            val png = if (PACKAGE.matches(pkg)) iconPng(pkg) else null
-            val h = hashMapOf("Access-Control-Allow-Origin" to "*")
-            return if (png == null) WebResourceResponse("image/png", null, 404, "Not Found", h, ByteArrayInputStream(ByteArray(0)))
-            else WebResourceResponse("image/png", null, 200, "OK", h, ByteArrayInputStream(png))
-        } finally { Trace.endSection() }
-    }
-
     companion object {
-        /** Legacy WebView icon host (reserved, never networked). */
-        const val ICON_BASE = "https://appassets.androidplatform.net/glass-icon/"
-        private val PACKAGE = Regex("[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)*")
         private val LAUNCH_CATEGORIES = arrayOf(Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_INFO, Intent.CATEGORY_LAUNCHER)
 
         @JvmStatic

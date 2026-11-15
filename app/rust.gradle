@@ -1,7 +1,8 @@
 // Rust core (rust/) → libglass.so, packaged per ABI. Applied from app/build.gradle.
 //
 // Properties (gradle.properties, -P, or ~/.gradle/gradle.properties):
-//   glass.rust=false              build without the native core (the app then runs its original JavaScript paths)
+//   glass.rust=false              build without the native core (native UI search uses its Kotlin fallback; the legacy
+//                                 recovery APK runs its original JavaScript paths)
 //   glass.rustAbis=a,b            ABIs to build (default armeabi-v7a,arm64-v8a; add x86_64 for emulators)
 //   glass.cargo=/path/to/cargo    cargo executable if it is not on PATH
 //   glass.rustProfile=release     cargo profile (release|dev)

@@ -24,9 +24,12 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * Glass 2.0 native UI prototype (docs/nativeui/PROTOTYPE.md): the home screen drawn with a custom View instead of the
- * WebView. Not a HOME activity and runs in its own process (:native) so it can be measured without the WebView in the
- * same process. Start it with: adb shell am start -n com.glasslauncher/.NativeHomeActivity
+ * Glass 2.0 native home screen, drawn with a custom View (docs/nativeui/PROTOTYPE.md). Runs in its own process (:native).
+ *
+ * N5: in the native production APK (product flavor `native`) this activity IS the HOME / Leanback launcher entry and the
+ * APK contains no WebView UI. In the legacy recovery APK (flavor `legacy`) it stays the opt-in native UI behind the
+ * WebView MainActivity. The flavor-specific [HomeHandoff] (src/native, src/legacy) holds the only difference: whether a
+ * crash budget and a hand-back to another HOME UI exist.
  *
  * Threading: the UI thread only handles keys and draws. Config, artwork decoding/scaling, wallpaper blur, the
  * installed-app list (AppDiscovery) and Control Centre state (SystemControls) are loaded on one worker thread and
@@ -53,8 +56,8 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     @Volatile private var sClick = 0
     private var probe: FrameLatencyProbe? = null
     private var asHome = false
-    /** Deletes the unconfirmed-start marker (one tiny file) once this HOME start has survived UiRouter.HEALTHY_AFTER_MS. */
-    private val confirmHealthy = Runnable { UiRouter.markNativeHealthy(applicationContext) }
+    /** Legacy recovery APK: deletes the unconfirmed-start marker once this HOME start has survived HomeHandoff.HEALTHY_AFTER_MS. */
+    private val confirmHealthy = Runnable { HomeHandoff.markHealthy(applicationContext) }
     private val ticker = object : Runnable {
         override fun run() { view?.tick(); ui.postDelayed(this, 10_000) }
     }
@@ -64,15 +67,15 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         try {
             super.onCreate(b)
             installCrashHandler(applicationContext)
-            asHome = intent.getBooleanExtra(EXTRA_AS_HOME, false)
-            // Stage 4a: as HOME, an earlier start that never confirmed itself healthy (signal in libglass.so, killed while hung)
-            // counts as a crash; at the limit HOME goes back to the WebView UI before anything native is built.
-            if (asHome && UiRouter.recordNativeStart(applicationContext, System.currentTimeMillis()) != UiRouter.NATIVE) {
-                startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            asHome = intent.getBooleanExtra(EXTRA_AS_HOME, false) || HomeHandoff.isHomeLaunch(intent)
+            // Stage 4a (legacy recovery APK only): as HOME, an earlier start that never confirmed itself healthy counts as a
+            // crash; at the limit HomeHandoff hands HOME back to the WebView UI before anything native is built. The native
+            // production APK has no other UI to hand to, so onHomeStart always continues there.
+            if (asHome && !HomeHandoff.onHomeStart(this)) {
                 finish()
                 return
             }
-            if (asHome) ui.postDelayed(confirmHealthy, UiRouter.HEALTHY_AFTER_MS)
+            if (asHome && HomeHandoff.TRACKS_CRASHES) ui.postDelayed(confirmHealthy, HomeHandoff.HEALTHY_AFTER_MS)
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             apps = AppDiscovery(this)
             sys = SystemControls(this)
@@ -443,15 +446,15 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        asHome = asHome || intent.getBooleanExtra(EXTRA_AS_HOME, false)
+        asHome = asHome || intent.getBooleanExtra(EXTRA_AS_HOME, false) || HomeHandoff.isHomeLaunch(intent)
     }
 
-    /** As HOME, hand back to the WebView UI if the owner switched modes (or the crash fallback did) while we were away. */
+    /** Legacy recovery APK, as HOME: hand back to the WebView UI if the owner switched modes (or the crash fallback did). */
     private fun checkStillHome() {
-        if (!asHome) return
+        if (!asHome || !HomeHandoff.TRACKS_CRASHES) return
         worker.execute {
-            if (UiRouter.mode(this) != UiRouter.NATIVE) ui.post {
-                startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            if (HomeHandoff.shouldHandBack(this)) ui.post {
+                HomeHandoff.handBack(this)
                 finish()
             }
         }
@@ -461,17 +464,18 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         private const val TAG = "GlassNative"
         private const val STATE_FOCUS = "glass.focus"
         private const val PREF_RECENT = "recent"
-        /** Set by MainActivity when the native UI is the HOME screen: Back at the root then does nothing, like a launcher. */
+        /** Marks a HOME start (Back at the root then does nothing, like a launcher). Set by the legacy MainActivity; the native
+         *  production APK also treats HOME / Leanback-launcher intents as HOME starts (HomeHandoff.isHomeLaunch). */
         const val EXTRA_AS_HOME = "glass.asHome"
         @Volatile private var crashHandlerInstalled = false
 
-        /** Records native-process crashes for UiRouter's fallback, then lets the default handler kill the process. */
+        /** Legacy recovery APK: records native-process crashes for the WebView fallback, then lets the default handler kill the process. */
         private fun installCrashHandler(app: android.content.Context) {
-            if (crashHandlerInstalled) return
+            if (crashHandlerInstalled || !HomeHandoff.TRACKS_CRASHES) return
             crashHandlerInstalled = true
             val previous = Thread.getDefaultUncaughtExceptionHandler()
             Thread.setDefaultUncaughtExceptionHandler { t, e ->
-                try { UiRouter.recordNativeCrash(app, System.currentTimeMillis(), e) } catch (_: Throwable) {}
+                try { HomeHandoff.recordCrash(app, e) } catch (_: Throwable) {}
                 previous?.uncaughtException(t, e)
             }
         }
