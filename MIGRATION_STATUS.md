@@ -129,6 +129,21 @@ still the default HOME and nothing on this branch has run on the VIP7802.
   `omittedFacts`); a `hasSettings` failure now means unavailable and is not cached (was: available, cached). `AppDiscovery` gained
   `installedAppsJsonOrThrow()` for native Search; the WebView path is unchanged. Policy table: `docs/nativeui/SEARCH.md` "Fact policy".
   Tests: `SearchEngineFactsPolicyTest`. Verification: GitHub Actions only (no local Gradle/Kotlin/cargo). Device: **pending**.
+  CI: run [43399600625](https://github.com/TristanFialko/GlassLauncher/actions/runs/43399600625) on `5f26378` passed all six jobs.
+- **M4** (Stage 4 of `docs/nativeui/MIGRATION_PLAN.md`; start `5f26378`): only the device-independent part is authorised. 4a
+  (opt-in native HOME + crash fallback) is already implemented; its gate is the owner's VIP7802 checklist. 4b (flip the default) needs
+  4a to pass plus a week of use, and 4c (remove WebView/HTML/CSS/JS) one release of 4b, so neither was started.
+  - Defect fixed (`2195d8f`): native Search's facts source called `SettingsLauncher.has`, which answers `false` on a PackageManager
+    error. `SearchEngine` caches a `false` as a real answer for the engine's lifetime, so the M3 fact policy (unavailable for this session
+    only, asked again on the next open) never applied in production; only a not-yet-created launcher (`settings!!`) threw. Now
+    `SettingsLauncher.hasOrThrow` propagates the error and the facts source lives in `NativeSearchFacts` (JVM-testable). The WebView
+    path (`GlassBridge.hasSettings` -> `has`) is unchanged.
+  - Tests: `NativeSearchFactsTest` (error not cached, Wi-Fi offered after reopen, real answers cached; the old lenient wiring is shown
+    to hide the shortcut; installed-apps failure still fails the session), `SettingsLauncherTest`, and 4a fallback contract cases in
+    `UiRouterTest` (reason text, file round trip, WebView mode unaffected by crashes, malformed crash entries, newline in the reason).
+  - Verification: no local Gradle/Kotlin/cargo; results come only from the PR #5 checks
+    on the M4 head (no claim is made here). Device: **pending** (4a checklist below).
+  - Owner decisions still open: removal-matrix step 2 (GlassBridge Kotlin fallback: lone-surrogate queries, `PERF.core:'js'`).
 
 ## Native audit branch (2026-11-13, `glasslauncher-2.0-native-audit`)
 

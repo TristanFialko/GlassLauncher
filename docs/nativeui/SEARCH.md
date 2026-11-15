@@ -141,13 +141,15 @@ failure contract above, and `AppDiscovery.installedAppsJson()` already turned Pa
 
 * Evidence: registry.js `snapshot()` read `G.apps.installed` directly (no catalog without its app list), skipped a throwing provider
   (`catch(e){ continue; }`), and `hasSettings` treated a bridge `null` as available. The last is deliberately not kept: an unanswerable
-  kind is a false positive (`SettingsLauncher.has` itself answers `false` on an exception), and the next open asks again.
+  kind is a false positive (`SettingsLauncher.has`, the WebView rule, answers `false` on an exception), and the next open asks again.
 * An empty installed list or an empty alias map returned normally is valid data, not a failure.
 * Optional failures are not request failures: `failureCount` is unchanged, the route is unchanged (a partial catalog still goes to
   Rust), they are logged once per engine under `FACTS` with the class name only, and `SearchEngine.omittedFacts` names what was left out
   of the current session (`aliases`, `extraEntries`, `settings:<kind>`; empty after a failed preparation).
-* Production: `NativeHomeActivity` now calls `AppDiscovery.installedAppsJsonOrThrow()` (same list; the WebView keeps the lenient
-  `installedAppsJson()`), and throws from `hasSettings` while `SettingsLauncher` is not ready instead of caching `false`.
+* Production: `NativeSearchFacts` (built by `NativeHomeActivity`) calls `AppDiscovery.installedAppsJsonOrThrow()` (same list; the
+  WebView keeps the lenient `installedAppsJson()`) and `SettingsLauncher.hasOrThrow`, which throws on a PackageManager error and while
+  the launcher is not ready. Before M4 it called `has`, which answered `false` on an error, so the engine cached the error as
+  "unavailable" for its lifetime (`NativeSearchFactsTest`). The WebView keeps `has`.
 * Tests: `SearchEngineFactsPolicyTest`; `SearchEngineLifecycleTest` already expected `onFailed` when `installedApps()` throws.
 
 Tests: `SearchEngineFailureTest` (prepare failure, Kotlin failure, Rust then Kotlin failure, Rust fails then Kotlin succeeds,
