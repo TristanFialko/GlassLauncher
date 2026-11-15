@@ -26,10 +26,8 @@ import java.util.concurrent.Executors
 /**
  * Glass 2.0 native home screen, drawn with a custom View (docs/nativeui/PROTOTYPE.md). Runs in its own process (:native).
  *
- * N5: in the native production APK (product flavor `native`) this activity IS the HOME / Leanback launcher entry and the
- * APK contains no WebView UI. In the legacy recovery APK (flavor `legacy`) it stays the opt-in native UI behind the
- * WebView MainActivity. The flavor-specific [HomeHandoff] (src/native, src/legacy) holds the only difference: whether a
- * crash budget and a hand-back to another HOME UI exist.
+ * N6: this activity is the only UI in GlassLauncher 2.0 and the sole HOME / Leanback launcher entry. A crash loop is
+ * handled natively by [NativeRecovery] (safe mode: Kotlin search ranking, Rust core skipped), never by another UI.
  *
  * Threading: the UI thread only handles keys and draws. Config, artwork decoding/scaling, wallpaper blur, the
  * installed-app list (AppDiscovery) and Control Centre state (SystemControls) are loaded on one worker thread and
@@ -56,8 +54,10 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     @Volatile private var sClick = 0
     private var probe: FrameLatencyProbe? = null
     private var asHome = false
-    /** Legacy recovery APK: deletes the unconfirmed-start marker once this HOME start has survived HomeHandoff.HEALTHY_AFTER_MS. */
-    private val confirmHealthy = Runnable { HomeHandoff.markHealthy(applicationContext) }
+    /** True when [NativeRecovery] detected a crash loop: Search skips the Rust core for this start. */
+    private var safeMode = false
+    /** Deletes the unconfirmed-start marker once this HOME start has survived NativeRecovery.HEALTHY_AFTER_MS. */
+    private val confirmHealthy = Runnable { NativeRecovery.markHealthy(applicationContext) }
     private val ticker = object : Runnable {
         override fun run() { view?.tick(); ui.postDelayed(this, 10_000) }
     }
@@ -67,15 +67,13 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         try {
             super.onCreate(b)
             installCrashHandler(applicationContext)
-            asHome = intent.getBooleanExtra(EXTRA_AS_HOME, false) || HomeHandoff.isHomeLaunch(intent)
-            // Stage 4a (legacy recovery APK only): as HOME, an earlier start that never confirmed itself healthy counts as a
-            // crash; at the limit HomeHandoff hands HOME back to the WebView UI before anything native is built. The native
-            // production APK has no other UI to hand to, so onHomeStart always continues there.
-            if (asHome && !HomeHandoff.onHomeStart(this)) {
-                finish()
-                return
+            asHome = isHomeLaunch(intent)
+            // As HOME, an earlier start that never confirmed itself healthy counts as a crash; at the limit this start runs
+            // in safe mode (NativeRecovery). It always continues: there is no other UI to hand HOME to.
+            if (asHome) {
+                safeMode = NativeRecovery.recordStart(applicationContext, System.currentTimeMillis())
+                ui.postDelayed(confirmHealthy, NativeRecovery.HEALTHY_AFTER_MS)
             }
-            if (asHome && HomeHandoff.TRACKS_CRASHES) ui.postDelayed(confirmHealthy, HomeHandoff.HEALTHY_AFTER_MS)
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             apps = AppDiscovery(this)
             sys = SystemControls(this)
@@ -89,7 +87,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
             @Suppress("DEPRECATION")
             v.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             // Home, then Search above it, then a toast layer so toasts stay visible over Search (glass.js toast z-order).
-            val engine = SearchEngine(searchExec, MainLooperScheduler(), searchFacts, RustBackend) { Log.i(TAG, it) }   // route changes only, never per key
+            val engine = SearchEngine(searchExec, MainLooperScheduler(), searchFacts, if (safeMode) SafeModeBackend else RustBackend) { Log.i(TAG, it) }   // route changes only, never per key
             val s = NativeSearchView(this, searchHost, engine, IconSource { pkg, size -> searchIcon(pkg, size) }, pm)
             search = s
             val toastLayer = object : View(this) { override fun onDraw(c: android.graphics.Canvas) { v.drawToastLayer(c) } }
@@ -418,7 +416,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     }
 
     /** Back from a launched app (or any pause): the clock/theme catch up, in-flight focus animations settle, focus stays where it was. */
-    override fun onResume() { super.onResume(); view?.settle(); ui.post(ticker); checkStillHome(); cc?.onResume() }
+    override fun onResume() { super.onResume(); view?.settle(); ui.post(ticker); cc?.onResume() }
     override fun onPause() { ui.removeCallbacks(ticker); cc?.onPause(); super.onPause() }
 
     override fun onSaveInstanceState(out: Bundle) {
@@ -446,36 +444,26 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        asHome = asHome || intent.getBooleanExtra(EXTRA_AS_HOME, false) || HomeHandoff.isHomeLaunch(intent)
-    }
-
-    /** Legacy recovery APK, as HOME: hand back to the WebView UI if the owner switched modes (or the crash fallback did). */
-    private fun checkStillHome() {
-        if (!asHome || !HomeHandoff.TRACKS_CRASHES) return
-        worker.execute {
-            if (HomeHandoff.shouldHandBack(this)) ui.post {
-                HomeHandoff.handBack(this)
-                finish()
-            }
-        }
+        asHome = asHome || isHomeLaunch(intent)
     }
 
     companion object {
         private const val TAG = "GlassNative"
         private const val STATE_FOCUS = "glass.focus"
         private const val PREF_RECENT = "recent"
-        /** Marks a HOME start (Back at the root then does nothing, like a launcher). Set by the legacy MainActivity; the native
-         *  production APK also treats HOME / Leanback-launcher intents as HOME starts (HomeHandoff.isHomeLaunch). */
-        const val EXTRA_AS_HOME = "glass.asHome"
         @Volatile private var crashHandlerInstalled = false
 
-        /** Legacy recovery APK: records native-process crashes for the WebView fallback, then lets the default handler kill the process. */
+        /** A HOME or Leanback-launcher intent makes this the launcher root: Back at the root then does nothing. */
+        @JvmStatic fun isHomeLaunch(intent: Intent?): Boolean =
+            intent != null && (intent.hasCategory(Intent.CATEGORY_HOME) || intent.hasCategory(Intent.CATEGORY_LEANBACK_LAUNCHER))
+
+        /** Records crashes for NativeRecovery's safe mode, then lets the default handler kill the process. */
         private fun installCrashHandler(app: android.content.Context) {
-            if (crashHandlerInstalled || !HomeHandoff.TRACKS_CRASHES) return
+            if (crashHandlerInstalled) return
             crashHandlerInstalled = true
             val previous = Thread.getDefaultUncaughtExceptionHandler()
             Thread.setDefaultUncaughtExceptionHandler { t, e ->
-                try { HomeHandoff.recordCrash(app, e) } catch (_: Throwable) {}
+                try { NativeRecovery.recordCrash(app, System.currentTimeMillis(), e) } catch (_: Throwable) {}
                 previous?.uncaughtException(t, e)
             }
         }

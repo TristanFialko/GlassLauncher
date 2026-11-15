@@ -14,28 +14,14 @@ android {
         versionCode 7
         versionName '2.0.0-dev'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-        // Legacy recovery APK only: NativeHomeActivity is adb-launchable in debug builds (owner testing / benchmarks); release
-        // reaches it via MainActivity. In the native production APK it is the exported HOME activity (src/native manifest).
-        manifestPlaceholders = [nativeUiExported: "false"]
     }
-    // N5: two APKs from one tree (docs/nativeui/MIGRATION_PLAN.md, "N5 flavor split").
-    //   native  production launcher: Kotlin + Rust, NativeHomeActivity is HOME/Leanback; no WebView, Java, HTML, CSS or JS.
-    //   legacy  recovery launcher: the pre-N5 WebView UI (MainActivity HOME, opt-in native UI). src/legacy only.
-    // Same applicationId and versionCode, so either installs over the other with `adb install -r`; the recovery build is
-    // told apart by its versionName suffix.
-    flavorDimensions.add('ui')
-    productFlavors {
-        create('native') { dimension = 'ui' }
-        create('legacy') {
-            dimension = 'ui'
-            versionNameSuffix = '-legacy'
-        }
-    }
+    // N6: one APK, no product flavors. Kotlin + Rust only; NativeHomeActivity is the sole HOME / Leanback entry.
+    // The pre-N6 WebView recovery APK is a CI artifact of commit 7f9483e (docs/nativeui/STAGE4A_DEVICE_RUNBOOK.md).
+    // ABIs: rust.gradle packages libglass.so for armeabi-v7a + arm64-v8a (glass.rustAbis).
     // android.util.Log / android.os.Trace are stubs on the host JVM; RustCore only logs/traces.
     testOptions { unitTests.returnDefaultValues = true }
     // Sideloaded onto Android 11 boxes, not published on Google Play; targetSdk 30 is deliberate (see MIGRATION_STATUS.md).
     lint { disable 'ExpiredTargetSdkVersion' }
-    buildTypes { debug { manifestPlaceholders = [nativeUiExported: "true"] } }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
