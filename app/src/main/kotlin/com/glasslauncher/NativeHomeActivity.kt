@@ -24,9 +24,10 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * Glass 2.0 native UI prototype (docs/nativeui/PROTOTYPE.md): the home screen drawn with a custom View instead of the
- * WebView. Not a HOME activity and runs in its own process (:native) so it can be measured without the WebView in the
- * same process. Start it with: adb shell am start -n com.glasslauncher/.NativeHomeActivity
+ * Glass 2.0 native home screen, drawn with a custom View (docs/nativeui/PROTOTYPE.md). Runs in its own process (:native).
+ *
+ * N6: this activity is the only UI in GlassLauncher 2.0 and the sole HOME / Leanback launcher entry. A crash loop is
+ * handled natively by [NativeRecovery] (safe mode: Kotlin search ranking, Rust core skipped), never by another UI.
  *
  * Threading: the UI thread only handles keys and draws. Config, artwork decoding/scaling, wallpaper blur, the
  * installed-app list (AppDiscovery) and Control Centre state (SystemControls) are loaded on one worker thread and
@@ -53,6 +54,10 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     @Volatile private var sClick = 0
     private var probe: FrameLatencyProbe? = null
     private var asHome = false
+    /** True when [NativeRecovery] detected a crash loop: Search skips the Rust core for this start. */
+    private var safeMode = false
+    /** Deletes the unconfirmed-start marker once this HOME start has survived NativeRecovery.HEALTHY_AFTER_MS. */
+    private val confirmHealthy = Runnable { NativeRecovery.markHealthy(applicationContext) }
     private val ticker = object : Runnable {
         override fun run() { view?.tick(); ui.postDelayed(this, 10_000) }
     }
@@ -62,7 +67,13 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
         try {
             super.onCreate(b)
             installCrashHandler(applicationContext)
-            asHome = intent.getBooleanExtra(EXTRA_AS_HOME, false)
+            asHome = isHomeLaunch(intent)
+            // As HOME, an earlier start that never confirmed itself healthy counts as a crash; at the limit this start runs
+            // in safe mode (NativeRecovery). It always continues: there is no other UI to hand HOME to.
+            if (asHome) {
+                safeMode = NativeRecovery.recordStart(applicationContext, System.currentTimeMillis())
+                ui.postDelayed(confirmHealthy, NativeRecovery.HEALTHY_AFTER_MS)
+            }
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             apps = AppDiscovery(this)
             sys = SystemControls(this)
@@ -76,7 +87,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
             @Suppress("DEPRECATION")
             v.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             // Home, then Search above it, then a toast layer so toasts stay visible over Search (glass.js toast z-order).
-            val engine = SearchEngine(searchExec, MainLooperScheduler(), searchFacts)
+            val engine = SearchEngine(searchExec, MainLooperScheduler(), searchFacts, if (safeMode) SafeModeBackend else RustBackend) { Log.i(TAG, it) }   // route changes only, never per key
             val s = NativeSearchView(this, searchHost, engine, IconSource { pkg, size -> searchIcon(pkg, size) }, pm)
             search = s
             val toastLayer = object : View(this) { override fun onDraw(c: android.graphics.Canvas) { v.drawToastLayer(c) } }
@@ -328,15 +339,11 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     @Volatile private var sKeys: Array<IntArray> = emptyArray()   // KeyKind.ordinal -> SoundPool ids (a few variants each, glass.js mkKeyPool)
     private val keyRandom = java.util.Random()
 
-    /** Runs on [searchExec]. */
-    private val searchFacts = object : SearchFactsSource {
-        override fun installedApps(): List<InstalledApp> = try {
-            val a = JSONArray(apps!!.installedAppsJson())
-            List(a.length()) { i -> a.getJSONObject(i).let { InstalledApp(it.getString("id"), it.optString("name"), it.optBoolean("show", true)) } }
-        } catch (t: Throwable) { Log.e(TAG, "search apps", t); emptyList() }
-        override fun aliases(): Map<String, List<String>> = emptyMap()   // window.SEARCH_ALIASES is not configured in apps.js
-        override fun hasSettings(kind: String): Boolean = settings?.has(kind) == true
-    }
+    /**
+     * Runs on [searchExec]; the fields are read at call time. Both facts throw on failure (not ready, PackageManager error) so
+     * SearchEngine applies the fact policy instead of caching a swallowed error as "no apps" / "no such settings page".
+     */
+    private val searchFacts = NativeSearchFacts({ apps!!.installedAppsJsonOrThrow() }) { kind -> settings!!.hasOrThrow(kind) }
 
     /** Runs on [pm]. */
     private fun searchIcon(pkg: String, size: Int): Bitmap? {
@@ -409,7 +416,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     }
 
     /** Back from a launched app (or any pause): the clock/theme catch up, in-flight focus animations settle, focus stays where it was. */
-    override fun onResume() { super.onResume(); view?.settle(); ui.post(ticker); checkStillHome(); cc?.onResume() }
+    override fun onResume() { super.onResume(); view?.settle(); ui.post(ticker); cc?.onResume() }
     override fun onPause() { ui.removeCallbacks(ticker); cc?.onPause(); super.onPause() }
 
     override fun onSaveInstanceState(out: Bundle) {
@@ -418,6 +425,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     }
 
     override fun onDestroy() {
+        ui.removeCallbacks(confirmHealthy)
         probe?.detach()
         cc?.onDestroy()
         ui.removeCallbacks(packageRefresh)
@@ -436,35 +444,26 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        asHome = asHome || intent.getBooleanExtra(EXTRA_AS_HOME, false)
-    }
-
-    /** As HOME, hand back to the WebView UI if the owner switched modes (or the crash fallback did) while we were away. */
-    private fun checkStillHome() {
-        if (!asHome) return
-        worker.execute {
-            if (UiRouter.mode(this) != UiRouter.NATIVE) ui.post {
-                startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                finish()
-            }
-        }
+        asHome = asHome || isHomeLaunch(intent)
     }
 
     companion object {
         private const val TAG = "GlassNative"
         private const val STATE_FOCUS = "glass.focus"
         private const val PREF_RECENT = "recent"
-        /** Set by MainActivity when the native UI is the HOME screen: Back at the root then does nothing, like a launcher. */
-        const val EXTRA_AS_HOME = "glass.asHome"
         @Volatile private var crashHandlerInstalled = false
 
-        /** Records native-process crashes for UiRouter's fallback, then lets the default handler kill the process. */
+        /** A HOME or Leanback-launcher intent makes this the launcher root: Back at the root then does nothing. */
+        @JvmStatic fun isHomeLaunch(intent: Intent?): Boolean =
+            intent != null && (intent.hasCategory(Intent.CATEGORY_HOME) || intent.hasCategory(Intent.CATEGORY_LEANBACK_LAUNCHER))
+
+        /** Records crashes for NativeRecovery's safe mode, then lets the default handler kill the process. */
         private fun installCrashHandler(app: android.content.Context) {
             if (crashHandlerInstalled) return
             crashHandlerInstalled = true
             val previous = Thread.getDefaultUncaughtExceptionHandler()
             Thread.setDefaultUncaughtExceptionHandler { t, e ->
-                try { UiRouter.recordNativeCrash(app, System.currentTimeMillis(), e) } catch (_: Throwable) {}
+                try { NativeRecovery.recordCrash(app, System.currentTimeMillis(), e) } catch (_: Throwable) {}
                 previous?.uncaughtException(t, e)
             }
         }

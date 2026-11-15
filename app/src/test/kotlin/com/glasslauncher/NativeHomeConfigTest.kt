@@ -57,4 +57,42 @@ class NativeHomeConfigTest {
         assertEquals(0.2f, cfg.soundVolume, 1e-6f)
         assertEquals(listOf("x", "y"), cfg.rows[0].cards[0].ids)
     }
+
+    private val assets = File("src/main/assets")
+    private fun shipped() = NativeHomeConfig.parse(File(assets, "nativeui/home.json").readText())
+
+    /** Replaces tools/parity/nativeui-config-check.js: every artwork and wallpaper the config names is packaged. */
+    @Test fun shippedArtworkAndWallpapersExist() {
+        val cfg = shipped()
+        val missing = ArrayList<String>()
+        for (r in cfg.rows) for (c in r.cards) for (p in listOf(c.icon, c.dark)) {
+            if (p.isNotEmpty() && !File(assets, p).isFile) missing.add("${c.name}: $p")
+        }
+        for (p in listOf(cfg.wallpaperLight, cfg.wallpaperDark)) if (!File(assets, p).isFile) missing.add(p)
+        assertEquals(emptyList<String>(), missing)
+    }
+
+    /** apps.js was deleted in N6; these are the rows nativeui-config-check.js last verified against it. */
+    @Test fun shippedRowsArePinned() {
+        val cfg = shipped()
+        assertEquals(listOf("top", "ent"), cfg.rows.map { it.kind })
+        assertEquals(listOf("", "Entertainment"), cfg.rows.map { it.title })
+        val got = cfg.rows.flatMap { r -> r.cards.map { "${it.name}|${it.id}|${it.ids.joinToString(",")}|${it.match}|${it.icon}|${it.dark}" } }
+        assertEquals(listOf(
+            "YouTube|com.google.android.youtube.tv|||icons/Youtube.png|darkicons/darkyoutube.png",
+            "Netflix|com.netflix.ninja|||icons/Netflix.png|darkicons/darknetflix.png",
+            "Prime Video|com.amazon.amazonvideo.livingroom|||icons/Prime.png|darkicons/darkprime.png",
+            "Disney+|com.disney.disneyplus|||icons/Disney+.png|darkicons/darkdisney.png",
+            "Spotify|com.spotify.tv.android|||icons/Spotify.png|darkicons/Spotify.png",
+            "Stremio||com.stremio.one|stremio|icons/stremio.png|darkicons/stremio.png",
+            "Rhenium|||rhenium|icons/rhenium.png|darkicons/rhenium.png",
+            "Moonlight||com.limelight,com.limelight.noroot,com.limelight.root|moonlight|icons/moonlight.png|darkicons/moonlight.png",
+            "RetroArch||com.retroarch,com.retroarch.aarch64,com.retroarch.ra32|retroarch|icons/retroarch.png|darkicons/retroarch.png",
+        ), got)
+        assertEquals("wallpaper.jpg", cfg.wallpaperLight)
+        assertEquals("wallpaper2.jpg", cfg.wallpaperDark)
+        assertEquals(true, cfg.soundEnabled)
+        assertEquals(0.2f, cfg.soundVolume, 1e-6f)
+        assertEquals(0.3f, cfg.keyVolume, 1e-6f)
+    }
 }

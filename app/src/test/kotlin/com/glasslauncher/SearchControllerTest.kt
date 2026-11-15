@@ -209,4 +209,67 @@ class SearchControllerTest {
         c.onResults("ab", listOf(result("AB")))
         assertEquals(listOf("AB"), c.results.map { it.title })
     }
+
+    // ---- M3: failure contract and activation while refreshing ----
+
+    @Test fun internalFailureIsAnErrorStateNotNoMatch() {
+        c.open()
+        c.hardwareChar("n")
+        c.onFailed("n")
+        assertTrue(c.failed)
+        assertTrue(c.results.isEmpty())
+        c.onResults("n", listOf(result("Netflix")))
+        assertFalse("the next delivered ranking clears the error", c.failed)
+        assertEquals(listOf("Netflix"), c.results.map { it.title })
+    }
+
+    @Test fun submitDuringOrAfterAFailureToastsUnavailable() {
+        c.open()
+        c.hardwareChar("n"); host.log.clear()
+        c.key(SKey.OK)                                   // hardware Enter window: submit while awaiting
+        c.onFailed("n")
+        assertTrue(host.log.toString(), host.log.contains("toast:" + SearchController.UNAVAILABLE_TOAST))
+        assertFalse(host.log.contains("toast:Nothing matches that"))
+        host.log.clear(); t += 5_000
+        c.kb.jump(true); c.key(SKey.OK)
+        assertTrue(host.log.toString(), host.log.contains("toast:" + SearchController.UNAVAILABLE_TOAST))
+    }
+
+    @Test fun failureMovesFocusOutOfTheList() {
+        c.open()
+        typed("a", result("A1"))
+        c.kb.jump(true); c.key(SKey.OK)
+        assertTrue(c.focusInList)
+        c.onFailed("a")
+        assertFalse(c.focusInList)
+    }
+
+    @Test fun staleOrClosedFailuresAreIgnored() {
+        c.open()
+        c.hardwareChar("a"); c.hardwareChar("b")
+        c.onFailed("a")
+        assertFalse(c.failed)
+        c.onFailed("ab")
+        assertTrue(c.failed)
+        c.open()
+        assertFalse("reopening clears the error", c.failed)
+        c.key(SKey.BACK)
+        c.onFailed("")
+        assertFalse(c.isOpen)
+    }
+
+    @Test fun rowsOfThePreviousQueryAreNotActivatedWhileTheNewOneRanks() {
+        c.open()
+        typed("a", result("Alpha"), result("Beta"))
+        c.hardwareChar("b")                              // "ab" requested; "a" rows still shown
+        t += 5_000
+        c.key(SKey.LEFT)                                 // keyboard is on row 1 key 0: left edge -> list
+        assertTrue(c.focusInList)
+        host.log.clear()
+        c.key(SKey.OK)
+        assertTrue(host.log.toString(), host.log.none { it.startsWith("launch:") })
+        c.onResults("ab", listOf(result("Abba")))
+        c.key(SKey.OK)
+        assertTrue(host.log.toString(), host.log.contains("launch:Abba:Abba"))
+    }
 }

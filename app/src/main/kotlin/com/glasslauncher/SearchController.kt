@@ -36,6 +36,8 @@ class SearchController(
         const val QUERY = 1; const val RESULTS = 2; const val FOCUS = 4; const val KEYS = 8; const val PRESS = 16; const val OPEN = 32
         const val MAX_QUERY = 60
         const val HW_ENTER_WINDOW_MS = 2500L
+        /** Toast for Enter/submit while the last query failed internally (no WebView equivalent: registry.js could not fail). */
+        const val UNAVAILABLE_TOAST = "Search isn\u2019t working right now"
         val SUGGESTIONS = listOf("Settings", "Wi-Fi", "Bluetooth", "Volume", "Play Store", "Appearance")
         private val SUGGEST_RESULTS = SUGGESTIONS.map { SearchResult(ResultKind.SUGGEST, it, "", "", "search", null, SearchAction.UseSuggestion(it)) }
     }
@@ -46,6 +48,8 @@ class SearchController(
     var results: List<SearchResult> = emptyList(); private set
     var sel = 0; private set
     var focusInList = false; private set
+    /** The current results are the outcome of an internal failure (engine onFailed), not a legitimate "no match". */
+    var failed = false; private set
     private var lastHw = 0L
     private var awaiting = false
     private var submitPending = false
@@ -53,7 +57,7 @@ class SearchController(
     fun open() {
         isOpen = true
         kb.reset()
-        query = ""; sel = 0; lastHw = 0; submitPending = false
+        query = ""; sel = 0; lastHw = 0; submitPending = false; failed = false
         results = SUGGEST_RESULTS
         engine.beginSession()
         awaiting = true
@@ -73,6 +77,7 @@ class SearchController(
     fun onResults(q: String, list: List<SearchResult>) {
         if (!isOpen || q != query) return
         awaiting = false
+        failed = false
         results = if (query.isEmpty()) SUGGEST_RESULTS else list
         sel = minOf(sel, maxOf(0, results.size - 1))
         onChange(RESULTS)
@@ -81,6 +86,24 @@ class SearchController(
             if (query.isNotEmpty() && list.isNotEmpty()) { sel = 0; setFocus(true); host.playNav() }
             else host.toast("Nothing matches that")
         } else if (focusInList && results.isEmpty()) setFocus(false)
+    }
+
+    /**
+     * The engine could not rank [q] at all. Shown as an error state (never as "no match"); a pending submit toasts
+     * [UNAVAILABLE_TOAST]; focus leaves the (now empty) list. Stale or closed-session failures are ignored like results.
+     */
+    fun onFailed(q: String) {
+        if (!isOpen || q != query) return
+        awaiting = false
+        failed = query.isNotEmpty()
+        results = if (query.isEmpty()) SUGGEST_RESULTS else emptyList()
+        sel = minOf(sel, maxOf(0, results.size - 1))
+        onChange(RESULTS)
+        if (submitPending) {
+            submitPending = false
+            host.toast(if (failed) UNAVAILABLE_TOAST else "Type to search")
+        }
+        if (focusInList && results.isEmpty()) setFocus(false)
     }
 
     private fun setQuery(q: String) {
@@ -101,10 +124,13 @@ class SearchController(
     private fun submit() {
         if (query.isEmpty()) { host.toast("Type to search"); return }
         if (awaiting) { submitPending = true; engine.flush(); return }
-        if (results.isNotEmpty()) { sel = 0; setFocus(true); host.playNav() } else host.toast("Nothing matches that")
+        if (results.isNotEmpty()) { sel = 0; setFocus(true); host.playNav() } else host.toast(if (failed) UNAVAILABLE_TOAST else "Nothing matches that")
     }
 
     private fun run(i: Int) {
+        // search.js ranked synchronously, so a row always belonged to the typed query. Here the list can still show the
+        // previous query's rows while the new ranking is in flight: never activate those (the suggestions are static).
+        if (awaiting && query.isNotEmpty()) { engine.flush(); return }
         val e = results.getOrNull(i) ?: return
         host.playClick()
         when (val a = e.action) {
