@@ -53,6 +53,8 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     @Volatile private var sClick = 0
     private var probe: FrameLatencyProbe? = null
     private var asHome = false
+    /** Deletes the unconfirmed-start marker (one tiny file) once this HOME start has survived UiRouter.HEALTHY_AFTER_MS. */
+    private val confirmHealthy = Runnable { UiRouter.markNativeHealthy(applicationContext) }
     private val ticker = object : Runnable {
         override fun run() { view?.tick(); ui.postDelayed(this, 10_000) }
     }
@@ -63,6 +65,14 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
             super.onCreate(b)
             installCrashHandler(applicationContext)
             asHome = intent.getBooleanExtra(EXTRA_AS_HOME, false)
+            // Stage 4a: as HOME, an earlier start that never confirmed itself healthy (signal in libglass.so, killed while hung)
+            // counts as a crash; at the limit HOME goes back to the WebView UI before anything native is built.
+            if (asHome && UiRouter.recordNativeStart(applicationContext, System.currentTimeMillis()) != UiRouter.NATIVE) {
+                startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                finish()
+                return
+            }
+            if (asHome) ui.postDelayed(confirmHealthy, UiRouter.HEALTHY_AFTER_MS)
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             apps = AppDiscovery(this)
             sys = SystemControls(this)
@@ -414,6 +424,7 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     }
 
     override fun onDestroy() {
+        ui.removeCallbacks(confirmHealthy)
         probe?.detach()
         cc?.onDestroy()
         ui.removeCallbacks(packageRefresh)

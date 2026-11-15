@@ -1,6 +1,6 @@
 # Glass Launcher 2.0 — Migration status
 
-_Last updated: 2026-11-13 · branch `glasslauncher-2.0-consolidated` (from `glasslauncher-2.0-migration` at `3522999`; PR #2 open on the old branch, not merged) · baseline
+_Last updated: 2026-11-15 · working branch `glasslauncher-2.0-full-native` (PR #5, draft, not merged; base `glasslauncher-2.0-consolidated`) · baseline
 `glasslauncher-1.5-phase7-baseline` (`452320a`) · app version `2.0.0-dev` (versionCode 7)_
 
 ## Summary (read this first)
@@ -144,6 +144,22 @@ still the default HOME and nothing on this branch has run on the VIP7802.
   - Verification: no local Gradle/Kotlin/cargo; results come only from the PR #5 checks
     on the M4 head (no claim is made here). Device: **pending** (4a checklist below).
   - Owner decisions still open: removal-matrix step 2 (GlassBridge Kotlin fallback: lone-surrogate queries, `PERF.core:'js'`).
+- **Stage 4a readiness** (2026-11-15, start `2bb54be`):
+  - Blocker fixed (found by code reading): the crash fallback only counted JVM exceptions (`:native` uncaught-exception handler). A
+    signal in `libglass.so` (armeabi-v7a has never run on the box), a Rust abort or the system killing a hung process never reached
+    it, so a native HOME that died that way would be relaunched by Android forever with no fallback. Now every native HOME start
+    writes `files/native-start.pending` (`UiRouter.recordNativeStart`); the native UI deletes it after 5 s (`markNativeHealthy`).
+    A marker still present at the next start counts as a crash (`UncleanExit`) in the same 2-in-10-min budget, and at the limit
+    the native UI hands HOME straight back to `MainActivity`. A JVM crash clears the marker, so it is not counted twice. An explicit
+    `--es glass.ui ...` choice clears it. The marker is a separate file, so the healthy path never rewrites `ui-mode.properties`
+    across processes. The benchmark harness starts `.NativeHomeActivity` directly (not as HOME), so it is not tracked.
+  - Tests: 12 new `UiRouterTest` cases, including file-level sequences on a temporary directory (crash loop without a JVM
+    exception falls back on the third start, healthy starts never count, no double count, re-opt-in resets, corrupt marker).
+  - Residual risk (documented): an ANR after the first 5 s is not counted. Recovery is the WebView command below.
+  - `tools/metrics/loc.py`: `rust/*/tests/` now counts as test (was "other"), recorded data under `tools/*/fixtures/` is its own
+    `fixture` category, `.gitignore` is tooling, and the packaged `assets/ui/README.txt` is docs. Production numbers are unchanged
+    apart from this commit's Kotlin.
+  - Owner procedure: `docs/nativeui/STAGE4A_DEVICE_RUNBOOK.md` (exact commands and expected results). Device: **pending**.
 
 ## Native audit branch (2026-11-13, `glasslauncher-2.0-native-audit`)
 
@@ -238,8 +254,9 @@ under Windows PowerShell 5.1.
 
 ## What the owner needs to do next (when the TV is free, about 1.5 h)
 
-All commands are Windows CMD from the repository root. Download `glasslauncher-debug-apk` from the latest green CI run
-on `glasslauncher-2.0-consolidated` (or PR #2's run at `3522999`, the same app code) to `C:\glass\glass2\app-debug.apk`.
+All commands are Windows CMD from the repository root. **Stage 4a: follow `docs/nativeui/STAGE4A_DEVICE_RUNBOOK.md`**, which supersedes the steps below for
+the full-native build. Download `glasslauncher-debug-apk` from PR #5's latest green CI run (head of `glasslauncher-2.0-full-native`)
+to `C:\glass\glass2\app-debug.apk`. The steps below are the earlier consolidated-branch smoke run, kept for reference.
 
 1. Install and confirm identity:
    ```bat

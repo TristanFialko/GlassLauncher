@@ -11,8 +11,9 @@ Categories (first matching rule wins; see CATEGORY_RULES):
   production  code that ships in the APK or runs on the device: app/src/main/{java,kotlin,res,AndroidManifest.xml},
               the packaged WebView assets (app/src/main/assets: index.html, apps.js, js/, css/, nativeui/), Rust
               glass-core and glass-jni sources *outside* their #[cfg(test)] modules
-  test        app/src/test, app/src/androidTest, Rust #[cfg(test)] modules
-  tooling     tools/, rust/glass-cli (host CLI for parity/bench), build scripts, CI, *.bat helpers
+  test        app/src/test, app/src/androidTest, Rust integration tests (rust/*/tests/), Rust #[cfg(test)] modules
+  fixture     recorded test data: tools/*/fixtures/ (JS-derived ranking golden file, registry entries, device dumps)
+  tooling     tools/, rust/glass-cli (host CLI for parity/bench), build scripts, CI, *.bat helpers, .gitignore
   legacy      app/src/main/assets_baseline and assets_phase1..3: historical snapshots, NOT a source set, not packaged
   docs        *.md and other prose
   binary      images, audio, fonts, jars (bytes only, no lines)
@@ -44,7 +45,10 @@ CATEGORY_RULES = [
     ('binary', r'\.(png|jpe?g|webp|gif|mp3|wav|ogg|ttf|otf|jar|ico|so)$'),
     ('legacy', r'^app/src/main/assets_(baseline|phase\d+)/'),
     ('test', r'^app/src/(test|androidTest)/'),
+    ('test', r'^rust/[^/]+/tests/'),
     ('docs', r'\.md$'),
+    ('docs', r'^app/src/main/assets/ui/README\.txt$'),
+    ('fixture', r'^tools/[^/]+/fixtures/'),
     ('production', r'^app/src/main/(java|kotlin|res)/'),
     ('production', r'^app/src/main/AndroidManifest\.xml$'),
     ('production', r'^app/src/main/assets/(index\.html|apps\.js|js/|css/|nativeui/)'),
@@ -55,6 +59,7 @@ CATEGORY_RULES = [
     ('tooling', r'(^|/)(build\.gradle|rust\.gradle|settings\.gradle|gradle\.properties|gradlew(\.bat)?|Cargo\.(toml|lock)|rust-toolchain\.toml)$'),
     ('tooling', r'^gradle/'),
     ('tooling', r'\.bat$'),
+    ('tooling', r'(^|/)\.gitignore$'),
 ]
 
 # Production surface split used by the migration docs (applies to production files only).

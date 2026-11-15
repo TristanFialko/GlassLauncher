@@ -11,32 +11,32 @@ python3 tools/metrics/loc.py --json   # machine-readable
 ```
 
 The script uses `git ls-files` (falls back to walking the tree) and classifies each file, first match wins:
-`binary` → `legacy` (`app/src/main/assets_baseline/`, `assets_phase*/`) → `test` (`app/src/test|androidTest/`) → `docs` (`*.md`)
+`binary` → `legacy` (`app/src/main/assets_baseline/`, `assets_phase*/`) → `test` (`app/src/test|androidTest/`, `rust/*/tests/`) → `docs` (`*.md`) → `fixture` (`tools/*/fixtures/`)
 → `production` (`app/src/main/{java,kotlin,res}/`, the manifest, `app/src/main/assets/{index.html,apps.js,js/,css/,nativeui/}`,
 `rust/glass-{core,jni}/src/`) → `tooling` (everything that builds, tests or benchmarks but does not ship). In Rust files a
 `#[cfg(test)]` module counts as test. "Code" = non-blank lines that are not pure comments (heuristic, per language).
 
-Production code at `f01f4637` (52 files, 7199 physical lines):
+Production code after the Stage 4a fix (branch `glasslauncher-2.0-full-native`, 53 files, 7558 physical lines):
 
 | Language | Files | Code | Share |
 |---|---:|---:|---:|
-| Kotlin | 22 | 3737 | 62.7 % |
-| JavaScript | 13 | 1049 | 17.6 % |
-| Rust | 4 | 506 | 8.5 % |
-| Java | 4 | 341 | 5.7 % |
-| CSS | 5 | 202 | 3.4 % |
-| XML (manifest/res) | 2 | 51 | 0.9 % |
+| Kotlin | 23 | 3925 | 63.8 % |
+| JavaScript | 13 | 1049 | 17.1 % |
+| Rust | 4 | 506 | 8.2 % |
+| Java | 4 | 347 | 5.6 % |
+| CSS | 5 | 202 | 3.3 % |
+| XML (manifest/res) | 2 | 51 | 0.8 % |
 | HTML | 1 | 47 | 0.8 % |
 | JSON (`nativeui/home.json`) | 1 | 24 | 0.4 % |
-| **Total** | 52 | 5957 | 100 % |
+| **Total** | 53 | 6151 | 100 % |
 
-By surface: WebView UI (HTML/CSS/JS) **1298 = 21.8 %**; WebView host Java (MainActivity, GlassBridge) 164 = 2.8 %; shared Java
-glue (AppDiscovery, RustCore) 177 = 3.0 %; Kotlin native UI + glue 62.7 %; Rust core + JNI 8.5 %.
+By surface: WebView UI (HTML/CSS/JS) **1298 = 21.1 %**; WebView host Java (MainActivity, GlassBridge) 164 = 2.7 %; shared Java
+glue (AppDiscovery, RustCore) 183 = 3.0 %; Kotlin native UI + glue 63.8 %; Rust core + JNI 8.2 %.
 
-**The "~45 % JavaScript" figure is not supported by the tree.** Measured: 17.6 % of production code is JavaScript, 21.8 % if
-HTML and CSS are included. Not production (excluded above): legacy asset snapshots (HTML 975, JS 706, CSS 113, a Java text copy
-213), tests (Kotlin 1168 incl. `SearchRankingGoldenTest`, Java 455, Rust inline 155), tooling (PowerShell 1345, JSON fixtures,
-JS 448, Python 225, YAML 223, Gradle 141, Rust `glass-cli` 129), docs (Markdown 1460). Binaries are listed, not counted.
+Not production (excluded above, code lines): tests (Kotlin 2278, Rust 582 = `tests/golden.rs` + inline `#[cfg(test)]`, Java 455);
+fixtures (JSON 10600, device-dump text 349); tooling (PowerShell 1345, JS 448, Python 230, YAML 223, Gradle 141, Rust `glass-cli`
+129, Shell 101, Batch 87); legacy asset snapshots (HTML 975, JS 706, CSS 113, a Java text copy 213); docs (Markdown 2490).
+The earlier `f01f4637` table (Kotlin 62.7 %, JS 17.6 %, Rust 8.5 % of 5957) is superseded. Binaries are listed, not counted.
 
 Rust is deliberately small: it owns platform-independent search/snapshot logic only. Raising its share by moving Android
 framework calls into Rust is out of scope (see `docs/decisions/0004-migration-scope.md`).
