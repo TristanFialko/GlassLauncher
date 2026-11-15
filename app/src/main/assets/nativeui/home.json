@@ -1,5 +1,5 @@
 {
-  "_comment": "Native UI prototype config. Mirrors window.APPS / ENTERTAINMENT / THEME / SOUND in apps.js; tools/parity/nativeui-config-check.js fails CI if they drift.",
+  "_comment": "Native home config. Originally mirrored apps.js (removed in N6); NativeHomeConfigTest pins these rows and checks that every artwork and wallpaper file exists.",
   "rows": [
     { "kind": "top", "title": "", "apps": [
       { "name": "YouTube", "id": "com.google.android.youtube.tv", "ids": [], "match": "", "icon": "icons/Youtube.png", "dark": "darkicons/darkyoutube.png" },

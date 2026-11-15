@@ -33,30 +33,9 @@ jobs:
       - name: cargo clippy
         working-directory: rust
         run: cargo clippy --locked --all-targets -- -D warnings
-      - name: cargo test
+      - name: cargo test (includes the frozen 2,522-query ranking golden, tests/golden.rs)
         working-directory: rust
         run: cargo test --locked
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Search parity (JavaScript registry.js vs Rust) + host benchmark
-        # shell: bash adds -o pipefail, so a parity failure is not hidden by tee (the default shell is plain bash -e)
-        shell: bash
-        run: |
-          cargo build --locked --release -p glass-cli --manifest-path rust/Cargo.toml
-          node tools/parity/search-parity.js --bench | tee parity.txt
-      - name: Registry snapshot parity (production JavaScript fixtures vs Rust snapshot preparation)
-        shell: bash
-        run: node tools/parity/snapshot-parity.js | tee -a parity.txt
-      - name: Frozen ranking golden file (registry.js still reproduces it; Rust matches it)
-        shell: bash
-        run: node tools/parity/ranking-golden.js --rust | tee -a parity.txt
-      - name: Native UI config matches apps.js
-        run: node tools/parity/nativeui-config-check.js
-      - uses: actions/upload-artifact@v4
-        with:
-          name: parity-report
-          path: parity.txt
       - name: Device benchmark harness - parser unit tests
         shell: pwsh
         run: ./tools/bench/test-bench-lib.ps1

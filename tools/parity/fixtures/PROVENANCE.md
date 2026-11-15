@@ -21,11 +21,28 @@ checked that `queryJs(q, 5)` is exactly the first 5 of that list, so the short-l
 **Recorded shape** (also asserted by `golden.rs`): `max` 24, short limit 5, 228 entries, 2,522 cases.
 First committed in `534b975` on `glasslauncher-2.0-native-audit`.
 
-**Status of the source.** At the time of writing `registry.js` and the WebView UI are **still in the tree** and still
-the default HOME; nothing has been removed. While `registry.js` exists, CI (`rust` job, "Frozen ranking golden file")
-re-runs the capture and fails if the JavaScript no longer reproduces this file byte for byte.
+**Status of the source (N7).** `registry.js`, `shortcuts.js`, `apps.js` and the WebView UI were deleted in N6, and the
+Node capture/parity scripts (`tools/parity/{fixture,ranking-golden,search-parity,snapshot-parity,nativeui-config-check}.js`)
+were deleted in N7; their last revision is `394fdc8` on `glasslauncher-2.0-full-native`. This file is therefore the frozen
+reference and **cannot be regenerated**. Do not edit it by hand; a deliberate ranking change must update Rust, Kotlin, this
+file and the pinned hashes below together, with the reason in the commit.
 
-**After the JavaScript is removed** (Stage C) this file is the reference and can no longer be regenerated. Do not edit it
-by hand; a deliberate ranking change must update Rust, Kotlin and this file together, with the reason in the commit.
-`ranking-golden.js` is capture tooling only and is deleted with the other Node tooling; the tests that read this file
-need no Node.
+**Pinned bytes** (asserted by `ParityFixtureIntegrityTest`, JVM unit tests):
+
+| File | Bytes | SHA-256 |
+| --- | --- | --- |
+| `ranking-golden.json` | 112,551 | `560e7b658cc52868509dfd94760bc60a8b6636d3858c2bfec9f0a56230cece47` |
+| `registry-entries.json` | 179,658 | `55fcf4a8f94d5030861b77ba60b83076c4b19cd540440f33b983a1436c3c7c2a` |
+
+**Checks that read the fixtures (no Node, no Python):**
+
+- `rust/glass-core/tests/golden.rs` (`cargo test`): shape (228 entries, 2,522 unique cases, max 24), Rust snapshot
+  preparation keeps exactly the 228 entries, and Rust ranks every case exactly as recorded at limit 24 and limit 5.
+- `SearchRankingGoldenTest`: the same 2,522 × 2 rankings for the Kotlin fallback, for `SearchCatalog` + `SearchRanking`
+  built from registry-entries case 0, and for the Rust core through the real JNI library.
+- `SearchCatalogFixtureTest`: every `registry-entries.json` case (8 boxes) on the Kotlin catalog and on Rust snapshot
+  preparation through JNI (replaces `snapshot-parity.js`).
+- `SearchRankingParityTest`: Kotlin fallback vs Rust on all 8 boxes, more than 3,000 queries (replaces the
+  JavaScript-vs-Rust half of `search-parity.js`, whose JavaScript side no longer exists).
+- `ParityFixtureIntegrityTest`: pinned bytes above, golden provenance text, case count/uniqueness, no lone surrogates,
+  and the 8 registry-entries case sizes (228, 228, 226, 23, 14, 19, 19, 52).
