@@ -328,17 +328,11 @@ class NativeHomeActivity : Activity(), NativeHomeView.Host {
     @Volatile private var sKeys: Array<IntArray> = emptyArray()   // KeyKind.ordinal -> SoundPool ids (a few variants each, glass.js mkKeyPool)
     private val keyRandom = java.util.Random()
 
-    /** Runs on [searchExec]. */
-    private val searchFacts = object : SearchFactsSource {
-        // Essential fact: a failure must reach SearchEngine (explicit failure, retried on the next open), not become "no apps".
-        override fun installedApps(): List<InstalledApp> {
-            val a = JSONArray(apps!!.installedAppsJsonOrThrow())
-            return List(a.length()) { i -> a.getJSONObject(i).let { InstalledApp(it.getString("id"), it.optString("name"), it.optBoolean("show", true)) } }
-        }
-        override fun aliases(): Map<String, List<String>> = emptyMap()   // window.SEARCH_ALIASES is not configured in apps.js
-        // Not ready yet: throw, so the engine treats the kind as unavailable for this session only instead of caching false.
-        override fun hasSettings(kind: String): Boolean = settings!!.has(kind)
-    }
+    /**
+     * Runs on [searchExec]; the fields are read at call time. Both facts throw on failure (not ready, PackageManager error) so
+     * SearchEngine applies the fact policy instead of caching a swallowed error as "no apps" / "no such settings page".
+     */
+    private val searchFacts = NativeSearchFacts({ apps!!.installedAppsJsonOrThrow() }) { kind -> settings!!.hasOrThrow(kind) }
 
     /** Runs on [pm]. */
     private fun searchIcon(pkg: String, size: Int): Bitmap? {
